@@ -1,1 +1,1 @@
-# Automatische_Reglersynthese
+# Automatische Reglersynthese
