@@ -1,0 +1,4 @@
+# Sometimes when matlab is the wrong working directory and images are
+# generated, they appear in a folder called "Dokumentation"
+# Ignore that folder for version control
+Dokumentation

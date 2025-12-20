@@ -1,0 +1,232 @@
+\newpage
+\subsection{Ergebnis}
+Wie im Kapitel~\fullref{sec:Methodik} bereits erwähnt, wird für die Ermittlung der zu vertiefenden Methoden folgende Punkte betrachtet.
+\methodeCriterias
+
+
+\newpage
+\subsubsection{Bewertungstabelle}
+In der \ref{tab:Bewertungstabelle} ist die Bewertung der betrachteten Methoden in einer Tabelle dargestellt.
+Es ist jedoch schwierig eine Quantisierung der einzelnen Kriterien vorzunehmen,
+die Tabelle soll daher nur als grobe Orientierung dienen.
+
+
+\begin{table}[H]
+    \centering
+        \includegraphics[width=0.98\linewidth]{images/Bewertung.pdf}
+        \caption{Bewertungstabelle der betrachteten Methoden}
+    \label{tab:Bewertungstabelle}
+\end{table}
+\newpage
+
+\subsection{Kombination mehrerer Methoden}
+\label{sec:KombinationMehrererMethoden}
+\minipagedOrBelowEachOther
+{
+Es ist natürlich nicht vorgeschrieben nur eine Methode allein zu verwenden.
+Das Kombinieren von mehreren Methoden kann sehr viele Vorteile bringen. 
+}{}
+
+\horizontalLine
+\paragraph*{Beispiel 1:\\Ziegler-Nichols + genetischer Algorithmus für PID-Tuning}
+\minipagedOrBelowEachOther
+{
+  Ein klassischer Ansatz zur schnellen Parametrierung eines PID-Reglers ist die Ziegler-Nichols Methode.
+  Diese Methode liefert eine erste Abschätzung der Reglerparameter basierend auf dem offenen Regelkreisverhalten.
+  Allerdings sind die mit Ziegler-Nichols bestimmten Parameter oft nicht optimal für spezifische Anforderungen.
+}
+{
+  An dem Punkt kann ein \gls{GA} ansetzen, um die Reglerparameter weiter auf die gewünschten Anforderungen zu optimieren.
+  Weil Ziegler-Nichols für \gls{MIMO} und instabile -\gls{System}e nicht geeignet ist, 
+  unterliegt auch die Kombination dieser beiden Methoden dieser Einschränkung. 
+}
+
+
+\horizontalLine
+\paragraph*{Beispiel 2:\\Ziegler-Nichols + diverse andere Optimierungsmethoden für PID-Tuning}
+\minipagedOrBelowEachOther
+{
+Wie im vorherigen Beispiel beschrieben, kann Ziegler-Nichols eine gute erste Abschätzung der Reglerparameter liefern.
+Für die weitere Optimierung der Regelparameter können aber auch andere Optimierungsmethoden verwendet werden:
+}
+{}
+\begin{itemize}
+    \item Differential Evolution \cite{storn1997differentialEvolution}
+    \item Gradient Descent
+    \item Gradient Descent with Momentum
+\end{itemize}
+
+\horizontalLine
+\paragraph*{Beispiel 3:\\Evolutionärer Algorithmus + MATLAB \textit{systune} für komplexe Reglerstrukturen}
+\minipagedOrBelowEachOther
+{
+Da für die Optimierung mit MATLAB \textit{systune} \cite{matlabSystune} ein initiales Modell mit Reglerstruktur benötigt wird,
+kann eine Schwierigkeit darin bestehen, eine geeignete Reglerstruktur zu finden.
+Ein evolutionärer Algorithmus wie \gls{NEAT} könnte verwendet werden, 
+um verschiedene Reglerstrukturen zu generieren, welche anschliessend
+mit MATLAB \textit{systune} optimiert werden.
+}
+{
+Die Optimierungsergebnisse von \textit{systune} können in die Bewertungsfunktion des evolutionären Algorithmus einfliessen, 
+um die besten Reglerstrukturen zu identifizieren.
+}
+
+
+\horizontalLine
+\subsection{Auswahl der zu vertiefenden Methoden}
+\subsubsection{MATLAB \textit{systune}}
+%\minipagedOrBelowEachOther
+{
+  Aus allen betrachteten Methoden sticht~\fullref{sec:rechercheSystune} heraus, es handelt sich dabei nicht um einen spezifischen 
+  Algorithmus für die \gls{Reglersynthese} sondern um ein Tool aus der MATLAB Control System Toolbox \cite{matlabControlSystemToolbox}.
+  Mit diesem Tool können verschiedene Reglerstrukturen und Systemmodelle optimiert werden.
+  Die Flexibilität und die einfache Automatisierung machen dieses Tool zu einer guten Wahl für die weitere Vertiefung.
+}
+{
+
+}
+\minipagedOrBelowEachOther
+{
+  \paragraph*{Voraussetzungen der Systeme}
+  \begin{itemize}
+    \item Das System muss als $genss$-Modell \cite{matlabGenss} modelliert sein
+    \item Für die Optimierung können beliebig viele Parameter optimiert werden
+    \item Die zu optimierenden Parameter können überall im Regelkreis liegen
+    \item Das System sollte in der Lage sein, die definierten Optimierungsziele zu erreichen
+    \item Stabile als auch instabile Systeme können optimiert werden
+    \item SISO- als auch MIMO-Systeme können optimiert werden
+    \item Nur lineare- und Zeitinvariante Systeme können optimiert werden
+  \end{itemize}
+}
+{
+\paragraph*{Ermöglichtes Reglerverhalten}
+MATLAB \textit{systune} \cite{matlabSystune} ermöglicht die Definition von verschiedenen Optimierungszielen \cite{matlabTuningGoals},
+welche spezifisch auf das gewünschte Reglerverhalten abgestimmt werden können.
+
+
+\paragraph*{Die Schwierigkeit der Parametrisierung}
+Die Parametrisierung erfolgt über Optimierungsziele \cite{matlabTuningGoals}.
+Einerseits können beliebig viele Optimierungsziele definiert werden, andererseits können diese auch noch in harte und weiche Ziele
+unterteilt werden.
+Dadurch kann die Optimierung sehr flexibel gestaltet werden.
+Jedes Optimierungsziel beinhaltet selbst noch weitere Parameter zur Konfiguration.
+Das macht die Parametrisierung etwas komplexer, jedoch auch sehr mächtig.
+}
+
+%\paragraph{Ermöglichtes Reglerverhalten}
+%\minipagedOrBelowEachOther
+%{
+%MATLAB systune \cite{matlabSystune} ermöglicht die Definition von verschiedenen Optimierungszielen \cite{matlabTuningGoals},
+%welche sehr spezifisch auf das gewünschte Reglerverhalten abgestimmt werden können.
+%}
+%{}
+
+%\paragraph{Voraussetzungen der Systeme}
+%\begin{itemize}
+%  \item Das \gls{System} muss als $genss$ \cite{matlabGenss} modelliert sein
+%  \item Für die Optimierung können beliebig viele Parameter optimiert werden
+%  \item Die zu optimierenden Parameter können überall im Regelkreis liegen
+%  \item Das \gls{System} sollte in der Lage sein, die definierten Optimierungsziele zu erreichen
+%  \item Stabile als auch instabile \gls{System}e können optimiert werden
+%  \item \gls{SISO}- als auch \gls{MIMO}-\gls{System}e können optimiert werden
+%  \item Nur lineare \gls{System}e können optimiert werden
+%\end{itemize}
+
+%\paragraph{Die Schwierigkeit der Parametrierung}
+%\minipagedOrBelowEachOther
+%{
+%  Die Parametrierung erfolgt über Optimierungsziele \cite{matlabTuningGoals}.
+%  Einerseits können beliebig viele Optimierungsziele definiert werden, andererseits können diese auch noch in harte und weiche Ziele
+%  unterteilt werden. 
+%}
+%{
+%  Dadurch kann die Optimierung sehr flexibel gestaltet werden.
+%  Jedes Optimierungsziel beinhaltet selbst noch weitere Parameter zur Konfiguration.
+%  Das macht die Parametrierung etwas komplexer, jedoch auch sehr mächtig.
+%}
+
+\newpage
+\paragraph*{Automatisierungsgrad}
+Um die Optimierung durchzuführen,
+muss der Anwender einige Informationen bereitstellen.
+Dazu gehören:
+\begin{itemize}
+  \item Definition des $genss$-Modells \cite{matlabGenss}, welches bereits den zu optimierenden Regler enthält
+  \item Definition der Optimierungsziele \cite{matlabTuningGoals} und deren Parametrisierung
+  \item Bestimmung welche Optimierungsziele hart und welche weich sind
+  \item (Optional) Definition von Startwerten für die zu optimierenden Parameter
+\end{itemize}
+\minipagedOrBelowEachOther
+{
+Sobald diese Informationen bereitgestellt sind,
+kann der Optimierungsprozess gestartet werden.
+Das Tool übernimmt dann die komplette Optimierung und liefert ein 
+$genss$-Modell \cite{matlabGenss} mit den optimierten Parametern zurück.
+Ausserdem wird eine Auswertung der Optimierung für jedes Optimierungsziel bereitgestellt.
+}
+{
+
+}
+
+
+
+
+\horizontalLine
+\subsubsection{Genetischer Algorithmus für PID-Tuning}
+\label{sec:GAforPIDTuning}
+
+\paragraph*{Ermöglichtes Reglerverhalten}
+\minipagedOrBelowEachOther
+{
+Benutzerdefinierte Bewertungsfunktionen ermöglichen die Optimierung des PID-Reglers auf sehr spezifische Anforderungen.
+}
+{
+Die Theorie zum GA ist im Kapitel\\
+~\fullref{sec:Description_GenetischerAlgorithmus} beschrieben.
+}
+
+\paragraph*{Voraussetzungen der Systeme}
+\begin{itemize}
+  \item Modell benötigt für den \gls{GA}
+  %\item System muss stabil sein
+  %\item System muss \gls{minimalphasiges System} sein
+  \item System kann \gls{MIMO} sein
+  \item Reglerstruktur ist beliebig % auf PID-Regler beschränkt
+\end{itemize}
+
+
+\minipagedOrBelowEachOther
+{
+  \paragraph*{Die Schwierigkeit der Parametrisierung}
+  Der Anwender muss eine Bewertungsfunktion definieren welche aus beliebigen Teilfunktionen bestehen kann.
+}
+{
+  \paragraph*{Automatisierungsgrad}
+  Mit bestehender Bewertungsfunktion und vordefiniertem Modell inklusive Reglerstruktur,
+  kann die Optimierung gestartet werden.
+  Die Optimierung ist ein iterativer Prozess welcher solange wiederholt wird, 
+  bis das Ergebnis zufriedenstellend ist.
+}
+
+
+
+
+
+\horizontalLine
+\subsubsection{Differential Evolution für PID-Tuning}
+\minipagedOrBelowEachOther
+{
+  \gls{DE} hat ziemlich ähnliche Eigenschaften wie der \gls{GA}.
+  Der Unterschied besteht hauptsächlich darin, wie die Selektion, Kreuzung und Mutation durchgeführt werden.\\
+
+
+  Weil die beiden Algorithmen so ähnlich sind, wird hier nicht weiter auf die Eigenschaften eingegangen,
+  da sie bereits im Abschnitt\\
+  ~\fullref{sec:GAforPIDTuning} beschrieben wurden.
+}
+{
+  Die Theorie zu DE ist im Kapitel\\
+  ~\fullref{sec:Description_DifferentialEvolutionAlgorithmus} beschrieben.
+}
+
+

@@ -1,0 +1,383 @@
+% LaTeX document for examples of tikzSystems package
+\documentclass[tikz,border=10pt]{article}
+\usepackage{listings}
+
+% set page width
+\usepackage[a4paper, total={170mm,257mm}, left=20mm, top=20mm]{geometry}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  rulecolor=\color{gray!50},
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  morekeywords={usepackage,documentclass,newcommand,pgfkeys},
+}
+
+\input{tikzSystemsPreamble}
+
+
+
+\newcommand{\drawOrigin}
+{
+    \definecolor{lightGrayColor}{rgb}{0.8,0.8,0.8};
+    \debugCoordinate[label={-0.4,0.1}{Origin}, showCoordinates={-0.4,-0.1}]{0,0};
+    \drawArrow{0,0}{0,1}{lightGrayColor};
+    \drawArrow{0,0}{1,0}{lightGrayColor};
+}
+\newcommand{\drawExampleBackground}{
+    \drawOrigin;
+    \drawGrid{16}{4};
+}
+
+\begin{document}
+
+
+%% ============================================
+%% COMMAND: \blockNode
+%% ============================================
+\section{blockNode}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+    
+    % Param1 is node name
+    % Param2 is position
+    % Param3 is label
+    \blockNode{controller}{3,2}{$G_c(s)$};    
+
+    % Debugging stuff...
+    \definecolor{dbgArrowsColor}{rgb}{0.8,0.8,0.0};
+    \drawArrow{0,0}{controller.center}{dbgArrowsColor};
+
+
+    % Mark blockNode coordinates
+    \debugCoordinate[label={0.0,-0.2}{.center}]{controller.center};
+    \debugCoordinate[label={0.0,0.2}{.north}]{controller.north};
+    \debugCoordinate[label={0.4,0.0}{.east}]{controller.east};
+    \debugCoordinate[label={0.0,-0.2}{.south}]{controller.south};
+    \debugCoordinate[label={-0.4,0.0}{.west}]{controller.west};
+
+    \debugCoordinate[label={-0.6,-0.2}{.south west}]{controller.south west};
+    \debugCoordinate[label={0.6,-0.2}{.south east}]{controller.south east};
+    \debugCoordinate[label={0.6,0.2}{.north east}]{controller.north east};
+    \debugCoordinate[label={-0.6,0.2}{.north west}]{controller.north west};
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is node name
+% Param2 is position
+% Param3 is label
+\blockNode{controller}{3,2}{$G_c(s)$};
+\end{lstlisting}
+
+%% ============================================
+%% COMMAND: \sumNode
+%% ============================================
+\section{sumNode}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+    
+    % Param1 is node name
+    % Param2 is position
+    % Param3 is label
+    \sumNode{sum}{3,2};    
+
+    % Debugging stuff...
+    \definecolor{dbgArrowsColor}{rgb}{0.8,0.8,0.0};
+    \debugCoordinate[label={-0.4,0.1}{Origin}, showCoordinates={-0.4,-0.1}]{0,0};
+    \drawArrow{0,0}{sum.center}{dbgArrowsColor};
+
+
+    % Mark blockNode coordinates
+    \debugCoordinate[label={0.0,-0.3}{.center}, scale=0.5]{sum.center};
+    \debugCoordinate[label={0.0,0.2}{.north}, scale=0.5]{sum.north};
+    \debugCoordinate[label={0.4,0.0}{.east}, scale=0.5]{sum.east};
+    \debugCoordinate[label={0.0,-0.3}{.south}, scale=0.5]{sum.south};
+    \debugCoordinate[label={-0.4,0.0}{.west}, scale=0.5]{sum.west};
+
+    \debugCoordinate[label={-0.6,-0.2}{.south west}, scale=0.5]{sum.south west};
+    \debugCoordinate[label={0.6,-0.2}{.south east}, scale=0.5]{sum.south east};
+    \debugCoordinate[label={0.6,0.2}{.north east}, scale=0.5]{sum.north east};
+    \debugCoordinate[label={-0.6,0.2}{.north west}, scale=0.5]{sum.north west};
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is node name
+% Param2 is position
+% Param3 is label
+\sumNode{sum}{3,2};  
+\end{lstlisting}
+
+
+%% ============================================
+%% COMMAND: \connect
+%% ============================================
+\section{connect}
+\subsection{simple path connection}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+    
+    % Param1 is a list of points to connect
+    % Param2 is arrow style
+    \connect{(0,0) (3,2) (5,1) (7,3)}{->};   
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is a list of points to connect
+% Param2 is arrow style
+\connect{(0,0) (3,2) (5,1) (7,3)}{->}; 
+\end{lstlisting}
+
+\subsection{path with label}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+    
+    % Optional parameter "label" specifies label position and text
+    % label={<xOffset,yOffset>}{text}
+    % xOffset and yOffset are relative to the last point in the path
+    % The text origin is in the center of the text box
+    \connect[label={0.5,0.5}{\textbf{Path}}]{(0,0) (3,2) (5,1) (7,3)}{->};   
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Optional parameter "label" specifies label position and text
+% label={<xOffset,yOffset>}{text}
+% xOffset and yOffset are relative to the last point in the path
+% The text origin is in the center of the text box
+\connect[label={0.5,0.5}{\textbf{Path}}]{(0,0) (3,2) (5,1) (7,3)}{->}; 
+\end{lstlisting}
+
+\subsection{path with minus sign}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+    
+    % Optional parameter "label" specifies label position and text
+    % sign={<xOffset,yOffset>}
+    % xOffset and yOffset are relative to the last point in the path
+    % The text origin is in the center of the text box
+    \connect[sign={0.5,0.5}]{(0,0) (3,2) (5,1) (7,3)}{->};   
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Optional parameter "label" specifies label position and text
+% sign={<xOffset,yOffset>}
+% xOffset and yOffset are relative to the last point in the path
+% The text origin is in the center of the text box
+\connect[sign={0.5,0.5}]{(0,0) (3,2) (5,1) (7,3)}{->};
+\end{lstlisting}
+
+%% ============================================
+%% COMMAND: \feedback
+%% ============================================
+\newpage
+\section{feedback}
+\subsection{simple}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+    % Param1 is from_coordinate
+    % Param2 is yOffsetOfLoop
+    % Param3 is to_coordinate
+    % Param4 is arrow style
+    \feedback{5,3}{-1}{2,3}{->};
+
+    % Debugging stuff...
+    \definecolor{dbgArrowsColor}{rgb}{1,0.5,0};
+    \drawArrow{6,3}{6,2}{dbgArrowsColor};
+    \drawLabel{8.5,2.5}{Param2: yOffsetOfLoop = -1};
+
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is from_coordinate
+% Param2 is yOffsetOfLoop
+% Param3 is to_coordinate
+% Param4 is arrow style
+\feedback{5,3}{-1}{2,3}{->};
+\end{lstlisting}
+
+\subsection{with label and minus sign}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+    % Param1 is from_coordinate
+    % Param2 is yOffsetOfLoop
+    % Param3 is to_coordinate
+    % Param4 is arrow style
+    \feedback[sign={-0.25,-0.25}, label={1.5,-1.2}{\textbf{Feedback}}]{5,3}{-1}{2,3}{->};
+
+    % Debugging stuff...
+    \definecolor{dbgArrowsColor}{rgb}{1,0.5,0};
+    \drawArrow{6,3}{6,2}{dbgArrowsColor};
+    \drawLabel{8.5,2.5}{Param2: yOffsetOfLoop = -1};
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is from_coordinate
+% Param2 is yOffsetOfLoop
+% Param3 is to_coordinate
+% Param4 is arrow style
+\feedback[sign={-0.25,-0.25}, label={1.5,-1.2}{\textbf{Feedback}}]{5,3}{-1}{2,3}{->};
+\end{lstlisting}
+
+
+%% ============================================
+%% COMMAND: \connectionNode
+%% ============================================
+\section{connectionNode}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+    % Param1 is node name
+    % Param2 is position
+    \connectionNode{nodeName}{3,2};
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Param1 is node name
+% Param2 is position
+\connectionNode{nodeName}{3,2};
+\end{lstlisting}
+
+
+%% ============================================
+%% Example system
+%% ============================================
+\section{Example system}
+\subsection{Simple feedback system}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+    % Draw blocks
+    \sumNode{sum}{1,3};
+    \blockNode{controller}{2.5,3}{$G_c(s)$};
+    \blockNode{plant}{5,3}{$G(s)$};
+
+    % Draw connections
+    \connect[label={-0.5,0.25}{r}]{(0,3) (sum.west)}{->};
+    \connect[label={-0.5,0.25}{e}]{(sum.east) (controller.west)}{->};
+    \connect[label={-0.5,0.25}{u}]{(controller.east) (plant.west)}{->};
+    \connectionNode{output}{6,3};
+    \connect[label={-0.5,0.25}{y}]{(plant.east) \vectorAdd{output}{0.5,0}}{->};
+
+    \feedback[sign={-0.25,-0.25}]{output}{-1}{sum}{->};
+
+
+    
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Draw blocks
+\sumNode{sum}{1,3};
+\blockNode{controller}{2.5,3}{$G_c(s)$};
+\blockNode{plant}{5,3}{$G(s)$};
+
+% Draw connections
+\connect[label={-0.5,0.25}{r}]{(0,3) (sum.west)}{->};
+\connect[label={-0.5,0.25}{e}]{(sum.east) (controller.west)}{->};
+\connect[label={-0.5,0.25}{u}]{(controller.east) (plant.west)}{->};
+\connectionNode{output}{6,3};
+\connect[label={-0.5,0.25}{y}]{(plant.east) \vectorAdd{output}{0.5,0}}{->};
+\feedback[sign={-0.25,-0.25}]{output}{-1}{sum}{->};
+\end{lstlisting}
+
+\subsection{MIMO system}
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+    % Draw blocks
+    \sumNode{sum}{1,3};
+    \blockNode{controller}{2.5,3}{$G_c(s)$};
+    \blockNode{plant}{5,3}{$G(s)$};
+
+    %% Draw connections
+    %Input signals
+    \connect[label={-1.2,0}{r1}   ]{(0,3)   (sum.west)                      }{->};
+    \connect[label={-1.2,-0.5}{r2}]{(0,2.5) (0.5,2.5)    (0.5,3)  (sum.west)}{->};
+
+    %Feedback signals
+    \connect[label={-0.5,0.25}{e}]{(sum.east) (controller.west)}{->};
+    \connect[label={-0.5,0.25}{u}]{(controller.east) (plant.west)}{->};
+    \connectionNode{output}{6,3};
+    
+    %Output signals
+    \connect[label={0.2,0}{y1}]{(plant.east) \vectorAdd{output}{1,0}                                                          }{->};
+    \connect[label={0.2,0}{y2}]{(plant.east) \vectorAdd{output}{0.5,0} \vectorAdd{output}{0.5,-0.5} \vectorAdd{output}{1,-0.5}}{->};
+
+    \feedback[sign={-0.25,-0.25}]{output}{-1}{sum}{->};
+
+
+    
+\end{tikzpicture}
+\begin{lstlisting}[language={[LaTeX]TeX}]
+% Draw blocks
+\sumNode{sum}{1,3};
+\blockNode{controller}{2.5,3}{$G_c(s)$};
+\blockNode{plant}{5,3}{$G(s)$};
+%% Draw connections
+%Input signals
+\connect[label={-1.2,0}{r1}   ]{(0,3)   (sum.west)                      }{->};
+\connect[label={-1.2,-0.5}{r2}]{(0,2.5) (0.5,2.5)    (0.5,3)  (sum.west)}{->};
+
+%Feedback signals
+\connect[label={-0.5,0.25}{e}]{(sum.east) (controller.west)}{->};
+\connect[label={-0.5,0.25}{u}]{(controller.east) (plant.west)}{->};
+\connectionNode{output}{6,3};
+
+%Output signals
+\connect[label={0.2,0}{y1}]{(plant.east) \vectorAdd{output}{1,0}                                                          }{->};
+\connect[label={0.2,0}{y2}]{(plant.east) \vectorAdd{output}{0.5,0} \vectorAdd{output}{0.5,-0.5} \vectorAdd{output}{1,-0.5}}{->};
+\feedback[sign={-0.25,-0.25}]{output}{-1}{sum}{->};
+\end{lstlisting}
+
+
+
+
+
+
+
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \drawExampleBackground;
+
+     % Blöcke erstellen
+  %\gainNode{G1}{0,0}{$K_1$}
+  %\gainNode[south]{G2}{3,0}{$K_2$}
+  %\gainNode[west]{G3}{6,0}{$K_3$}
+  %
+  %% Jetzt mit Punkt-Notation
+  %\draw[->] (G1.west) -- ++(-1,0);
+  %\draw[->] (G1.east) -- (G2.west);
+  %\draw[->] (G3.east) -- ++(-1,0);
+
+
+    %\draw (0,-2) -- (0.5,-2);
+    %\draw (0.5,-2) -- (1.5,-2.5);  % slanted line to show switch
+    %\draw (1.5,-2) -- (2,-2);
+    %\draw[fill=black] (0.5,-2) circle (0.05);
+    %\draw[fill=black] (1.5,-2) circle (0.05);
+
+    \switchNC[east]{0,0}
+
+    \switchNC[south]{1,0}
+
+    \switchNC[west]{2,0}
+
+    \switchNC[north]{3,0}
+
+    \switchNO[east]{0,2}
+
+    \switchNO[south]{1,2}
+
+    \switchNO[west]{2,02}
+
+    \switchNO[north]{3,2}
+
+    \switchTwo[north]{5,0}
+
+
+  
+    %\gainNode[east]{G1}{3,0}{$K_1$}
+    \saturationBlockNode{satBlock}{7,0}{-10,10}
+
+    % Debugging stuff...
+\end{tikzpicture}
+
+
+
+
+\end{document}

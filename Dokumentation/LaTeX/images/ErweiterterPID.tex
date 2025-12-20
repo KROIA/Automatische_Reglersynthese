@@ -1,0 +1,129 @@
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    %\begin{scope}[shift={(0,5)}]   
+        \newcommand{\labeloffset}{0.2}
+        \definecolor{lightGrayColor}{rgb}{0.6,0.6,0.6};
+
+        
+        \newcommand{\varPIDTs}{Ts}
+        \newcommand{\varPIDKb}{Kb}
+        \newcommand{\varPIDKp}{Kp}
+        \newcommand{\varPIDKi}{Ki}
+        \newcommand{\varPIDKd}{Kd}
+        \newcommand{\varPIDKn}{Kn}
+        \newcommand{\varPIDUSatLow}{U_{\mathrm{SatLow}}}
+        \newcommand{\varPIDUSatHigh}{U_{\mathrm{SatHigh}}}
+        \newcommand{\varPIDISatLow}{I_{\mathrm{SatLow}}}
+        \newcommand{\varPIDISatHigh}{I_{\mathrm{SatHigh}}}
+        \newcommand{\varPIDZ}{z}
+        \newcommand{\varPIDupreSat}{u_{\mathrm{preSat}}}
+        \newcommand{\varPIDu}{u}
+        \newcommand{\varPIDudOne}{u_{\mathrm{d1}}}
+        \newcommand{\varPIDudTwo}{u_{\mathrm{d2}}}
+        \newcommand{\varPIDud}{u_{\mathrm{d}}}
+        \newcommand{\varPIDup}{u_{\mathrm{p}}}
+        \newcommand{\varPIDui}{u_{\mathrm{i}}}
+
+        \newcommand{\formulaDNoFilter}{\varPIDKd \cdot \frac{\varPIDZ-1}{\varPIDTs \cdot \varPIDZ}}
+        \newcommand{\formulaDWithFilter}{\varPIDKd \cdot \frac{\varPIDKn \cdot (\varPIDZ-1)}{\varPIDZ-1 + \varPIDKn \cdot \varPIDTs}}
+        \newcommand{\formulaIntegrator}{\frac{\varPIDTs}{\varPIDZ-1}}
+
+        %\drawGrid{16}{-15};
+
+        % Input/Output nodes
+        \connectionNode{input}{1, -5};
+        \connect[label={-0.5,\labeloffset}{$e$}]{(0,-5) (input.center)}{-};
+        % Output summation
+        \sumNode{outputSum}{12,-5};
+        \saturationBlockNode{outputSaturationNode}{$(outputSum.center) + (2,0)$}{$\varPIDUSatLow$}{$\varPIDUSatHigh$};
+        \connectionNode{outSumNode}{$(outputSum.center) + (1,0)$};
+        \connectionNode{outSatNode}{$(outputSaturationNode.center) + (1,0)$};
+        \connect[label={-0.5,\labeloffset+0.1}{$\varPIDupreSat$}]{(outputSum.east) (outSumNode) (outputSaturationNode.west)}{->};
+        \connect[label={-0.5,\labeloffset}{$\varPIDu$}]{(outputSaturationNode.east) (outSatNode) (16, -5)}{->};
+        \sumNode{outputSatSubtract}{14,-7};
+        \connect[sign={-0.1,\labeloffset}]{(outSumNode) (13,-7) (outputSatSubtract.west)}{->};
+        \connect{(outSatNode) (15,-7) (outputSatSubtract.east)}{->};
+        
+        
+
+
+        % Differenzierer Teil
+        \node[font=\small, lightGrayColor] at (3.2,0) {Ableitungstyp};
+        \connect{(1.5,-1.8) (1.5,0) (2,0)}{-, dashed, lightGrayColor};
+
+        \switchTwo[east]{1,-2};
+        \connect{(input.center) (1,-2)}{-};
+
+        % Ableitung ohne filter
+        \blockNode{diffNoFilter}{9,-1}{$\formulaDNoFilter$};
+        \connect[label={-1.3,\labeloffset}{Ohne Filter}]{(2,-1.5) (2,-1) (diffNoFilter.west)}{->};
+
+        % Ableitung mit filter
+        \blockNode{diffWithFilter}{9,-3}{$\formulaDWithFilter$};
+        \connect[label={-1,\labeloffset}{Mit Filter}]{(2,-2.5) (2,-3) (diffWithFilter.west)}{->};
+
+        % Zusammenführung
+        \sumNode{differentialSum}{11,-2};
+        \connect[label={0.3,1}{$\varPIDudOne$}]{(diffNoFilter.east) (11,-1) (differentialSum.north)}{->};
+        \connect[label={0.3,-1}{$\varPIDudTwo$}]{(diffWithFilter.east) (11,-3) (differentialSum.south)}{->};
+        \connect[label={-0.3,0.5}{$\varPIDud$}]{(differentialSum.east) (12, -2) (outputSum.north)}{->};
+
+
+
+        % kP Teil
+        \gainNode{kpBlock}{9,-5}{$\varPIDKp$};
+        \connect{(input.center) (kpBlock.west)}{->};
+        \connect[label={-1,\labeloffset}{$\varPIDup$}]{(kpBlock.east) (outputSum.west)}{->};
+
+
+        % kI Teil
+        \switchThree[west]{8,-8};
+        \node[font=\small, lightGrayColor] at (9.5,-9.5) {Anti-Windup Typ};
+        \connect{(7.5, -7.85) (7.5,-9.5) (8,-9.5)}{-, dashed, lightGrayColor};
+        \connectionNode{input1}{1,-7.5};
+        \connect[label={-1.5, \labeloffset}{Ohne}]{(input1.center) (7,-7.5)}{-};
+
+        \connectionNode{input2}{1,-8};
+        \connect{(input2.center) (2,-8)}{-};
+        \switchNC{2,-8};
+        \connect[label={-1.5,\labeloffset}{Clamping}]{(3,-8) (7,-8)}{-};
+        \node[draw, rectangle, minimum height=1cm, minimum width=1.2cm] at (2.5,-9.5) (clampingController) {
+            \begin{tabular}
+                {c}
+                \small Clamping \\
+                \small Controller
+                \
+            \end{tabular}
+        };
+        \connect{(clampingController.north) (2.5, -7.9) }{-, dashed, lightGrayColor};
+        \connectionNode{input3}{2,-10.5};
+        \connect{(input3.center) \vectorAdd{clampingController.south}{-0.5,0}}{->};
+        \connectionNode{outSatDiv}{7,-12};
+        \connect{(outSatDiv.center) (2.5,-12) (clampingController.south)}{->};
+
+        \sumNode{backCalcSum}{4, -10.5};
+        \connect[label={-1.5,\labeloffset}{Back Calculation}]{(backCalcSum.north) (4, -8.5) (7, -8.5)}{-};
+        \gainNode[south]{kiBlock}{1, -6}{$\varPIDKi$};
+        \connect{(input.center) (kiBlock.north)}{->};
+        \connect{(kiBlock.south) (input1.center) (input2.center) (1, -10.5) (input3.center) (backCalcSum.west)}{->};
+
+        \gainNode[west]{backCalcGain}{6, -10.5}{$\varPIDKb$};
+        \connect{(backCalcGain.west) (backCalcSum.east)}{->};
+        \connect{(outSatDiv.center) (7, -10.5) (backCalcGain.east)}{->};
+        \connect{(outputSatSubtract.south) (14, -12) (outSatDiv.center)}{-};
+
+        % Integrator
+        \blockNode{integrator}{9,-8}{$\formulaIntegrator$};
+        \connect{(8, -8) (integrator.west)}{->};
+        \saturationBlockNode{iSaturationNode}{$(integrator.east) + (1,0)$}{$\varPIDISatLow$}{$\varPIDISatHigh$};
+        \connect{(integrator.east) (iSaturationNode.west)}{->};
+        \connect[label={0.75, 0.5+\labeloffset}{I-Begrenzung}]{(iSaturationNode.north) ($(iSaturationNode.center) + (0,1)$) ($(integrator.center) + (0,1)$) (integrator.north)}{->};
+        \connectionNode{uiNode}{12, -8}
+        \connect[label={-0.3,-0.5}{$\varPIDui$}]{(iSaturationNode.east) (uiNode.center) (outputSum.south)}{->};
+        \connect{(uiNode.center) (12,-11.5) (3,-11.5) \vectorAdd{clampingController.south}{0.5,0}}{->};
+        
+    
+
+        
+        
+
+\end{tikzpicture}

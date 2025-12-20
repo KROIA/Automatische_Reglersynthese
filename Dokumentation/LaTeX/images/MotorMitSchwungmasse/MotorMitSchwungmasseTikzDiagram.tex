@@ -1,0 +1,89 @@
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=0.7, transform shape]
+    \newcommand{\labeloffset}{0.2}
+
+    \newcommand{\topPosY}{2}
+    \newcommand{\centerPosY}{0}
+    \newcommand{\bottomPosY}{-2}
+
+    % Draw grid
+    %\draw[step=1cm,gray,very thin] (0,0) grid (10,10);
+
+
+
+    \gainNode[east]{inputGain1}{1, \topPosY}{$k_{\mathbf{1}}$};
+    \sumNode{sumA}{3,\topPosY};
+    \gainNode[east]{inputGain2}{4, \topPosY}{$k_{\mathbf{2}}$};
+    \blockNode{intA}{6, \topPosY}{$\frac{1}{s}$};
+    \gainNode[east]{preIntB}{8, \topPosY}{$k_{\mathbf{3}}$};
+    \blockNode{intB}{10, \topPosY}{$\frac{1}{s}$};
+    \connectionNode{postIntA}{7, \topPosY};
+    \connectionNode{outputA}{11, \topPosY};
+    \connect[label={-1,0}{$u_{\mathbf{1}}$}]{(0, \topPosY) (inputGain1.west)}{->};
+    \connect{(inputGain1.east) (sumA.west)}{->};
+    \connect{(sumA.east) (inputGain2.west)}{->};
+    \connect{(inputGain2.east) (intA.west)}{->};
+    \connect{(intA.east) (postIntA.center) (preIntB.west)}{->};
+    \connect{(preIntB.east) (intB.west)}{->};
+    \connect[label={0.2,0}{$y_{\mathbf{1}}$}]{(intB.east) (outputA.center) ($(outputA.center) + (1, 0)$)}{->};
+    \feedback[sign={-0.2,0.2}]{postIntA.center}{1}{sumA.north}{->};
+
+
+
+
+    
+    
+
+
+
+
+    % bottom part
+    \gainNode[east]{inputGain4}{1, \bottomPosY}{$k_{\mathbf{4}}$};
+    \sumNode{sumB}{3,\bottomPosY};
+    \gainNode[east]{inputGain5}{4, \bottomPosY}{$k_{\mathbf{5}}$};
+    \blockNode{intA}{6, \bottomPosY}{$\frac{1}{s}$};
+    \gainNode[east]{preIntB}{8, \bottomPosY}{$k_{\mathbf{6}}$};
+    \blockNode{intB}{10, \bottomPosY}{$\frac{1}{s}$};
+    \connectionNode{postIntA}{7, \bottomPosY};
+    \connectionNode{outputB}{11, \bottomPosY};
+    \connect[label={-1,0}{$u_{\mathbf{2}}$}]{(0, \bottomPosY) (inputGain4.west)}{->};
+    \connect{(inputGain4.east) (sumB.west)}{->};
+    \connect{(sumB.east) (inputGain5.west)}{->};
+    \connect{(inputGain5.east) (intA.west)}{->};
+    \connect{(intA.east) (postIntA.center) (preIntB.west)}{->};
+    \connect{(preIntB.east) (intB.west)}{->};
+    \connect[label={0.2,0}{$y_{\mathbf{2}}$}]{(intB.east) (outputB.center) ($(outputB.center) + (1, 0)$)}{->};
+    \feedback[sign={-0.2,-0.2}]{postIntA.center}{-1}{sumB.south}{->};
+    
+    
+
+
+    % center part
+    \sumNode{angleDivSum}{11, \centerPosY};
+    \connect{(outputA.center) (angleDivSum.north)}{->};
+    \connect{(outputB.center) (angleDivSum.south)}{->};
+
+    \gainNode[west]{backGain}{6.2, \centerPosY}{$k_{\mathbf{7}}$};
+    \connect{(angleDivSum.west) (backGain.east)}{->};
+    \connectionNode{backConnection}{3, \centerPosY};
+    \connect[sign={-0.2,-0.2}]{(backGain.west)  (backConnection.center) (sumA.south)}{->};
+    \connect{(backGain.west) (backConnection.center) (sumB.north)}{->};
+
+    % Draw blocks
+   % \sumNode{sum}{1,0};
+%
+   % \saturationBlockNode{saturation1}{-1, 0}{0}{10};
+   % \blockNode{controller}{2.5,0}{$G_c(s)$};
+   % \saturationBlockNode{saturation2}{$(controller.east) + (1.5,0)$}{0}{10};
+   % \blockNode{plant}{$(saturation2.east) + (2,0)$}{$G(s)=\frac{K1}{T \cdot s + 1}$};
+%
+   % % Draw connections
+   % \connect{(-2.5,0)             (saturation1.west)          }{->};
+   % \connect[label={-0.5,\labeloffset}{$\mathbf{r}$}              ]{(saturation1.east)             (sum.west)          }{->};
+   % \connect[label={-0.5,\labeloffset}{$\mathbf{e}$}   ]{(sum.east)        (controller.west)   }{->};
+   % \connect{(controller.east) (saturation2.west)   }{->};
+   % \connect[label={-0.4,\labeloffset}{$\mathbf{u}$}   ]{(saturation2.east) (plant.west)        }{->};
+   % \connectionNode{output}{$(plant.east) + (0.5,0)$};
+   % \connect[label={0.2,0}{$\mathbf{y}$}               ]{(plant.east) \vectorAdd{output}{0.5,0}}{->};
+%
+   % \feedback[sign={-0.3,-0.1}              ]{output.center}{-1}{sum.south}{->};
+\end{tikzpicture}

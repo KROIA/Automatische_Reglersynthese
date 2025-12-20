@@ -1,0 +1,120 @@
+\documentclass[%
+final,
+twoside,
+a4paper]{article}
+%%%%
+
+% Vor der Abgabe einkommentieren:
+% Unterkapitel in 
+%   - Main generell
+%   - 30_Hauptstudie
+%   - 111_DiverseErklaerungen
+%   - 120_Anhang
+%
+
+% Document information
+\newcommand*{\Title}            {Analyse und Test von Methoden\\zur automatischen Reglersynthese}
+\newcommand*{\TitleInfo}        {Bachelorarbeit in Electrical and Computer Engineering}
+\newcommand*{\Author}		    {Alex Krieg}
+\newcommand*{\Prof}				{Prof. Dr. Lukas Ortmann}
+\newcommand*{\Modul}			{Regelungstechnik}
+\newcommand*{\Betreuer}			{Prof. Dr. Lukas Ortmann}
+\newcommand*{\Laborassistent}	{Bruno Vollenweider}
+\newcommand*{\Projektpartner}	{}
+\newcommand*{\Place}            {Rapperswil}
+\newcommand*{\LogoOST}          {\includegraphics[height = 1cm]{header/ost_logo_cut.png}}
+\newcommand*{\LogoIET}          {\includegraphics[height=0.9cm]{header/icom_logo.pdf}}
+\newcommand*{\finalday}         {19. Dez. 2025}
+
+% Header
+\input{header/header}
+\input{libs/tikzSystems/tikzSystemsPreamble}
+\input{libs/formulasWithDerivation/formulasWithDerivationPreamble}
+\input{Verzeichnisse}
+\input{sections/Formeln/formeln}
+
+%\renewcommand{\minipagedOrBelowEachOther}[2]{%
+%    {
+%        #1%
+%        #2%
+%    }
+%}
+
+\setcounter{secnumdepth}{4}
+
+
+% tcolorbox setup
+\tcbset{width=(\linewidth-1mm)/2,before=,after=\hfill,arc=0mm,
+	colframe=red!50!black,colback=white,colback = red!10}
+
+\newcommand{\hsp}{\hspace{5pt}}
+\linespread{1} % 1.0 = default, 1.2 = 20% larger
+
+\titleformat{\section}[hang]{\Huge\bfseries}{\thesection\hsp\textcolor{gray80}{|}\hsp}{7pt}{\Huge\bfseries}
+\titleformat{\subsection}[hang]{\huge\bfseries}{\thesubsection\hsp\textcolor{gray60}{|}\hsp}{7pt}{\Large\bfseries}
+\titleformat{\subsubsection}[hang]{\Large\bfseries}{\thesubsubsection\hsp\textcolor{gray40}{|}\hsp}{7pt}{\large\bfseries}
+\titleformat{\paragraph}[hang]{\large\bfseries}{\theparagraph\hsp\textcolor{gray40}{|}\hsp}{7pt}{\large\bfseries}
+
+
+\setlength{\cftmyequationsnumwidth}{3cm} % Breite für Nummerierung
+\numberwithin{equation}{subsection}
+\renewcommand\theequation{Formel \thesubsection.\arabic{equation}}
+
+
+
+% fontstyle
+%\renewcommand\familydefault{\sfdefault}    % Arial
+
+%\newif\ifinanappendix
+%\inanappendixfalse
+\setcounter{tocdepth}{2}
+
+% Document=========================================
+\begin{document}
+    \raggedright
+    \pagenumbering{Roman}
+    \newgeometry{left=2cm, right=2cm, top=1cm, bottom=1cm, headsep=1.5cm, marginparwidth=1mm, marginparsep=3mm, includeheadfoot}
+    
+    
+
+    \newpage
+    \input{sections/00_titlepage}
+    
+    \pagestyle{plain}
+    \clearpage
+    \tableofcontents
+    \newpage
+    \setcounter{page}{1}
+    \pagenumbering{arabic}
+    
+    \pagestyle{docstyle}
+    \include{sections/10_Einleitung}
+    \include{sections/11_Methodik}
+
+    \include{sections/20_Recherche}
+
+
+    \include{sections/30_Hauptstudie}
+
+    \include{sections/80_Auswertung}
+
+    \include{sections/100_Schlussteil}
+    
+
+    
+    
+    
+   % \setcounter{page}{1}
+    %\pagenumbering{Roman}
+
+
+    %\newgeometry{left=0.75cm, right=0.75cm, top=0cm, bottom=0cm, headsep=1.5cm,marginparwidth=1mm, marginparsep=3mm, includeheadfoot}
+    \appendix
+    \include{sections/120_Anhang}
+
+\end{document}
+
+
+
+% CheatSheet
+% \newpage Neue Seite anfangen

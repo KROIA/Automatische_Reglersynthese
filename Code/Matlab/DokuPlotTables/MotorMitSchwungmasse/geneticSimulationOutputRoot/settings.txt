@@ -1,0 +1,58 @@
+Optimierungsparameter:
+#define PARAMETERLIST_ENABLE_KP 
+#define PARAMETERLIST_ENABLE_KI
+#define PARAMETERLIST_ENABLE_KD
+#define PARAMETERLIST_ENABLE_KN
+
+
+
+
+	// Default parameters
+	static constexpr double s_defaultKp = 0.0;
+	static constexpr double s_defaultKi = 0.0;
+	static constexpr double s_defaultKd = 0.0;
+	static constexpr double s_defaultKn = 0.0;
+	static constexpr double s_defaultPIDISaturation = 100000000.0;
+	static constexpr AutoTuner::PID::AntiWindupMethod s_defaultPIDAntiWindupMethod = AutoTuner::PID::AntiWindupMethod::Clamping;
+	static constexpr AutoTuner::PID::IntegrationSolver s_defaultPIDIntegrationSolver = AutoTuner::PID::IntegrationSolver::ForwardEuler;
+#ifdef PARAMETERLIST_ENABLE_KN
+	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Filtered;
+#else
+	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Unfiltered;
+#endif
+	static constexpr double s_defaultPIDAntiWindupBackCalculationConstant = 0.1;
+
+	static constexpr double s_startAreaRange = 1;
+	static constexpr size_t s_agentCount = 30;
+	//static constexpr size_t s_testRuns = 1;
+	static constexpr double s_endTime = 50;
+	static constexpr double s_deltaTime = 0.01;
+	static constexpr size_t s_targetEpochs = 1000;
+
+	static constexpr double m_nyquistBeginFreq = 0.01;
+	static constexpr double m_nyquistEndFreq = 20;
+	static constexpr double m_targetPhaseMargin = M_PI/4; // degrees
+	static constexpr double m_targetGainMargin = 2; 
+
+#ifdef USE_GENTIC_SOLVER
+	static constexpr double s_startLearningRate = 0.1;
+	static constexpr double s_learningRateDecay = 0.999; // per generation
+#else
+	static constexpr double s_startLearningRate = 0.5;
+#endif
+
+
+
+
+
+
+
+
+
+
+double m_tuningGoalFactor_errorIntegral = 2.8;
+double m_tuningGoalFactor_actuatorEffort = 0.1;
+double m_tuningGoalFactor_overshoot = 111;
+double m_tuningGoalFactor_gainMargin = 0;   // Ab Epoche 100
+double m_tuningGoalFactor_phaseMargin = 99; // Ab Epoche 100
+bool m_useLearningRateDecay = true;

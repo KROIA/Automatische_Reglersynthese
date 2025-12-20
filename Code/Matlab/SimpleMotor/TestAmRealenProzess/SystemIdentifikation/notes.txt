@@ -1,0 +1,7 @@
+DC Gains:
+
+a*x+b
+Last: l=0, DCGain Func: a=1.0634, b=-0.35332
+last: l=1, DCGain Func: a=0.91241, b=-0.39418
+last: l=2, DCGain Func: a=0.78972, b=-0.36519
+

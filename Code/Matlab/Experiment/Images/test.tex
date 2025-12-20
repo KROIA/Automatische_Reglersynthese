@@ -1,0 +1,275 @@
+\documentclass{article}
+\usepackage{xparse,pgfkeys}
+\usepackage{xkeyval}
+\usepackage{expl3}  % for LaTeX3 key handling
+
+\usepackage[table]{xcolor} % für Farben in Tabellen
+\usepackage{pgf}           % für Farbinterpolation
+\usepackage{colortbl}      % für farbige Tabellenzellen
+\usepackage{booktabs}      % schönere Tabellenlinien
+\usepackage{pgffor}         % für Schleifen
+\usepackage{etoolbox}       % für Listen-Operationen
+\usepackage{pifont}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{makecell}
+
+
+% \translate{x}{y}{content}
+\newcommand{\translate}[3]{%
+  \hspace*{#1}% move horizontally
+  \raisebox{#2}{#3}% move vertically and render content
+}
+
+\definecolor{brightRed}{RGB}{255,200,200}
+\definecolor{brightGreen}{RGB}{200,255,200}
+\newcommand{\cmark}{
+  \edef\colorname{brightGreen}
+  \expandafter\cellcolor\expandafter{\colorname}
+  \textcolor{green}{\reflectbox{\rotatebox{-90}{\ding{51}}}}
+  }  % grünes Häkchen
+\newcommand{\xmark}{
+  \edef\colorname{brightRed}
+  \expandafter\cellcolor\expandafter{\colorname}
+  \textcolor{red}{\reflectbox{\rotatebox{-90}{\ding{55}}}}
+  }    % rotes Kreuz
+
+% Dynamische Zellenfärbung basierend auf Bewertung (1=rot, 10=grün)
+\newcommand{\colcell}[1]{%
+  \pgfmathsetmacro{\pct}{round((#1-1)/9*100)}% Prozentwert berechnen
+  \edef\colorname{green!\pct!red}% Farbe zusammensetzen
+  \expandafter\cellcolor\expandafter{\colorname}\textbf{#1}%
+}
+
+
+
+
+
+
+
+% Define a new command with optional key-value parameters
+\makeatletter
+
+% Define keys with default values (initially undefined)
+\define@key{myparams}{width}{\def\myparam@width{#1}}
+\define@key{myparams}{height}{\def\myparam@height{#1}}
+\define@key{myparams}{color}{\def\myparam@color{#1}}
+
+% Command to check if parameter was set
+\newcommand{\ifparamset}[3]{%
+  \@ifundefined{myparam@#1}{#3}{#2}%
+}
+
+% Reset all parameters to undefined
+\newcommand{\resetparams}{%
+  \let\myparam@width\undefined
+  \let\myparam@height\undefined
+  \let\myparam@color\undefined
+}
+
+% Your main macro with optional parameters
+\newcommand{\mymacro}[2][]{%
+  \resetparams% Clear previous values
+  \setkeys{myparams}{#1}% Parse the optional parameters
+  %
+  % Now use the parameters
+  \textbf{Content: #2}\\
+  %
+  % Check if parameters were set and act accordingly
+  \ifparamset{width}{Width was set to: \myparam@width\\}{Width not set\\}
+  \ifparamset{height}{Height was set to: \myparam@height\\}{Height not set\\}
+  \ifparamset{color}{Color was set to: \myparam@color\\}{Color not set\\}
+}
+
+\makeatother
+
+
+
+
+
+
+
+\ExplSyntaxOn
+% Define a key family "mymacro"
+\keys_define:nn { mymacro }
+  {
+    width  .dim_set:N = \l_mymacro_width_dim,
+    height .dim_set:N = \l_mymacro_height_dim,
+    width  .initial:n = 1cm,
+    height .initial:n = 1cm,
+  }
+
+% Define the command
+\NewDocumentCommand{\mybox}{O{}}
+ {
+   % Parse the key=value options
+   \keys_set:nn { mymacro } { #1 }
+   % Example usage of parameters:
+   \fbox{\parbox[c][\l_mymacro_height_dim][c]{\l_mymacro_width_dim}{Content}}
+ }
+\ExplSyntaxOff
+
+\begin{document}
+
+\subsection{No parameters}
+\mymacro{Hello World}
+
+\subsection{With width only}
+\mymacro[width=5]{Hello World}
+
+\subsection{With multiple parameters}
+\mymacro[width=10, height=20, color=blue]{Hello World}
+
+\subsection{With some parameters}
+\mymacro[width=15, color=red]{Hello World}
+
+
+
+
+
+\mybox[width=3cm, height=2cm]
+
+\bigskip
+
+\mybox[height=1cm, width=4cm] % order doesn’t matter!
+
+
+\def\rowA{8,7,9,10}
+\def\rowB{5,6,4,7}
+
+
+
+\begin{table}[h]
+
+%\newcommand{\cc}[1]{\translate{0.0cm}{0.0cm}{\reflectbox{\rotatebox{-90}{\colcell{#1}}}}}
+\newcommand{\cc}[1]{\reflectbox{\rotatebox{-90}{\colcell{#1}}}}
+\centering
+\renewcommand{\arraystretch}{1.5}
+
+
+\rotatebox{90}{
+  \reflectbox{
+\begin{tabular}{r|cccc|ccccc|ccc|cc|}
+\toprule
+\textbf{} &
+\multicolumn{4}{c}{\reflectbox{Reglerverhalten}} &
+\multicolumn{5}{c}{\reflectbox{Systemvoraussetzung}} &
+\multicolumn{3}{c}{\reflectbox{Parametrisierung}} &
+\multicolumn{2}{c}{\reflectbox{Automatisierungsgrad}} \\
+\cline{2-13} % <-- horizontale Linie nur zwischen Spalte 2 und 4
+
+\textbf{} &
+\rotatebox{90}{\reflectbox{\textbf{Stabilität}}} &
+\rotatebox{90}{\reflectbox{\textbf{Zeitverhalten}}} &
+\rotatebox{90}{\reflectbox{\textbf{Stationär}}} &
+\rotatebox{90}{\reflectbox{\textbf{Robustheit}}} &
+
+\rotatebox{90}{\reflectbox{\textbf{Instabil möglich}}} &
+\rotatebox{90}{\reflectbox{\textbf{MIMO fähig}}} &
+\rotatebox{90}{\reflectbox{\textbf{Nichtlinear fähig}}} &
+\rotatebox{90}{\reflectbox{\textbf{Zeitvariant fähig}}} &
+\rotatebox{90}{\reflectbox{\textbf{Struktur offenheit}}} &
+
+\rotatebox{90}{\reflectbox{\textbf{Benutzerfreundlichkeit}}} &
+\rotatebox{90}{\reflectbox{\textbf{Reglerstruktur Vorgabe}}} &
+\rotatebox{90}{\reflectbox{\textbf{Flexibilität der Optimierungsvorgaben}}} &
+
+\rotatebox{90}{\reflectbox{\textbf{Tools/Technologien}}} &
+\rotatebox{90}{\reflectbox{\textbf{Eingriff des Anwenders}}}\\
+\midrule
+\reflectbox{Lambda-Tuning}         & \cc{8}  & \cc{8}  & \cc{10}  & \cc{8} &   \xmark  & \cmark   & \xmark  & \xmark & \xmark  \\
+\reflectbox{Pol-Platzierung}      \\
+\reflectbox{LQR}    \\
+\reflectbox{Ziegler-Nichols}  \\
+\reflectbox{Matlab systune} \\
+\reflectbox{Matlab looptune} \\
+\reflectbox{Genetischen Algorithmen} \\
+\reflectbox{Neuroevolution} \\
+
+\bottomrule
+\end{tabular}
+}
+}
+\caption{Bewertungen (1 = rot, 10 = grün)}
+\end{table}
+
+
+
+
+
+
+
+
+
+\pagebreak
+\begin{table}[h]
+
+\newcommand{\cc}[1]{\translate{-0.5cm}{0cm}{\rotatebox{-90}{\colcell{#1}}}}
+\centering
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabular}{r|cccc|ccccc|ccc|cc|}
+\toprule
+\textbf{} &
+\multicolumn{4}{c}{Reglerverhalten} &
+\multicolumn{5}{c}{Systemvoraussetzung} &
+\multicolumn{3}{c}{Parametrisierung} &
+\multicolumn{2}{c}{Automatisierungsgrad} \\
+\cline{2-13} % <-- horizontale Linie nur zwischen Spalte 2 und 4
+
+\textbf{} &
+\rotatebox{-90}{\textbf{Stabilität}} &
+\rotatebox{-90}{\textbf{Zeitverhalten}} &
+\rotatebox{-90}{\textbf{Stationär}} &
+\rotatebox{-90}{\textbf{Robustheit}} &
+
+\rotatebox{-90}{\textbf{Instabil möglich}} &
+\rotatebox{-90}{\textbf{MIMO fähig}} &
+\rotatebox{-90}{\textbf{Nichtlinear fähig}} &
+\rotatebox{-90}{\textbf{Zeitvariant fähig}} &
+\rotatebox{-90}{\textbf{Struktur offenheit}} &
+
+\rotatebox{-90}{\textbf{Benutzerfreundlichkeit}} &
+\rotatebox{-90}{\textbf{Reglerstruktur Vorgabe}} &
+\rotatebox{-90}{\textbf{Flexibilität der Optimierungsvorgaben}} &
+
+\rotatebox{-90}{\textbf{Tools/Technologien}} &
+\rotatebox{-90}{\textbf{Eingriff des Anwenders}}\\
+\midrule
+Lambda-Tuning         & \cc{8}  & \cc{8}  & \cc{10}  & \cc{8} &   \xmark  & \cmark   & \xmark  & \xmark & \xmark  \\
+Pol-Platzierung      \\
+LQR    \\
+Ziegler-Nichols  \\
+Matlab systune \\
+Matlab looptune \\
+Genetischen Algorithmen \\
+Neuroevolution \\
+
+\bottomrule
+\end{tabular}
+
+\caption{Bewertungen (1 = rot, 10 = grün)}
+\end{table}
+
+
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Column 1} & \textbf{Column 2} \\ \hline
+\makecell[c]{Centered \\ multi-line \\ text} & \makecell[c]{Also \\ centered} \\ \hline
+\end{tabular}
+
+%\def\rowA{8,7,9, 10}
+%\def\rowB{5,6,4,7}
+%\def\rowC{3,8,9,5}
+%
+%
+%\begin{tabular}{|l|c|c|c|c|}
+%\hline
+%\textbf{Thema} & \textbf{K1} & \textbf{K2} & \textbf{K3} & \textbf{K4} \\
+%\hline
+%\AddRow{Design}{\rowA}
+%\AddRow{Usability}{\rowB}
+%\AddRow{Performance}{\rowC}
+%\end{tabular}
+
+\end{document}

@@ -1,0 +1,760 @@
+\usepackage[T1]{fontenc}	% ä,ü...
+\usepackage[utf8]{inputenc} % utf-8 Unterstützung
+\usepackage[ngerman]{babel} % Silbentrennung und Rechtschreibung Deutsch
+\usepackage[{left=1.5cm,right=1.5cm,top=0cm,bottom=0cm}]{geometry} % Seitenränder Titelblatt
+\usepackage{pdflscape}
+\usepackage[fontsize=8pt]{fontsize}
+\usepackage{needspace}
+\usepackage{sectsty}
+\sectionfont{\raggedright}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Packages
+%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[page,header]{appendix}
+%\usepackage{acronym} 		   % Für Abkürzungsverzeichnis
+%\usepackage{glossaries}
+%\usepackage[hidelinks]{hyperref}
+\usepackage{hyperref}
+\usepackage{etoolbox}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue!50!black,  % darker, less aggressive blue
+}
+\usepackage[nonumberlist, nopostdot]{glossaries}
+\usepackage{pdfcomment}
+\usepackage{cooltooltips}
+\usepackage{xifthen}
+\renewcommand{\glossarysection}[2][]{} % Remove "Glossar" title when using \printglossaries
+
+%\let\oldgls\gls
+%\renewcommand{\gls}[1]{%
+%  \ifcsname glo@#1@long\endcsname
+%    % For acronyms - use original \gls
+%    \pdftooltip{\oldgls{#1}}{\glsentrylong{#1}}%
+%  \else
+%    % For symbols - manually create hyperlink
+%    \oldgls{#1}%
+%  \fi
+%}
+
+
+% Redefine \gls to include tooltips
+%\let\oldgls\gls
+%\renewcommand{\gls}[1]{%
+%  \pdftooltip{\oldgls{#1}}{\glsentrylong{#1}}%
+%}
+
+% \setglossarystyle{long4col}
+\usepackage{glossary-longragged}
+\setglossarystyle{longragged3col}
+\usepackage{csquotes}
+\usepackage{paracol}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{intersections}
+\usepgfplotslibrary{fillbetween}
+
+
+\usepackage{adjustbox} 		   % adjustbox, minipage..
+\usepackage{amsmath}   		   % Allgemeine Matheumgebungen
+\usepackage{amssymb}  		   % Fonts: msam,msbm, eufm & Mathesymbole, Mengen (lädt automatisch amsfonts)
+\usepackage{amsfonts}
+\usepackage{array} 			   % Extending the array and tabular environment -> m,b,p,..
+\usepackage{caption}  		   % Verändern der Schriftart von Bildunterschriften
+\usepackage{changepage}
+\usepackage{epstopdf}
+\usepackage{expl3}
+\usepackage{float}
+\usepackage{framed, color}
+\usepackage{fancyhdr}			%Für Kopf & Fusszeile
+\usepackage{graphbox}
+\usepackage{graphicx}
+\usepackage{titletoc}			% Editieren des TOCs muss vor hyperref geladen werden
+\usepackage{tocloft}			% Editieren des TOCs muss vor hyperref geladen werden
+\usepackage{hyphenat}			%Wortumbruch
+\hyphenation{he-lio-trope opos-sum}
+
+\usepackage{minted}          % Erlaubt es Programmcode in der gewünschten Sprache zu hinterlegen (C++, Matlab,..)
+\usepackage{longtable}
+\usepackage{lastpage}			%Lastpage ref for Footer
+\usepackage{marginnote} 		% Für Seitenkommentare \marginnote
+\usepackage{mathtools}          % Vor mathabx laden!
+\usepackage{mathabx} 			% Package mit vielen weiteren Mathe Symbolen
+\usepackage{mparhack}  			% Improved marginpar placement
+\usepackage{multicol} 			% In­ter­mix sin­gle and mul­ti­ple columns
+\usepackage{multirow} 			% Create tabular cells spanning multiple rows
+\usepackage{paralist}
+\usepackage{pdfpages} 
+\usepackage{pxfonts} 			% Mathsymbols
+\usepackage[section]{placeins}  % Float-Barrier for Section
+\usepackage{rotating} 			% Rotation tools, including rotated fullpage floats
+\usepackage[onehalfspacing]{setspace}
+\usepackage{scrhack}        	% Fixes koma-script incompatibilities
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{textcomp} 			% Wird für Copyright-Symbol,Währungen, Musikalische-Symbole benötigt
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\usepackage[most]{tcolorbox}
+\usepackage{trfsigns}
+\usepackage{varwidth}
+\usepackage{wrapfig}
+\usepackage{fontawesome5} % for note icon
+
+
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, fit, positioning,arrows.meta,decorations.pathreplacing,calc}
+\usepackage{animate}
+
+
+\usepackage[table]{xcolor} % für Farben in Tabellen
+\usepackage{pgf}           % für Farbinterpolation
+\usepackage{colortbl}      % für farbige Tabellenzellen
+\usepackage{booktabs}      % schönere Tabellenlinien
+\usepackage{pgffor}         % für Schleifen
+\usepackage{etoolbox}       % für Listen-Operationen
+\usepackage{pifont}
+\usepackage{graphicx}
+\tcbuselibrary{vignette}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% Caption Setup
+%%%%%%%%%%%%%%%%%%%%%%%
+\captionsetup[figure]{labelfont={it,bf},textfont={it}}
+\captionsetup[table]{labelfont={it,bf},textfont={it},singlelinecheck=off,justification=centering}
+\captionsetup[lstlisting]{labelfont={it,bf},textfont={it}}
+\captionsetup[subfigure]{labelfont=bf,textfont=normalfont,singlelinecheck=off,justification=centering}
+
+\newenvironment{nscenter}
+{\parskip=-5pt\par\nopagebreak\centering}
+{\parskip=-15pt\par\noindent\ignorespacesafterend}
+
+%Rewritte Referenze Style and TOF,TOT
+\renewcommand{\thefigure}{Abb. \arabic{figure}}
+\renewcommand{\thetable}{Tab. \arabic{table}}
+\renewcommand{\theequation}{Formel \arabic{equation}}
+\newcommand{\myref}[1]{Abschnitt~\ref{#1}}
+
+\addto{\captionsngerman}{%
+    %	\renewcommand*{\contentsname}{Inhalt}
+    %	\renewcommand*{\listfigurename}{Abbildungen}
+    %	\renewcommand*{\listtablename}{Tabellen}
+    \renewcommand*{\figurename}{} %Delet Figure name 
+    \renewcommand*{\tablename}{}
+}
+\setlength{\cftfignumwidth}{2cm}	% Width of equation number in List of Figure
+\setlength{\cfttabnumwidth}{2cm}	% Width of equation number in List of Table
+
+%List of Equations
+\newcommand{\listequationsname}{Gleichungen}
+\newlistof{myequations}{equ}{\listequationsname}
+\newcommand{\myequations}[1]{% 
+    \addcontentsline{equ}{myequations}{\protect\numberline{\theequation}#1}\par}
+\setlength{\cftmyequationsnumwidth}{2cm}% Width of equation number in List of Equations
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Header and Footer %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%\pagestyle{fancy} %eigener Seitenstil
+\renewcommand{\sectionmark}[1]{\markright{#1}} %entfernt nummer vor section
+\renewcommand{\subsectionmark}[1]{}
+
+\fancypagestyle{plain}{
+    \fancyhf{} % Alle Kopf- und Fußzeilenfelder löschen
+    \fancyhead[C]{} %zentrierte Kopfzeile
+    \fancyhead[L]{\LogoIET}
+    \fancyhead[R]{\LogoOST}
+    \renewcommand{\headrulewidth}{0.4pt} %obere Trennlinie
+    
+    \fancyfoot[L]{Seite \thepage}
+    \fancyfoot[R]{\finalday}
+    \fancyfoot[C]{\Author}
+    \renewcommand{\footrulewidth}{0.4pt} %untere Trennlinie
+}
+
+\fancypagestyle{docstyle}{
+    \fancyhf{} %alle Kopf- und Fußzeilenfelder bereinigen
+    \fancyhead[C]{\textsl{\rightmark}} %zentrierte Kopfzeile
+    \fancyhead[L]{\LogoIET}
+    \fancyhead[R]{\LogoOST}
+    \renewcommand{\headrulewidth}{0.4pt} %obere Trennlinie
+    
+    \fancyfoot[L]{Seite \thepage}
+    \fancyfoot[R]{\finalday}
+    \fancyfoot[C]{\Author}
+    \renewcommand{\footrulewidth}{0.4pt} %untere Trennlinie
+}
+
+\fancypagestyle{empty}{
+    \fancyhf{} %alle Kopf- und Fußzeilenfelder bereinigen
+    \fancyhead[C]{} %zentrierte Kopfzeile
+    \fancyhead[L]{}
+    \fancyhead[R]{}
+    \renewcommand{\headrulewidth}{0pt} %obere Trennlinie
+    
+    \fancyfoot[L]{}
+    \fancyfoot[R]{}
+    \fancyfoot[C]{}
+    \renewcommand{\footrulewidth}{0pt} %untere Trennlinie
+}
+\pagestyle{docstyle} %Pagesytle
+
+
+%%%%%%%%%%%%%%%%%%%%%
+%% Load HSR Color  %%
+%%%%%%%%%%%%%%%%%%%%%
+\usepackage{xcolor}
+\usepackage{header/HSRColors}
+
+%%%%%%%%%%
+% Colors %
+%%%%%%%%%%
+\definecolor{black}{rgb}{0,0,0}
+\definecolor{red}{rgb}{1,0,0}
+\definecolor{white}{rgb}{1,1,1}
+\definecolor{grey}{rgb}{0.8,0.8,0.8}
+\definecolor{green}{rgb}{0,.8,0.05}
+\definecolor{brown}{rgb}{0.603,0,0}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{mygreen}{RGB}{28,172,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\definecolor{gray80}{gray}{0.8}
+\definecolor{gray60}{gray}{0.6}
+\definecolor{gray40}{gray}{0.4}
+\definecolor{gray20}{gray}{0.2}
+
+%%%%%%%%%%%%%%%%%%%%%
+%% Title %%
+%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%Title Spacing-----------------------------------------
+\usepackage{titlesec}
+\titleformat{\section}[hang]
+  {\normalfont\Large\bfseries}
+  {\thesection}
+  {1em}
+  {}
+%\titlespacing{name=\section}{-\marginparwidth}{0pt}{0.2em}
+%\titlespacing{name=\subsection}{-\marginparwidth+10pt}{0pt}{0.2em}
+%\titlespacing{name=\subsubsection}{-\marginparwidth+14pt}{0.2em}{0.2em}
+%\titlespacing{name=\paragraph}{-\marginparwidth+18pt}{0.2em}{0.2em}
+
+\titlespacing{name=\section}{1pt}{0pt}{0.2em}
+\titlespacing{name=\subsection}{1pt}{0pt}{0.2em}
+\titlespacing{name=\subsubsection}{1pt}{0.2em}{0.2em}
+\titlespacing{name=\paragraph}{1pt}{0.2em}{0.2em}
+
+%%%%%%%%%%%%%%%%%%
+%% Bibliography %%
+%%%%%%%%%%%%%%%%%%
+%\usepackage[fixlanguage]{babelbib}
+%\selectbiblanguage{german}
+
+
+\usepackage[backend=bibtex, style=numeric, sorting=ydnt, urldate=iso, seconds=true]{biblatex}
+%\usepackage[backend=bibtex,style=ieee, defernumbers=true]{biblatex} %Do not use biber with TexWorks
+\addbibresource{Literatur}
+
+
+% Abbildungen im Quellenverzeichnis nach Alphabet ordnen, Rest nummerieren
+%\DeclareFieldFormat{labelnumber}{\ifkeyword{abb}{\mknumalph{#1}}{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Itemize and Enumerate spacing %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \topsep: space between first item and preceding paragraph
+% \partopsep: extra space added to \topsep when environment starts a new paragraph
+% \itemsep: space between successive items. 
+\usepackage{enumitem} % Controls Layout of itemize, enumerate, description
+\setlist[itemize]{topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex,after=\vskip0.1\baselineskip}
+\setlist[enumerate]{topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex,after=\vskip0.1\baselineskip}
+
+%%%%%%%%%%%
+%% Index %%
+%%%%%%%%%%%
+\usepackage{imakeidx}
+\makeindex[intoc,columnseprule]
+\indexsetup{firstpagestyle=plain}    % Show header/footer on index page
+
+%-------------------------------------------------
+% Marginalien/Seitenränder
+%-------------------------------------------------
+%\marginpar{Eine Randnotiz}
+\newcommand{\marg}[1]{\marginpar{\raggedright \textbf{#1} }}	
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Aligned footnotes %%
+%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[hang]{footmisc}
+\setlength{\footnotemargin}{1em}
+
+%%%%%%%%%%%%%
+%% Tabular %%
+%%%%%%%%%%%%%
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}} % Tabelleninhalt linksausgerichtet
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}} % Tabelleninhalt rechtsausgerichtet
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}} %  Tabelleninhalt zentriert
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+%% Generelle Makros %%
+%%%%%%%%%%%%%%%%%%%%%%
+
+% If \Print=true, then make all links black for nicer print
+\providecommand*{\True}{true}
+\ifx \Print \True
+\hypersetup{hidelinks, colorlinks, linkcolor = black, citecolor = black, filecolor = black, urlcolor = black}
+\fi
+
+\parindent0pt % Zeileneinzug verhindern
+
+%Matlab font
+\newcommand{\matlab}[1]{\footnotesize{(Matlab: \texttt{#1})}\normalsize{}}
+
+% Makro für Tabellenbilder gleich unterhalb der Linie
+\newcommand\tabbild[2][]{%
+	\raisebox{0pt}[\dimexpr\totalheight+\dp\strutbox\relax][\dp\strutbox]{%
+		\includegraphics[#1]{#2}%
+	}%
+}
+
+% Makro für Vorteile und Nachteil mit Plus und Minus
+\newcommand\pro{\item[$+$]}
+\newcommand\con{\item[$-$]}
+
+
+%Float-Barrier for Subsection
+\makeatletter
+\AtBeginDocument{%
+	\expandafter\renewcommand\expandafter\subsection\expandafter{%
+		\expandafter\@fb@secFB\subsection
+	}%
+}
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Mathematical Operators %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\DeclareMathOperator{\sinc}{sinc}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\Real}{Re}
+\DeclareMathOperator{\Imag}{Im}
+\DeclareMathOperator{\euler}{e}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\PolyGrad}{PolyGrad}
+\DeclareMathOperator{\gradient}{grad}
+\DeclareMathOperator{\rotation}{rot}
+\DeclareMathOperator{\divergenz}{div}
+\DeclareMathOperator{\imag}{j}
+
+%Grösse Integral anpassen
+\def\Int{\mbox{\Large$\displaystyle\int$\normalsize}}
+\def\Int{\mbox{\Large$\displaystyle\iint$\normalsize}}
+\def\OInt{\mbox{\Large$\displaystyle\oint$\normalsize}}
+
+%Makro für 'd' von Integral- und Differentialgleichungen 
+\newcommand*{\diff}{\mathop{}\!\mathrm{d}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fouriertransform %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\unitlength1cm
+\newcommand{\FT}
+{
+	\begin{picture}(1,0.5)
+	\put(0.2,0.1){\circle{0.14}}\put(0.27,0.1){\line(1,0){0.5}}\put(0.77,0.1){\circle*{0.14}}
+	\end{picture}
+}
+
+
+\newcommand{\IFT}
+{
+	\begin{picture}(1,0.5)
+	\put(0.2,0.1){\circle*{0.14}}\put(0.27,0.1){\line(1,0){0.45}}\put(0.77,0.1){\circle{0.14}}
+	\end{picture}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Costum Functions %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pretocmd{\equation}{\noindent}{}{}
+
+
+
+% Command for chapter references that were defined using "\label{sec:labelName}"
+% Usage: ~\fullref{sec:labelName}
+\newcommand{\fullref}[1]{\textbf{\ref{#1} \nameref{#1}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Matlab Code Highlighting %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{matlabgreen}{rgb}{0,0.6,0}
+\definecolor{matlabblue}{rgb}{0,0,0.9}
+\definecolor{matlabpurple}{rgb}{0.5,0,0.5}
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\lstdefinelanguage{Matlab}{
+  morekeywords={break,case,catch,continue,else,elseif,end,for,function,
+    global,if,otherwise,persistent,return,switch,try,while},
+  morecomment=[l]% comment style
+  %{...}, % block comments
+  morestring=[m]', % strings
+}
+
+%\lstset{
+%  language=Matlab,
+%  basicstyle=\ttfamily\small,
+%  keywordstyle=\color{matlabblue}\bfseries,
+%  stringstyle=\color{matlabpurple},
+%  commentstyle=\color{matlabgreen},
+%  numbers=left,
+%  numberstyle=\tiny\color{gray},
+%  stepnumber=1,
+%  numbersep=5pt,
+%  showstringspaces=false,
+%  breaklines=true,
+%  frame=single,
+%  captionpos=b
+%}
+%\lstset{language=Matlab,%
+%    %basicstyle=\color{red},
+%    breaklines=true,%
+%    morekeywords={matlab2tikz},
+%    keywordstyle=\color{blue},%
+%    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+%    identifierstyle=\color{black},%
+%    stringstyle=\color{mylilas},
+%    commentstyle=\color{mygreen},%
+%    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+%    numbers=left,%
+%    numberstyle={\tiny \color{black}},% size of the numbers
+%    numbersep=9pt, % this defines how far the numbers are from the text
+%    emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+%    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+%}
+
+% Global style for all code blocks
+
+% Define colors for syntax highlighting
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Enable UTF-8 support in listings
+\lstset{
+    inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {°}{{\textdegree}}1
+        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+        {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+        {À}{{\`A}}1 {È}{{\`E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+        {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+        {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+        {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+        {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+        {ß}{{\ss}}1
+}
+
+% Define MATLAB language with proper keywords
+\lstdefinelanguage{Matlab}{
+    morekeywords={break,case,catch,continue,else,elseif,end,for,function,
+        global,if,otherwise,persistent,return,switch,try,while,classdef,
+        properties,methods,events},
+    morecomment=[l]\%,
+    morestring=[m]',
+    morestring=[m]"
+}
+
+
+
+% C++ listing style
+%\lstdefinestyle{cppstyle}{
+%    backgroundcolor=\color{backcolour},
+%    commentstyle=\color{codegreen},
+%    keywordstyle=\color{blue},
+%    numberstyle=\tiny\color{black},
+%    stringstyle=\color{codepurple},
+%    basicstyle=\ttfamily\footnotesize,
+%    breakatwhitespace=false,
+%    breaklines=true,
+%    captionpos=b,
+%    keepspaces=true,
+%    numbers=left,
+%    numbersep=10pt,
+%    showspaces=false,
+%    showstringspaces=false,
+%    showtabs=false,
+%    tabsize=4,
+%    language=C++,
+%    frame=l,
+%    framesep=3pt,
+%    framexleftmargin=17pt,
+%    rulecolor=\color{codegray}
+%}
+% C++ listing style
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    language=C++
+}
+
+% MATLAB listing style
+%\lstdefinestyle{matlabstyle}{
+%    backgroundcolor=\color{backcolour},
+%    commentstyle=\color{codegreen},
+%    keywordstyle=\color{blue},
+%    numberstyle=\tiny\color{black},
+%    stringstyle=\color{codepurple},
+%    basicstyle=\ttfamily\footnotesize,
+%    breakatwhitespace=false,
+%    breaklines=true,
+%    captionpos=b,
+%    keepspaces=true,
+%    numbers=left,
+%    numbersep=10pt,
+%    showspaces=false,
+%    showstringspaces=false,
+%    showtabs=false,
+%    tabsize=4,
+%    language=Matlab,
+%    frame=l,
+%    framesep=3pt,
+%    framexleftmargin=17pt,
+%    rulecolor=\color{codegray}
+%}
+\lstdefinestyle{matlabstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    language=Matlab
+}
+
+% Environment for C++ code section
+% Usage: \begin{cppcode}{title}{label} 
+%  ... 
+% \end{cppcode}
+\VerbatimEnvironment
+\lstnewenvironment{cppcode}[2]{%
+    \lstset{style=cppstyle, caption={#1}, label={#2}}
+}{}
+
+% Environment for MATLAB code section
+% Usage: \begin{matlabcode}{title}{label} 
+%  ... 
+% \end{matlabcode}
+\VerbatimEnvironment
+\lstnewenvironment{matlabcode}[2]{%
+    \lstset{style=matlabstyle, caption={#1}, label={#2}}
+}{}
+
+\VerbatimEnvironment
+\lstnewenvironment{matlabcode2}[2]{%
+    \lstset{style=matlabstyle, caption={#1}, label={#2}}%
+}{}
+
+
+% Command for including C++ file
+% Usage: \cppfile{title}{label}{filepath}
+\newcommand{\cppfile}[3]{%
+    \lstinputlisting[style=cppstyle, caption={#1}, label={#2}]{#3}
+}
+
+% Command for including MATLAB file
+% Usage: \matlabfile{title}{label}{filepath}
+\newcommand{\matlabfile}[3]{%
+    \lstinputlisting[style=matlabstyle, caption={#1}, label={#2}]{#3}
+}
+
+
+\renewcommand{\lstlistingname}{Code} % Change "Listing" to "Code"
+
+
+%\newtcolorbox{matlabcode2}[2][]{
+%    listing only,
+%    listing options={style=matlabstyle},
+%    title={#1}, label={#2},
+%    colback=white, colframe=black!50,
+%    left=2mm, right=2mm, top=1mm, bottom=1mm,
+%    breakable
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Horizontal Line Macro  %
+% Draw a horizontal line  for separating content %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\horizontalLine}{
+  \noindent\hrulefill
+}
+
+
+
+\definecolor{brightRed}{RGB}{255,200,200}
+\definecolor{brightGreen}{RGB}{200,255,200}
+\newcommand{\cmark}{
+  \edef\colorname{brightGreen}
+  \expandafter\cellcolor\expandafter{\colorname}
+  \textcolor{green}{\ding{51}}
+  }  % grünes Häkchen
+\newcommand{\xmark}{
+  \edef\colorname{brightRed}
+  \expandafter\cellcolor\expandafter{\colorname}
+  \textcolor{red}{\ding{55}}
+  }    % rotes Kreuz
+
+% Dynamische Zellenfärbung basierend auf Bewertung (1=rot, 10=grün)
+\newcommand{\colcell}[1]{%
+  \pgfmathsetmacro{\pct}{round((#1-1)/9*100)}% Prozentwert berechnen
+  \edef\colorname{green!\pct!red}% Farbe zusammensetzen
+  \expandafter\cellcolor\expandafter{\colorname}\textbf{#1}%
+}
+
+
+
+
+% Small helper to draw a chromosome as a row of boxes with bits
+% Small helper to draw a chromosome as a row of boxes with bits
+\tikzset{
+  gene/.style={
+    draw,
+    minimum width=8mm,
+    minimum height=8mm,
+    inner sep=0pt,
+    font=\ttfamily\small,
+    align=center
+  }
+}
+
+\newcommand{\mathFunction}[2]{%
+  \mathbf{\mathrm{#1}}\bigl(#2\bigr)
+}
+
+\newcommand{\mathFunctionRaw}[2]{%
+  #1\bigl(#2\bigr)
+}
+
+\newcommand{\mathFunctionDot}[2]{%
+  \dot{\mathbf{\mathrm{#1}}}\bigl(#2\bigr)
+}
+
+
+\newcommand{\mathFunctionD}[2]{%
+  \mathbf{\mathrm{#1}}\bigl[#2\bigr]
+}
+
+\newcommand{\mathFunctionDRaw}[2]{%
+  #1\bigl[#2\bigr]
+}
+
+\newcommand{\mathFunctionDDot}[2]{%
+  \dot{\mathbf{\mathrm{#1}}}\bigl[#2\bigr]
+}
+
+
+% Box über ganze Breite
+\newtcolorbox{notebox}{
+    colback=gray!15,
+    colframe=gray!50,
+    boxrule=0.3pt,
+    arc=2mm,
+    width=\textwidth,  % <--- volle Seitenbreite
+    enhanced,
+}
+
+\newcommand{\infoBlock}[1]{%
+\begin{notebox}
+\textcolor{blue}{\faInfoCircle}\hspace{0.5em}\textbf{Info:}\\[0.3em] % <--- neue Zeile
+#1
+\end{notebox}
+}
+
+
+\newcommand{\minipagedOrBelowEachOther}[3][t]{%
+\begin{figure}[H]
+{
+    \vspace{-0.2cm}
+    %\centering
+    \begin{minipage}[#1]{0.48\textwidth}
+    #2
+    \end{minipage}\hfill
+    \begin{minipage}[#1]{0.48\textwidth}
+    #3
+    \end{minipage}
+}
+\end{figure}
+}
+
+
+\newcommand{\minipagedWithHFillOrBelowEachOther}[3][t]{%
+\begin{figure}[H]
+{
+    \vspace{-0.2cm}
+    %\centering
+    \begin{minipage}[#1]{0.48\textwidth}
+    #2
+    \end{minipage}
+    \hfill
+    \vrule width 0.5pt % vertical line
+    \hfill
+    \begin{minipage}[#1]{0.48\textwidth}
+    #3
+    \end{minipage}
+}
+\end{figure}
+}
+
+
+
+
+
+

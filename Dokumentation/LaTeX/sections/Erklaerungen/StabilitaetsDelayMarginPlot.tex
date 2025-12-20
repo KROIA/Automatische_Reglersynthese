@@ -1,0 +1,64 @@
+\subsubsection{Totzeit- \& Verstärkungsreserve Diagramm}
+\label{sec:StabilitaetsDelayMarginPlot}
+
+\minipagedOrBelowEachOther
+{
+    Das Totzeit- \& Verstärkungsreserve Diagramm in~\ref{fig:stabilitaetsDelayMarginPlot} 
+    zeigt die Verstärkungs- und Totzeitreserven des optimierten geschlossenen Systems.
+    Der Rote Bereich stellt die instabilen Verstärkungs- und Totzeit- Paare dar.
+    Der Grüne Bereich stellt die stabilen Verstärkungs- und Totzeit- Paare dar.
+    Das Diagramm gibt an, wie viel Verstärkung und Totzeit dem open loop System $G$ hinzugefügt werden kann,
+    bis das closed loop System instabil wird.\\
+
+
+    Ermittelt wird das Diagramm, indem das zu testende System $G$ mit einem komplexen Faktor $K$ multipliziert wird
+    und anschliessend geprüft wird, ob sich ein Pol des geschlossenen Systems in der rechten Halbebene befindet.
+    \[
+        G_{test}(s) = \frac{K \cdot G(s)}{1 + K \cdot G(s)}
+    \]
+    \[
+        K = (r \cdot e^{-s \cdot T}) \quad \text{mit} \quad r \in (0, \infty), T \in [0, \infty)
+    \]
+
+
+
+    \begin{figure}[H]
+        \centering
+        \input{images/StabilitaetsMarginPlotSystemTikz.tex}
+        \caption{Testsystem für Totzeit- \& Verstärkungsreserve Diagramm}
+        \label{fig:stabilitaetsDelayMarginPlotSystem}
+    \end{figure}
+    Für jeden möglichen Wert von $K$ wird die Stabilität des geschlossenen Systems überprüft.
+    Wenn es stabil ist, wird der Punkt $K$ im Diagramm mit grüner Farbe markiert, 
+    andernfalls mit rot.
+    Weil es natürlich nicht möglich ist alle möglichen Werte von $K$ zu testen,
+    wird der Bereich in einem Raster getestet.
+    Damit ein möglichst grosser Bereich abgedeckt und dargestellt werden kann, wird die Verstärkung
+    in dB dargestellt.
+}{
+    %\centering
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/GeneticStabilityDelayMarginsPlot.pdf}
+        \caption{Totzeit- \& Verstärkungsreserve Diagramm für System $G$}
+        \label{fig:stabilitaetsDelayMarginPlot}
+    \end{figure}
+}
+
+\paragraph{Wofür ist dieses Diagramm nun nützlich?}
+\minipagedOrBelowEachOther
+{
+    Wird der Vorwärtspfad des Regelkreises mit diesem Diagramm analysiert,
+    lässt sich ablesen, wie viel Verstärkung und Totzeit das System verträgt.
+
+    In der Praxis bietet besonders dieses Diagramm mit der Totzeitinformation einen grossen Vorteil
+    gegenüber vielen anderen Robustheitsanalysen.
+    Eine Totzeit schleicht sich in realen Systemen sehr schnell ein und kann sich je nach System
+    stark auf die Stabilität auswirken.
+}
+{
+    Dieses Diagramm erleichtert es, im Designprozess bereits frühzeitig zu erkennen,
+    ob die realen Zeitverzögerungen zu Stabilitätsproblemen führen können oder nicht.
+    Gegebenenfalls kann die benötigte Totzeitreserve als Anforderung in den Optimierungsprozess
+    mit einbezogen werden.
+}

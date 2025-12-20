@@ -1,0 +1,298 @@
+\subsection{Objektives Fazit}
+\subsubsection{\textit{Systune}}
+\begin{itemize}
+    \item[+] Mit \textit{systune} lassen sich Systeme schnell und mit wenig Code optimieren.
+    \item[+] Die Tuning-Goals lassen sich einfach kombinieren.
+    \item[+] \textit{Systune} bietet viele vordefinierte Tuning-Goals für unterschiedliche Kriterien an.  
+    \item[+] \textit{Systune} ist in MATLAB integriert, wodurch der Grossteil der Komplexität nicht sichtbar ist.
+    \item[+] \textit{Systune} übernimmt für die Optimierung die benötigten Simulationen im Zeit- und Frequenzbereich automatisch.
+    \item[+] Erfordert keine Programmierkenntnisse um eine Optimierungsumgebung zu implementieren.
+    \item[--] Die Parametrisierung der Tuning-Goals ist nicht immer einfach.
+             Teilweise mangelt es an einer guten Dokumentation.
+    \item[--] Die Tuning-Goals lassen sich nur in zwei Kategorien einteilen: hart und weich.
+             Es gibt keine Möglichkeit die Priorität der Ziele zu gewichten.
+    \item[--] Zu wenige vordefinierte Tuning-Goals für spezifische Kriterien.
+    \item[--] Da nur lineare Systeme optimiert werden können, lassen sich keine Sättigungen oder Anti-Windup-Parameter optimieren.
+             Anti-Windup-Parameter werden von MATLABs tunablePID ~\cite{matlabTunablePID} auch nicht angeboten.
+    \item[--] Die Diagramme, welche die Optimierungsergebnisse der Tuning-Goals zeigen,
+             sind nicht immer verständlich und teilweise nicht dokumentiert. 
+             Höhere Fachkenntnisse sind deshalb notwendig um diese zu verstehen.
+\end{itemize}
+
+\minipagedOrBelowEachOther
+{
+    Die Optimierungsziele von MATLAB sind nicht ganz zufriedenstellend.
+    Es gibt zwar vordefinierte Ziele, die für einige Kriterien verwendet werden können, 
+    aber es bleibt noch viel Potenzial für weitere Ziele. Z.B Ziele für Rauschunterdrückung zwischen zwei Punkten im System fehlen.
+    Die Parametrierung der Optimierungsziele ist teilweise etwas komplex, und die Beschreibung in der Dokumentation
+    ist nicht immer sehr hilfreich.
+}
+{
+    Um ein zufriedenstellendes Systemverhalten zu erreichen, 
+    müssen die Optimierungsziele mehrfach angepasst, neue hinzugefügt oder entfernt werden.
+    Teilweise führt das hinzufügen eines neuen Ziels dazu, dass ein schlechteres Ergebnis dadurch erzielt wird, 
+    auch wenn die Ziele in einem realistischen Verhältnis zueinanderstehen.
+}
+
+
+\horizontalLine
+
+\subsubsection{Differential Evolution Algorithmus}
+\begin{itemize}
+    \item[+] Auch durch das simple Optimierungsziel: Minimierung des aufsummierten, absoluten Fehlers,
+             lässt sich schon ein sehr guter Regler finden.
+    \item[+] Sehr flexibel, es können beliebige Systeme optimiert werden, auch nichtlineare (nur zeitinvariante).
+    \item[+] Die Optimierungsziele sind frei definierbar.
+    \item[+] Der Algorithmus ist relativ einfach zu verstehen und zu implementieren.
+    \item[+] Konvergiert sehr schnell.
+    \item[--] Findet nicht immer eine gute Lösung.
+    \item[--] Für die Optimierung muss mehr Code geschrieben werden oder eine Toolbox gefunden werden, die einem viel Arbeit abnimmt.
+    \item[--] Die Definition der \gls{Fitnessfunktion} ist nicht immer einfach, 
+             da alle Optimierungsziele in einer einzigen Formel sind.
+    \item[--] Die Gewichtung der unterschiedlichen Kriterien in der Fitnessfunktion
+             ist nicht immer einfach zu bestimmen und erfordert mehrere Anläufe.
+    \item[--] Erfordert höhere Programmierkenntnisse um die Optimierungsumgebung zu implementieren.
+\end{itemize}
+
+\minipagedOrBelowEachOther
+{
+    \gls{DE} hat sehr ähnliche Vor- und Nachteile wie der \gls{GA}.
+    Der Algorithmus konvergiert jedoch schneller und hat einen schöneren Konvergenzverlauf.
+    DE garantiert, dass die \gls{Population} nicht schlechter wird mit jeder Generation,
+    unterliegt aber auch oft dem Problem zu früh in einem lokalen Minimum stecken zu bleiben.
+}
+{
+    DE ist in der Lage aus lokalen Minima herauszukommen, wenn die Streuung der Population nicht zu klein wird.
+    Für den DE müssen die Optimierungsumgebung und die Datenerhebung selbst implementiert werden, wie beim GA.
+}
+
+
+\newpage
+\subsubsection{Genetischer Algorithmus}
+\begin{itemize}
+    \item[+] Auch durch das simple Optimierungsziel: Minimierung des aufsummierten, absoluten Fehlers,
+             lässt sich schon ein sehr guter Regler finden.
+    \item[+] Sehr flexibel, es können beliebige Systeme optimiert werden, auch nichtlineare (nur zeitinvariante).
+    \item[+] Die Optimierungsziele sind frei definierbar. 
+    \item[+] Der Algorithmus ist ziemlich einfach zu verstehen und zu implementieren. 
+    \item[--] Findet nicht immer eine gute Lösung.
+    \item[--] Für die Optimierung muss mehr Code geschrieben werden oder eine Toolbox gefunden werden, die einem viel neue Codierung abnimmt.
+    \item[--] Die Definition der \gls{Fitnessfunktion} ist nicht immer einfach, 
+             da alle Optimierungsziele in einer einzigen Formel sind.
+    \item[--] Die Gewichtung der unterschiedlichen Kriterien in der Fitnessfunktion.
+             ist nicht immer einfach zu bestimmen und erfordert mehrere Anläufe.
+    \item[--] Erfordert höhere Programmierkenntnisse um die Optimierungsumgebung zu implementieren.
+\end{itemize}
+
+\minipagedOrBelowEachOther
+{
+    Anders als mit \textit{systune} muss die Optimierungsumgebung selbst implementiert werden.
+    In dieser Arbeit wurde auch der GA selbst implementiert, 
+    obwohl MATLAB eine fertige Implementierung anbietet \cite{matlabGeneticAlgorithm}.
+    Die Optimierungsziele müssen programmiert werden, 
+    was für sehr spezifische Anforderungen aufwendig sein kann.
+
+    Eine Schwierigkeit bei der Verwendung des GA liegt einerseits in der Definition der Fitnessfunktion,
+    welche bei \gls{Minimierungsproblem}en eine spezifische Umwandlung erfordert, nur ein Vorzeichenwechsel funktioniert nicht.
+    Andererseits müssen die Optimierungsziele als Formel ausgedrückt werden die in einem einzigen Wert resultieren.
+    Die Problematik besteht darin, die richtigen Formeln für die unterschiedlichen Kriterien zu erstellen und 
+    diese auch noch in ein gutes Verhältnis zueinander zu setzen. (Gewichtung der Bewertungskriterien)
+    Deshalb benötigt auch diese Methode mehrere Anläufe beim Erstellen der Fitnessfunktion 
+    bis ein zufriedenstellendes Systemverhalten erzielt wird.\\
+
+
+    Der GA hat den Nachteil, dass sich die zu optimierenden Parameter nur schwer einschränken lassen.
+    In spezifischen Fällen ist im Vorhinein bekannt, dass gewisse Bereiche von Parametern nicht möglich sind.
+    Diese Bereiche lassen sich im GA nur schwer ausschliessen, da der Algorithmus zufällig neue Individuen generiert.
+    Eine Möglichkeit wäre, die Fitness dieser Individuen sehr schlecht zu bewerten.\\
+
+
+    Ein weiterer Nachteil des GA besteht darin, dass der Algorithmus am besten auf gleich normierte Parameter anwendbar ist.
+    Befinden sich bestimmte Parameter in einem viel grösseren Werte-Bereich als andere, 
+    kann es sein dass die Mutations-Stärke für einige Parameter zu klein ist und für andere zu gross.
+    Bei gleich normierten Parametern entfällt dieses Problem.
+    Eine Lösung hierfür wäre, entweder die Parameter normiert dem Algorithmus zu übergeben,
+    oder den Algorithmus so anzupassen, dass die Mutations-Stärke für jeden Parameter individuell skaliert ist.
+    Es gibt verschiedenste Strategien für die individuelle Mutation eines Gens. (Stichwort: \textit{self-adaptive mutation})
+
+}
+{
+    Mit stetigem verkleinern der Mutations-Stärke kann die Geschwindigkeit der \gls{Konvergenz} erhöht werden, 
+    wodurch der GA vergleichbar schnell wie DE konvergiert.
+    Sein stochastisches Verhalten hilft dabei, nicht zu schnell in lokalen Minima stecken zu bleiben.\\
+
+
+    Damit die Optimierung überhaupt durchgeführt werden kann, müssen für die Fitnessfunktion die benötigten Daten 
+    ermittelt werden, diese können einerseits aus einer Simulation des Systems im Zeitbereich stammen,
+    andererseits können auch frequenzabhängige Messungen durchgeführt werden.
+    Diese Datenerhebung muss allenfalls selbst implementiert werden und kann je nach Anwendungsfall und Anforderung an das 
+    Reglerverhalten beliebig komplex werden.
+    Dafür sind weitere Programmierkenntnisse notwendig im Bereich der numerischen Simulation von Systemen und 
+    der Frequenzanalyse notwendig.
+    Natürlich lässt sich die Optimierung mit MATLAB und Simulink durchführen wodurch die Probleme der manuellen Implementierung 
+    einer Simulation und Frequenzanalyse entfallen, aber auch dann kann noch viel Aufwand bei der Implementierung der
+    Optimierungsumgebung entstehen.
+    Das sind Aspekte welche nichts mit dem \gls{GA} an sich zu tun haben, aber trotzdem notwendig sind um den Algorithmus
+    anwenden zu können. 
+}
+
+
+
+\horizontalLine
+\subsubsection{Welche ist die beste Methode?}
+\minipagedOrBelowEachOther
+{
+    Welche Methode besser geeignet ist, 
+    lässt sich nicht allgemein sagen und hängt stark vom jeweiligen Anwendungsfall ab.
+    Die Tests der drei Methoden an nur zwei Prozessen sind nicht ausreichend um eine allgemeingültige Aussage treffen zu können.
+    Für eine fundierte Aussage wären deutlich mehr Tests an sehr unterschiedlichen Prozessen notwendig.\\
+
+
+    Mit \textit{systune} lässt sich schneller ein Regler entwerfen und testen als mit den anderen beiden Methoden.
+    Allerdings wird es schwierig mit \textit{systune} den Regler auf allfällig folgende weitere Anforderungen zu verfeinern,
+    da sich solche Anforderungen nicht, oder nur ungenügend, in den vorhandenen Tuning-Goals abbilden lassen.
+}
+{
+    Für GA und DE ist es einfacher weitere Anforderungen in der Fitnessfunktion zu berücksichtigen.
+    Ein Kriterium kann frei definiert und gewichtet werden und bietet somit von einfach bis beliebig komplex viele Möglichkeiten.
+    Die Flexibilität und die Möglichkeit beliebige nichtlineare Systeme zu optimieren, 
+    bietet ausserdem den grossen Vorteil, dass sich der Regler besser auf reale Bedingungen abstimmen lässt.
+}
+
+
+\newpage
+\subsubsection{Iteratives Tuning der Methoden}
+\label{sec:objektivesFazitIterativesTuning}
+\minipagedOrBelowEachOther
+{
+    Alle drei Methoden erfordern ein iteratives Vorgehen um ein gutes Ergebnis zu erhalten.\\
+
+
+    \paragraph*{\textit{Systune}}
+    Bei \textit{systune} müssen die Tuning-Goals angepasst werden, bis ein zufriedenstellendes Ergebnis erzielt wird.
+    Verschiedene Kombinationen von Zielen und deren Parameter müssen ausprobiert werden,
+    denn nicht immer führt das Hinzufügen eines neuen Ziels zu einem besseren Ergebnis.\\
+
+
+    %\paragraph[Genetischer Algorithmus und Differential Evolution]{
+    %    \parbox[t]{\dimexpr\textwidth\relax}{
+    %        Genetischer Algorithmus und\\Differential Evolution}
+    %    }
+    \paragraph*{Genetischer Algorithmus und\\Differential Evolution}
+
+    Bei \gls{GA} und \gls{DE} muss die Fitnessfunktion angepasst werden, bis ein zufriedenstellendes Ergebnis erzielt wird.
+    Ausserdem müssen für eine Simulation im Zeitbereich die Stimulationssignale so gewählt werden,
+    dass die gewünschten Kriterien auch tatsächlich in die Fitness der Population mit einfliessen.
+    Die Hyperparameter des Algorithmus müssen teilweise angepasst werden.
+    In der Regel genügen die Standardeinstellungen für einen Grossteil der Anwendungen aus aber
+    in spezifischen Fällen kann es notwendig sein, diese anzupassen um bessere Ergebnisse zu erzielen.
+}
+{
+    Der implementiere PID-Regler hat viele Einstellmöglichkeiten um unterschiedliche Kombinationen zu testen.
+    Schlussendlich wurden jedoch nur die einfachsten Einstellungen verwendet.
+    \textit{Systune} kann keinen Anti-Windup optimieren, weshalb sich die verwendete Anti-Windup-Strategie auf 
+    \textit{Clamping}~\ref{par:Clamping} beschränkt.
+    Diese Methode benötigt keinen zusätzlichen Parameter und ist im Simulink PID-Regler-Block bereits integriert.\\
+    
+
+    Bei \gls{GA} und \gls{DE} wurde der PID-Regler direkt mit dieser Anti-Windup-Strategie optimiert.
+    Auch die Anti-Windup-Strategie \textit{Back-Calculation}~\ref{par:Back-Calculation}, 
+    bei der ein zusätzlicher Parameter optimiert werden muss, wurde ausprobiert. Dies hat auch zu guten Ergebnissen geführt,
+    jedoch wurde schlussendlich auf die einfachere \textit{Clamping} Methode zurückgegriffen, 
+    um den Vergleich mit \textit{systune} fairer zu gestalten.\\
+
+
+    Auch die Filterkonstante für den D-Anteil ist optional und lässt sich im Simulink PID-Regler-Block aktivieren oder deaktivieren.
+    Das gleiche gilt für die Implementierung in der C++ Simulation.
+    Da \textit{systune} aber die Filterkonstante immer mitoptimiert, wurde dies auch bei \gls{GA} und \gls{DE} so gehandhabt.
+}
+
+\paragraph{Bestimmung der Hyperparameter bei \gls{GA} und \gls{DE}}
+\minipagedOrBelowEachOther
+{
+    Für die Bestimmung der Hyperparameter wurde viel ausprobiert.
+    Gewisse Parameter haben grösseren Einfluss auf den Optimierungsprozess und andere weniger.
+    Das finden der optimalen Hyperparameter ist in sich selbst ein Optimierungsproblem.
+}
+{}
+\minipagedOrBelowEachOther
+{
+    \subparagraph{Populationsgrösse}
+    \noindent
+    \\
+    Die gewählte Populationsgrösse ist abhängig von der Komplexität des Problems,
+    also wie viele Parameter optimiert werden müssen.
+    Je komplexer das Problem, desto grösser sollte die Population gewählt werden,
+    um den Suchraum besser abdecken zu können.
+    Zu gross sollte die Population aber auch nicht gewählt werden,
+    da dies die Rechenzeit unnötig in die Höhe treibt und ab einer bestimmten Grösse kaum noch Vorteile bringt.\\
+
+
+    \subparagraph{Anzahl Generationen}
+    \noindent
+    \\
+    Dieser Parameter definiert, wie oft die Population aktualisiert wird.
+    Je komplexer das Problem, desto mehr Generationen werden benötigt.
+    Dieser Parameter wird als Abbruchbedingung der Optimierung verwendet und kann je nach Implementierung auch 
+    weggelassen werden, um stattdessen ein anderes Abbruchkriterium zu verwenden, 
+    wie z.B. ein Unterschreiten des Fehlers unter einen bestimmten Wert.\\
+}
+{
+    \subparagraph{Mutations-Stärke}
+    \noindent
+    \\
+    Die Mutations-Stärke definiert, wie stark eine Mutation ausfällt.
+    Je grösser die Mutations-Stärke, desto grösser werden die Veränderungen an den zu mutierenden Genen.
+    Eine grosse Mutations-Stärke kann dabei helfen, aus lokalen Minima herauszukommen,
+    jedoch kann eine zu grosse Mutations-Stärke auch dazu führen, dass die Optimierung nicht konvergiert.
+    Im Fall vom \gls{GA} wurde die Mutations-Stärke im Verlauf der Optimierung verkleinert um die Vorteile von grossen und kleinen
+    Mutationen zu kombinieren.
+    Für \gls{DE} muss die Mutations-Stärke nicht angepasst werden, da diese automatisch durch die abnehmende Distanz zweier Individuen im Verlauf
+    der Optimierung abnimmt.\\
+
+
+    \subparagraph{Konstante Systemparameter}
+    \noindent
+    \\
+    Systemparameter der Regelstrecke welche nicht optimiert wurden, 
+    sind von Hand festgelegt worden. Die Sättigung des I-Anteils des PID-Reglers ist ein Beispiel dafür.
+    In beiden getesteten Systemen wird ein gutes Ergebnis erzielt, sowohl mit einer Sättigung als auch ohne.
+    Deshalb ist eine genaue Bestimmung dieser Parameter nicht kritisch.\\  
+}
+\minipagedOrBelowEachOther
+{
+    \subparagraph{Mutations-Wahrscheinlichkeit (nur \gls{GA})}
+    \noindent
+    \\
+    Die Mutations-Wahrscheinlichkeit definiert, die Wahrscheinlichkeit, dass ein Genom eines Individuums mutiert wird.
+    Ein Genom ist eine einzelne Variable des Individuums, also z.B. ein Reglerparameter.
+    Je höher die Mutations-Wahrscheinlichkeit, desto grösser die Diversität in der Population.
+    Eine zu hohe Mutations-Wahrscheinlichkeit kann jedoch dazu führen, dass die Optimierung nicht konvergiert.
+    Dies kann mit einer radioaktiven Umgebung verglichen werden, in der sich die Individuen ständig verändern und 
+    somit langfristig keine auf das Problem abgestimmte Population entstehen kann.
+    Je mehr Parameter ein Individuum hat, desto kleiner sollte die Mutations-Wahrscheinlichkeit gewählt werden,
+    um nicht zu viele Mutationen pro Generation zu erzeugen.
+    Ein zu kleiner Wert schadet nur der Zeit, die für die Konvergenz benötigt wird. 
+    Ein zu grosser Wert kann jedoch verhindern, dass eine gute Lösung gefunden wird.\\
+
+}
+{
+    \subparagraph{Startwerte gesuchten Parameter}
+    \noindent
+    \\
+    Die Startwerte der zu optimierenden Parameter können einen grossen Einfluss auf die Konvergenzgeschwindigkeit haben, 
+    bzw. generell darauf, ob überhaupt eine gute Lösung gefunden wird.\\
+
+
+    In dieser Arbeit wurde eine zufällige Initialisierung der Parameter in der Umgebung um den Nullpunkt verwendet.
+    Die Wahl der Grösse der Startumgebung ist abhängig von der ungefähren Grössenordnung der zu optimierenden Parameter.
+    Es lohnt sich, mit der Grösse des Startbereichs zu experimentieren.\\
+
+
+    Bei bestimmten Problem stehen eventuell schon gute Startwerte zur Verfügung oder es gibt bekannte Bereiche,
+    in denen sich gute Lösungen befinden.
+    In solchen Fällen sollten diese Informationen genutzt werden, um die Startwerte entsprechend zu wählen.\\   
+}
+
+\newpage
+

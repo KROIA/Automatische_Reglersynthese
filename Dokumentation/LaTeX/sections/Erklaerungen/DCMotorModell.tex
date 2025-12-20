@@ -1,0 +1,234 @@
+\subsubsection{Regelkreis für Prozess: DC-Motor}
+\label{sec:DCMotorModell}
+\begin{figure}[H]
+    \centering
+    \input{images/SimpleMotor/SimpleMotorTikzDiagram}
+    
+  %  \begin{table}[h!]
+    \renewcommand{\arraystretch}{1.0}
+    \vspace{0.5cm}   % adds 0.5 cm of white space
+    \begin{tabular}{@{}llr@{}}
+        \toprule
+        \textbf{Symbol} & \textbf{Beschreibung} & \textbf{Wert} \\
+        \midrule
+        $K1$        & DC-Verstärkung                & 1  \\[0.5ex]
+        $T$         & Zeitkonstante                 & 0.14 \\[0.5ex]
+        \bottomrule
+    \end{tabular}
+    \caption{Regelkreis für Prozess: DC-Motor}
+    %\label{tab:Spannungsfall_Legende}
+    %\end{table}
+    \label{fig:SimpleMotorTikzDiagram}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+  Das Beispielsystem ist in~\ref{fig:SimpleMotorTikzDiagram} dargestellt.
+  Es handelt sich dabei um einen einfachen Regelkreis mit einem DC-Motor als Regelstrecke.
+  Der Motor wird mit einer Stellgrösse $u$ (Spannung) angesteuert und die Drehgeschwindigkeit $y$
+  wird als Spannung gemessen und zurückgeführt. 
+  Der Motor wird so gehandhabt als wäre es nicht möglich, ihn in entgegengesetzte Richtung zu betreiben,
+  daher kommt die untere Sättigung der Stellgrösse $u$ bei 0V zum Tragen.
+  Als Regler wird ein PID-Regler verwendet.
+  Der Aufbau des PID-Reglers ist in~\ref{fig:ErweiterterPID} dargestellt.
+  Die Last $l$ treibt eine Wirbelstrombremse an, die eine bremsende Wirkung auf den Motor hat.
+  Das System wird im Skript von Regelungstechnik 1-2 \cite{regT12Script} genauer beschrieben.
+  Im gegensatz zu dem im Skript definierten $K1=0.91$ wurde hier $K1=1$ verwendet,
+  da der im Skript verwendete Sprung von 4V für die Systemidentifikation nur für Sprünge von 4V geeignet ist.
+  Dies liegt daran, dass die DC-Verstärkung des Motors sehr stark nichtlinear ist. Die Wahl des korrekten $K1$
+  ist deshalb nicht sehr kritisch für die Optimierung des Reglers.
+}
+{
+  Das Modell des DC-Motors ist als PT1-Glied modelliert.
+  Die Übertragungsfunktion der Regelstrecke lautet:
+  \begin{equation}
+    \label{eq:DCMotorPT1}
+    \mathFunction{G}{s} = \frac{K1}{T \cdot s + 1}
+  \end{equation}
+  Die Wirbelstrombremse wird im Simulink-Modell abhängig von der Drehzahl des Motors modelliert.
+  Da dies ein nichtlineares Verhalten abbildet und die Last bei der Optimierung von \textit{systune} nicht berücksichtigt wird,
+  genügt die Übertragungsfunktion in \ref{eq:DCMotorPT1} als Modell für die Optimierung.\\
+
+
+  Bei den Optimierungen mit dem \gls{GA} und \gls{DE} ist es jedoch möglich, ein nichtlineares Modell zu verwenden,
+  weshalb dort die Last berücksichtigt wird. 
+
+
+}
+\minipagedOrBelowEachOther
+{
+  Der Regelkreis verfügt über zwei Eingänge:
+  \begin{itemize}
+    \item Sollwert $r$: Gewünschte Drehgeschwindigkeit des Motors
+    \item Störgrösse $l$: Externe Störung die auf den Motor wirkt.\\
+    Für die Last wird eine Wirbelstrombremse verwendet.
+  \end{itemize}
+}
+{
+
+}
+
+\paragraph{Implementierung im C++ Code}
+
+\begin{cppcode}{Update Funktion des DC-Motors im Code}{lst:DC_MotorDefinitionCPP}
+// Update Funktion des DC-Motors im C++ Code. class DCMotorSystem
+void update(double deltaTime) override
+{
+    // Variablen Aliasen für bessere Lesbarkeit in der Formel
+	double& y = m_outputAngularVelocity;
+	double& u = m_inputVoltage;
+	double& l = m_disturbance;
+	double& k1 = m_k1;
+	double& k2 = m_k2;
+	double& k3 = m_k3;
+	double& invT = m_invTimeConstant;
+
+    // Signal welches integriert wird
+    // invT = 1 / T wird bereits vor der Integration dazu multipliziert, anders als in der Formel oben dargestellt
+	double preIntSignal = (k1 * u - y * (1.0 + k2 * k3 * l)) * invT;
+
+    switch (getIntegrationSolver())
+	{
+		case IntegrationSolver::ForwardEuler:
+		{
+			m_integratorOutput = getIntegrated_forwardEuler(m_lastPreIntegratorSignal, m_integratorOutput, deltaTime);
+			break;
+		}
+		case IntegrationSolver::BackwardEuler:
+		{
+			m_integratorOutput = getIntegrated_backwardEuler(preIntSignal, m_integratorOutput, deltaTime);
+			break;
+		}
+		case IntegrationSolver::Bilinear:
+		{
+			m_integratorOutput = getIntegrated_Bilinear(m_lastPreIntegratorSignal, preIntSignal, m_integratorOutput, deltaTime);
+			break;
+		}
+	}
+	m_outputAngularVelocity = m_integratorOutput;
+	m_lastPreIntegratorSignal = preIntSignal;
+} 
+\end{cppcode}
+
+
+\newpage
+\paragraph{Implementierung des DC-Gains im Simulink Modell}
+Im Simulink-Modell ist der nichtlineare DC-Gain des Motors so modelliert, 
+dass das Modell dem realen Motor möglichst nahe kommt.
+Dies ist eigentlich für die Optimierung nicht relevant und diente nur dazu,
+die Regler im Simulink-Modell vorgängig zu testen bevor sie am realen Prozess ausprobiert wurden.
+Wie die nichtlinear DC-Verstärkung modelliert ist, wird nachfolgend erklärt.
+
+\horizontalLine
+
+\minipagedWithHFillOrBelowEachOther
+{
+
+
+
+Eine Systemidentifikation mit Sprüngen von 0V - 10V in 1V Schritten wurde durchgeführt,
+um unterschiedliche DC-Verstärkungen an den unterschiedlichen Arbeitspunkten zu ermitteln.\\
+
+
+Die ermittelten DC-Verstärkungen waren linear mit Offset in Abhängigkeit der Eingangsspannung $u$.
+Die Geradengleichung wurde mit Hilfe von Linearer Regression ermittelt.
+Die Geradengleichung lautet:
+\begin{equation}
+  \mathFunction{f_\mathbf{2}}{x} = m \cdot x - q
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    
+  %  \begin{table}[h!]
+    \renewcommand{\arraystretch}{1.0}
+    %\vspace{0.5cm}   % adds 0.5 cm of white space
+    \begin{tabular}{@{}cc@{}}
+        \toprule
+        \textbf{Symbol}  & \textbf{Wert} \\
+        \midrule
+        $m$       & 1.07  \\[0.5ex]
+        $q$         & -0.43   \\[0.5ex]
+        \bottomrule
+    \end{tabular}
+    \caption{Parameter der Geradengleichung}
+    %\label{tab:Spannungsfall_Legende}
+    %\end{table}
+\end{figure}
+
+
+
+Im Simulink-Modell wird für $x$ der Ausgangswert des PT1-Glieds eingesetzt.
+Das ist möglich, weil für das PT1-Glied eine Verstärkung von 1 verwendet wird.
+obwohl sich das $x$ in der Geradengleichung eigentlich auf das Eingangssignal bezieht.\\
+
+
+
+
+}
+{
+Da der Offset von -0.43 dazu führen würde, dass der Motor auch bei einer Eingangsspannung von 0V eine negative Drehzahl annehmen würde,
+muss ein Teil der Geradengleichung durch ein Polynom abgerundet werden.
+Der Wechsel der beiden Funktionen wird bei $x=1$ vorgenommen.\\
+
+
+Um dieses Polynom zu finden wurde ein Gleichungssystem aufgestellt:
+\begin{equation}
+  \mathFunction{f_\mathbf{1}}{x} = a \cdot x^2 + b \cdot x
+\end{equation}
+\begin{equation}
+  \left|
+    \begin{aligned}
+      m &= \mathFunctionDot{f_{\mathbf{1}}}{1} \\
+      \mathFunction{f_{\mathbf{1}}}{x} &= \mathFunction{f_{\mathbf{2}}}{1}
+    \end{aligned}
+  \right|
+\end{equation}
+Mit diesem Gleichungssystem werden die Koeffizienten $a$ und $b$ des Polynoms bestimmt.
+Die Lösung des Gleichungssystems ist:
+\begin{figure}[H]
+    \centering
+    
+  %  \begin{table}[h!]
+    \renewcommand{\arraystretch}{1.0}
+    %\vspace{0.5cm}   % adds 0.5 cm of white space
+    \begin{tabular}{@{}cc@{}}
+        \toprule
+        \textbf{Symbol}  & \textbf{Wert} \\
+        \midrule
+        $a$       & 0.43  \\[0.5ex]
+        $b$       & 0.21   \\[0.5ex]
+        \bottomrule
+    \end{tabular}
+    \caption{Parameter des Polynoms}
+    %\label{tab:Spannungsfall_Legende}
+    %\end{table}
+\end{figure}
+}
+
+
+
+\horizontalLine
+
+\minipagedOrBelowEachOther
+{
+  \vspace{0.5cm}   % adds 0.5 cm of white space
+  Die ermittelten Funktionen $\mathFunction{f_\mathbf{1}}{x}$ und $\mathFunction{f_\mathbf{2}}{x}$
+  sind im Blockdiagramm im Simulink-Modell umgesetzt und sorgen für eine relistischere Simulation des DC-Motors.
+  Die Kombination der beiden Funktionen ist in~\ref{fig:SimpleMotorTikzDiagram_nonlinearDCGain} dargestellt,
+  wobei $x$ der Ausgang des PT1-Glieds ist, welcher ohne diese Anpassung, der Winkelgeschwindigkeit des Motors entsprechen würde.
+  Der neue Wert $y$ wird dann als Drehgeschwindigkeit des Motors verwendet und an den Ausgang des Simulink-Modells weitergegeben. 
+}
+{
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/SimpleMotor/DcGainPlot.pdf}
+    %\input{images/SimpleMotor/SimpleMotorTikzDiagram_nonlinearDCGain}
+    \caption{Annäherung der DC-Verstärkung des Motors im Simulink-Modell}
+    \label{fig:SimpleMotorTikzDiagram_nonlinearDCGain}
+  \end{figure}
+}
+
+
+%\dot{}
+

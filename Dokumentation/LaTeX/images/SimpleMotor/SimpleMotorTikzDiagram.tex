@@ -1,0 +1,25 @@
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \newcommand{\labeloffset}{0.2}
+    % Draw grid
+    %\draw[step=1cm,gray,very thin] (0,0) grid (10,10);
+    
+    % Draw blocks
+    \sumNode{sum}{1,0};
+
+    \saturationBlockNode{saturation1}{-1, 0}{0}{10};
+    \blockNode{controller}{2.5,0}{$G_c(s)$};
+    \saturationBlockNode{saturation2}{$(controller.east) + (1.5,0)$}{0}{10};
+    \blockNode{plant}{$(saturation2.east) + (2,0)$}{$G(s)=\frac{K1}{T \cdot s + 1}$};
+
+    % Draw connections
+    \connect{(-2.5,0)             (saturation1.west)          }{->};
+    \connect[label={-0.5,\labeloffset}{$\mathbf{r}$}              ]{(saturation1.east)             (sum.west)          }{->};
+    \connect[label={-0.5,\labeloffset}{$\mathbf{e}$}   ]{(sum.east)        (controller.west)   }{->};
+    \connect{(controller.east) (saturation2.west)   }{->};
+    \connect[label={-0.4,\labeloffset}{$\mathbf{u}$}   ]{(saturation2.east) (plant.west)        }{->};
+    \connectionNode{output}{$(plant.east) + (0.5,0)$};
+    \connect[label={0.2,0}{$\mathbf{y}$}               ]{(plant.east) \vectorAdd{output}{0.5,0}}{->};
+    \connect[label={-6.95,0.7}{$\mathbf{l}$}              ]{(-2.5,1) ($(plant.north)+ (0, 0.5)$) (plant.north)}{->};
+
+    \feedback[sign={-0.3,-0.1}              ]{output.center}{-1}{sum.south}{->};
+\end{tikzpicture}

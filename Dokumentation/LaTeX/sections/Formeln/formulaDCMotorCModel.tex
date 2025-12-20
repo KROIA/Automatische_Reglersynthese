@@ -1,0 +1,75 @@
+\formulaWithDerivationDeclaration{formulaDCMotorCModel}
+{   % Dargestellte Formel
+    \mathFunction{y}{t}= \frac{1}{T} \cdot \int_{}^{}(K_{\mathbf{1}} \cdot \mathFunction{u}{t} - \mathFunction{y}{t} \cdot (1+K_{\mathbf{2}} \cdot K_{\mathbf{3}} \cdot \mathFunction{l}{t}))dt
+}
+{   % Herleitung der Formel
+    Als Ausgangslage dient das Modell aus dem Skript \cite{regT12Script} Kapitel 3.3, Gleichung (34):
+    \begin{equation*}
+        T \cdot \mathFunctionDot{y}{t} + \mathFunction{y}{t} = K_{\mathbf{1}} \cdot \mathFunction{u}{t} - K_{\mathbf{2}} \cdot \mathFunction{l}{t}
+    \end{equation*}
+
+    \begin{table}[H]
+        \center
+        \begin{tabular}{@{}rl@{}}
+                \toprule
+                \textbf{Parameter}              & \textbf{Beschreibung} \\
+                \midrule
+                $K_{\mathbf{1}}$                & Substitution mehrerer Motor spezifischer Konstanten \\[0.5ex]
+                $K_{\mathbf{2}}$                & Substitution mehrerer Motor spezifischer Konstanten \\[0.5ex]
+                $t$                 & Zeit \\[0.5ex]
+                $T$                 & Zeitkonstante des Motors \\[0.5ex]
+                $\mathFunction{u}{t}$           & Motor Eingangsspannung \\[0.5ex]
+                $\mathFunction{y}{t}$           & Motor Ausgangsdrehzahl als Spannung abgebildet \\[0.5ex]
+                \bottomrule
+        \end{tabular}
+        \caption{Symbole für die Herleitung des DC-Motor Modells}
+    \end{table}
+
+    \begin{table}[h]
+    \begin{tabular}{m{0.5\textwidth} m{0.5\textwidth}}
+        %\centering
+        \hline
+        Als Modifikation wird die Last $l$ mit dem Ausgang $y$ multipliziert, 
+        da das Lastmoment der Wirbelstrombremse abhängig von der Drehzahl des Motors ist.
+        Dabei wird der Faktor $K_{\mathbf{3}}$ als Proportionalitätsfaktor eingeführt.
+        $K_{\mathbf{3}}$ gibt an, wie stark die Last vom Ausgang abhängt.
+        Somit ergibt sich die rechts dargestellte modifizierte Differential Gleichung.
+        &
+        \begin{equation*}
+        T \cdot \mathFunctionDot{y}{t} + \mathFunction{y}{t} = K_{\mathbf{1}} \cdot \mathFunction{u}{t} - K_{\mathbf{2}} \cdot \mathFunction{l}{t} \cdot K_{\mathbf{3}} \cdot \mathFunction{y}{t}
+        \end{equation*} \\
+        \hline
+
+        Umstellen nach $\mathFunctionDot{y}{t}$
+        &
+        \begin{equation*}
+        T \cdot \mathFunctionDot{y}{t} = K_{\mathbf{1}} \cdot \mathFunction{u}{t} - K_{\mathbf{2}} \cdot \mathFunction{l}{t} \cdot K_{\mathbf{3}} \cdot \mathFunction{y}{t} - \mathFunction{y}{t}
+        \end{equation*}
+        \begin{equation*}
+        \mathFunctionDot{y}{t} = \frac{1}{T} (\cdot K_{\mathbf{1}} \cdot \mathFunction{u}{t} - K_{\mathbf{2}} \cdot \mathFunction{l}{t} \cdot K_{\mathbf{3}} \cdot \mathFunction{y}{t} - \mathFunction{y}{t})
+        \end{equation*} \\
+        \hline
+
+        Durch die Integration erhält man $\mathFunction{y}{t}$.
+        Diese Gleichung lässt sich in code implementieren.
+        &
+        \begin{equation*}
+            \mathFunction{y}{t}= \frac{1}{T} \cdot \int_{}^{}(K_{\mathbf{1}} \cdot \mathFunction{u}{t} - \mathFunction{y}{t} \cdot (1+K_{\mathbf{2}} \cdot K_{\mathbf{3}} \cdot \mathFunction{l}{t}))dt
+        \end{equation*}\\
+        \hline
+        
+    \end{tabular}
+    \end{table}
+
+    Da die Implementierung diskretisiert erfolgt, muss die Formel noch diskretisiert werden.
+    Dies wird in diesem Teil nicht weiter beschrieben, da die Integration im code auf unterschiedliche Arten
+    implementiert worden ist. (Backward Euler, Forward Euler und Bilinear Transformation)
+    Die folgende Formel dient deshalb nur zur Verdeutlichung des Prinzips der Implementierung im code.
+    Für jede Integrationsmethode muss die Transformation entsprechend durchgeführt werden.
+    Dies kann im C++ Code eingesehen werden. \cite{baRepository}
+    \begin{equation*}
+        \mathFunction{y}{t}= \frac{1}{T} \cdot \int_{}^{}(K_{\mathbf{1}} \cdot \mathFunction{u}{t} - \mathFunction{y}{t} \cdot (1+K_{\mathbf{2}} \cdot K_{\mathbf{3}} \cdot \mathFunction{l}{t}))dt
+    \end{equation*}
+
+    \newpage
+}

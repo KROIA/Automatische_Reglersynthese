@@ -1,0 +1,440 @@
+\section{Genetischer Algorithmus am DC-Motor}
+
+\newcommand{\individuumI}{\overrightarrow{I_{\mathbf{i}}}}
+\newcommand{\funcGOfk}[1]{\mathFunction{g_\mathbf{#1}}{\individuumI,k}}
+\newcommand{\funcGOf}[1]{\mathFunction{g_\mathbf{#1}}{\individuumI}}
+
+\minipagedOrBelowEachOther
+{
+%Leider lässt sich der PID nicht mit Ziegler Nichols Vorbestimmen weil der DC-Motor ein PT1-Verhalten hat.
+%Deshalb wird direkt mit dem Genetischen Algorithmus optimiert.
+Weil der genetische Algorithmus kein MATLAB voraussetzt, ist diese Methode auch ohne MATLAB implementiert worden.
+Das hat den Vorteil, dass ein System auch ohne MATLAB Lizenz optimiert werden kann.
+}
+{
+	Die Funktionsweise des \gls{GA} ist im Kapitel\\
+	\fullref{sec:Description_GenetischerAlgorithmus} beschrieben.
+
+}
+
+\subsection{System Definieren}
+\minipagedOrBelowEachOther
+{
+	%\vspace{0.8cm}
+	In der C++ Anwendung werden die Teilsysteme objektorientiert implementiert und anschliessend 
+	als ein gesamtheitliches Objekt zusammengeführt und verbunden.
+	Der Kernteil der Implementierungslogik spielt sich dabei in den Update-Funktionen der jeweiligen Teilsysteme ab.
+	Aufgrund des Codes-Umfangs werden deshalb in den nachfolgenden Unterkapiteln nur die Update-Funktionen gezeigt.
+}{
+	\vspace{-1cm}
+	%\centering
+    \begin{figure}[H]
+		\centering
+		\input{images/SimpleMotor/SimpleMotorTikzDiagram_genetic}
+		\caption{Regelkreis des DC-Motors}
+		\label{fig:SimpleMotorTikzDiagram_genetic}
+	\end{figure}
+}
+
+
+
+
+\horizontalLine
+\subsubsection{Motor definieren}
+\minipagedOrBelowEachOther
+{
+	Die Implementierung im C++ Code erfolgt natürlich diskretisiert.
+	Wie genau die Diskretisierte Implementierung aussieht wird nicht weiter erläutert und kann im Code eingesehen werden.
+	Als Grundlage für die Implementierung dient die ~\ref{form:formulaDCMotorCModel}.\\
+	Die dazugehörige C++ Implementierung ist im folgenden Codeausschnitt ersichtlich:\\
+	~\fullref{lst:DC_MotorDefinitionCPP}
+}{
+	\centering
+    \formulaWithDerivationShow{formulaDCMotorCModel} % Show formula 
+}
+
+
+
+
+
+\horizontalLine
+\subsubsection{PID-Regler definieren}
+Der PID-Regler wurde bereits im Kapitel \fullref{sec:ErweiterterPIDRegler} beschrieben und 
+auch die C++ Implementierung wird dort aufgeführt. Deshalb wird hier nicht weiter darauf eingegangen.
+
+
+
+\horizontalLine
+\subsubsection{Alle Teilsysteme verbinden}
+
+\begin{cppcode}{Update-Funktion des Gesamtsystems im Code}{lst:DC_MotorRegelkreisCPP}
+// Update Funktion des Gesamtsystems im C++ Code. class TestSystem
+void update(double deltaTime) override
+{
+	double y = m_dcMotorSystem.getAngularVelocity();	// y(t) * z^{-1}, Letzter Ausgang des Motors
+	m_errorValue = m_referenceValue - y;				// e(t) = r(t) - y(t)
+
+	m_pidController.setInput(m_errorValue);
+	m_pidController.update(deltaTime);
+	m_pidOutputValue = m_pidController.getOutput();	    // u(t)
+
+	m_dcMotorSystem.setInputs(m_pidOutputValue, m_disturbanceValue);
+	m_dcMotorSystem.update(deltaTime);
+}
+\end{cppcode}
+
+
+
+\newpage
+\subsection{Optimierungsziele definieren}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/SimpleMotor/Stimuli.pdf}
+    \caption{Anregungssignale für die Systemsimulation}
+    \label{fig:SimpleMotorStimuli}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+	Um die Bewertungsfunktion zu definieren wird eine zeitliche Simulation des Systems benötigt.
+	Dazu wird ein vordefiniertes Anregungssignal verwendet.
+	Das Anregungssignal besteht aus $r$ (Ziel-Drehzahl) und $l$ (Last/Störgrösse) und ist 
+	so gewählt, dass verschiedene Aspekte des Regelverhaltens bewertet werden können.
+}
+{
+	Einerseits ermöglichen die unterschiedlichen Sprünge im Ziel-Drehzahl $r$ eine Beurteilung 
+	über das Verhalten des Reglers auf den Prozess, der eine nichtlineare DC-Verstärkung hat.
+	Andererseits wird durch die Nutzung der Wirbelstrombremsen $l$, die Einwirkung von Störgrössen mitberücksichtigt.
+	Mit diesem Signal ist es dem \gls{GA} möglich, den Regler auf verschiedene Situationen zu optimieren.
+}
+\newpage
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}clrc@{}}
+		\toprule
+		\textbf{Symbol} & \textbf{Beschreibung} & \textbf{Wert} & \textbf{Einheit} \\
+		\midrule
+		$Ts$                & Abtastzeit &0.01& s\\[0.5ex]
+		$t_\mathbf{start}$  & Startzeit &0& s\\[0.5ex]
+		$t_\mathbf{end}$    & Endzeit &20& s\\[0.5ex]
+		$u_\mathbf{satHigh}$   & Obere Sättigungsgrenze der Stellgrösse &10& V\\[0.5ex]
+		$u_\mathbf{satLow}$   & Untere Sättigungsgrenze der Stellgrösse &0& V\\[0.5ex]
+		%$N$                 & Anzahl Individuen in der Population &30\\[0.5ex]
+		$K$                 & Anzahl Zeitschritte in der Simulation & 2000\\[0.5ex]
+		$D$				  & Anzahl der Optimierungs-Parameter & 4 & \\[0.5ex]
+		$\individuumI$    & \gls{Individuum} $\mathbf{i}$ in der \gls{Population} & $\individuumI \in \mathbb{R}^D$ \\[0.5ex]
+		%$\mathFunction{f}{\individuumI}$ & Maximierungs-Fitness-Funktion.& $f(\individuumI) \in \mathbb{R}^{+}$ \\[0.5ex]
+		$\mathFunction{g}{\individuumI}$ & Fehler-Minimierungs-Funktion. & $g(\individuumI) \in \mathbb{R}$ \\[0.5ex]
+		$a_\mathbf{o}$      & Gewichtungsfaktor für das Optimierungsziel $\mathbf{o}$ & $a_\mathbf{o} \in \mathbb{R}^{+_0}$ \\[0.5ex]
+		$O$                 & Anzahl Optimierungsziele & 3 \\[0.5ex]
+		$\funcGOfk{o}$ & Optimierungsfunktion für das Ziel $\mathbf{o}$ zum Zeitpunkt $k$ & $\funcGOfk{o} \in \mathbb{R}$ \\[0.5ex]
+		\bottomrule
+\end{tabular}
+\caption{Symbole für die Simulation am DC-Motor}
+\end{table}
+
+%\horizontalLine
+Für die Abtastzeit $Ts$ wurde ein realistischer Wert von 10ms gewählt.\\
+
+
+
+
+\minipagedOrBelowEachOther
+{
+	Die Anzahl Zeitschritte $K$ wird aus der Abtastzeit $T_\mathbf{s}$ und 
+	dem Simulationszeitraum $[t_\mathbf{start}, t_\mathbf{end}]$ berechnet.  
+}{
+	\centering
+    \begin{equation}
+		K = \frac{t_\mathbf{end}-t_\mathbf{start}}{T_\mathbf{s}}
+	\end{equation}
+}
+
+
+
+
+\horizontalLine
+
+\minipagedOrBelowEachOther
+{
+	Der \gls{GA} ist für \gls{Maximierungsproblem}e ausgelegt. 
+	Für diese Anwendung wäre es aber sinnvoller die Optimierungsziele als \gls{Minimierungsproblem}e zu formulieren.
+	Es gibt jedoch eine Möglichkeit zur Umrechnung von \gls{Minimierungsproblem}en in Maximierungsprobleme.
+	Dies ist im Kapitel~\fullref{sec:Description_GenetischerAlgorithmus_FitnessFunction_TransformationSteps} beschrieben.
+	Dank dieser Umrechnung können die Optimierungsziele als Minimierungsproblem formuliert werden.
+
+	Die Fehler-Minimierungs-Funktion $g(\individuumI)$
+	wird aus mehreren Teilsummen zusammengesetzt. Die Teilsummen bewerten verschiedene Aspekte des Regelverhaltens.
+	Allgemein lässt sich die Fehler-Minimierungs-Funktion $g(\individuumI)$ wie in der
+    \ref{form:SimpleMotorGeneticAlgorithmErrorMinimizationFunction} darstellen.
+}{
+	\centering
+	\begin{equation}
+        \label{form:SimpleMotorGeneticAlgorithmErrorMinimizationFunction}
+		\mathFunction{g}{\individuumI} = 
+		\frac{1}{K} \cdot \sum_{k=0}^{K-1}\bigg(
+				\sum_{o=0}^{O-1}\Big(
+					a_\mathbf{o} \cdot \funcGOfk{o}
+				\Big)
+			\bigg)
+	\end{equation}
+	
+	\begin{itemize}
+		\item $\frac{1}{K}$ dient zur Normierung der Fehlerbewertung auf die Anzahl der Zeitschritte.
+		\item $\sum_{k=0}^{K-1}$ summiert die Fehlerbewertung über alle Zeitschritte der Simulation.
+		\item $\sum_{o=0}^{O-1}\left(
+					a_\mathbf{o} \cdot \funcGOfk{o}
+				\right)$ summiert die gewichteten Optimierungsziele $\funcGOfk{o}$ für den Zeitschritt $k$.
+	\end{itemize}
+}
+
+
+
+
+
+
+%\begin{equation}
+%	\mathFunction{g}{\individuumI} = 
+%	\frac{1}{t_\mathbf{end}-t_\mathbf{start}}\sum_{k=0}^{K}(
+%		a_\mathbf{1} \cdot \mathFunction{g_\mathbf{1}}{k} + 
+%		a_\mathbf{2} \cdot \mathFunction{g_\mathbf{2}}{k}
+%		)
+%\end{equation}
+
+%\horizontalLine
+
+
+
+\newpage
+\label{sec:Description_GenetischerAlgorithmus_FitnessFunction_OptimizationGoals_SimpleMotor}
+\subsubsection{$\funcGOfk{0}$: Absoluter Regelungsfehler mit Sättigungsbedingung}
+\minipagedOrBelowEachOther
+{
+	$\funcGOfk{0}$ zielt darauf ab, den Absoluten Regelungsfehler zu minimieren.
+	An dieser Stelle könnte berechtigterweise die Frage aufkommen, warum nicht das Quadratische Fehlerintegral verwendet wird?
+	Tests haben gezeigt, dass es grundsätzlich egal ist ob das absolute oder das quadratische Fehlerintegral
+	als Optimierungsziel verwendet wird, der Unterschied liegt in der Anwenderfreundlichkeit.
+	Für die Optimierung mit den verschiedenen Zielen müssen passende Gewichtungen gewählt werden damit das gewünschte
+	Verhalten erreicht wird. Bei der Verwendung des quadratischen Fehlerintegrals
+	ist es schwieriger passende Gewichtungen zu finden als beim absoluten Fehlerintegral.
+	Mit dem absoluten Fehlerintegral konvergiert der genetische Algorithmus in einem grösseren Bereich 
+	des Gewichtes für das Optimierungsziel des Fehlerintegrals.
+
+	      
+}{
+	\begin{equation}
+		\label{form:SimpleMotorGeneticAlgorithmAbsoluteErrorWithSaturationCondition}
+		\begin{aligned}
+			ignoreError ={}&
+			\Big(\mathFunction{u}{\individuumI, k} \ge u_{\mathbf{sat+}} \land \mathFunction{r}{k} > \mathFunction{y}{\individuumI, k}\Big) \lor \\
+			&\Big(\mathFunction{u}{\individuumI, k} \le u_{\mathbf{sat-}} \land \mathFunction{r}{k} < \mathFunction{y}{\individuumI, k}\Big)
+		\end{aligned}
+	\end{equation}
+	Die Bedingung ~\ref{form:SimpleMotorGeneticAlgorithmAbsoluteErrorWithSaturationCondition} dient als Fairness-Ausgleich bei der Bestrafung des Fehlers. 
+	Im Fall, wo der Regler in die Sättigung läuft, weil eine grosse Änderung der Referenz vorliegt,
+	wird der Fehler nicht weiter aufaddiert, da der Regler in diesen Fällen nicht dazu beitragen kann,
+	dass die Fläche des Fehlers kleiner wird. Der Motor gibt bereits alles was er kann.
+	Durch diese Bedingung konzentriert sich der die Fehlerbewertung auf die Zeiträume in denen der Regler
+	den Fehler tatsächlich beeinflussen kann.
+	%\centering
+    \begin{equation}
+		\funcGOfk{0} =
+		\begin{cases}
+		0 & \text{wenn } ignoreError=1\\
+		|\mathFunction{e}{\individuumI,k}| & \text{sonnst}
+		\end{cases}
+	\end{equation}
+}
+\vspace{0.1cm}
+\horizontalLine
+\subsubsection{$\funcGOfk{1}$: Stellwertänderungsrate}
+\minipagedOrBelowEachOther
+{
+	$\funcGOfk{1}$ bewertet grosse Stellwertänderungen als schlecht.
+	Ohne dieses Optimierungsziel tendiert der \gls{GA} dazu, den Regler sehr aggresiv zu machen, was 
+	sich negativ auf das Stellverhalten auswirkt. Zur Schonung des Motors wird deshalb mit diesem
+	Optimierungsziel versucht, grosse Stellwertänderungen zu vermeiden.
+	Dank diesem Ziel wird auch automatisch die Rauschunterdrückung des Reglers gefördert.
+}{
+	\centering
+    \begin{equation}
+		\funcGOfk{1} = \frac{| \mathFunction{u}{\individuumI,k} - \mathFunction{u}{\individuumI,k-1}|}{T_\mathbf{s}}
+	\end{equation}
+}
+
+\horizontalLine
+\subsubsection{$\funcGOfk{2}$: Positives Überschwingen unterdrücken}
+\minipagedOrBelowEachOther
+{
+	\vspace{0.5cm}
+	$\funcGOfk{2}$ fokussiert sich auf das Überschwingen des Systems in die positive Richtung.
+	Es wird dabei nur die erste Überschwingung bewertet nach einer Referenzänderung,
+	weil es schwierig zu definieren ist, ab wann Signal als nicht mehr schwingend zu betrachten ist.
+	Das Kriterium für das Überschwingen ist in~\ref{fig:StepresponseOvershootingCriteriaPlot}
+	als Fläche zwischen der Referenz $r$ und der Systemantwort $y$ dargestellt.
+	Diese Fläche wird noch normiert mit $u_\mathbf{sat+}$.
+}{
+	\centering
+    
+	\begin{figure}[H]
+	    \centering
+	    \input{images/StepresponseOvershootingCriteriaPlot.tex}
+	    \caption{Kriterium für das Überschwingen in positive Richtung}
+	    \label{fig:StepresponseOvershootingCriteriaPlot}
+	\end{figure}
+
+
+}
+
+\horizontalLine
+
+
+\subsubsection{$\mathFunction{g}{\individuumI}$: Gesamte Fehlerbewertung}
+\minipagedOrBelowEachOther
+{
+	Die Teilbewertungen werden jeweils mit einem \\
+	Gewichtungsfaktor $a_\mathbf{o}$ skaliert. Diese müssen vom Anwender\\
+	passend gewählt werden, um das gewünschte Verhalten zu\\
+	erzielen.
+}{
+	\centering
+    \begin{equation}
+		\mathFunction{g}{\individuumI} = 
+		\frac{1}{K} \cdot \sum_{k=0}^{K-1}\Big(
+			a_\mathbf{0} \cdot \funcGOfk{0} + 
+			a_\mathbf{1} \cdot \funcGOfk{1} +
+			a_\mathbf{2} \cdot \funcGOfk{2}
+			\Big)
+	\end{equation}
+}
+\newpage
+
+
+\subsection{Optimierung durchführen}
+\begin{figure}[H]
+	\center
+    \vspace{-0.5cm}
+    \includegraphics[width=\linewidth]{images/SimpleMotor/Genetic_SimulationSoftware.png}
+    \caption{Software der Systemsimulation für die Optimierung}
+    \label{fig:SimpleMotorGenetic_SimulationSoftware}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+	Die Optimierung wird 10-mal mit dem \gls{GA} durchgeführt, 
+	weil der GA aufgrund seiner stochastischen Natur nicht immer zum gleichen Ergebnis führt.
+	Bei der Optimierung wurden die Einstellungen aus der~\ref{tab:SimpleMotorGenetic_OptimizationParameters} verwendet.\\
+
+	Für den \gls{Hyperparameter} der Mutationsstärke $\mathFunction{M}{k}$ wird ein
+	abklingender Wert verwendet, um zu Beginn der Optimierung eine grössere Diversität in der Population zu ermöglichen.
+	Am Ende der Optimierung soll die Population jedoch weniger divers sein, um eine bessere \gls{Konvergenz} zu ermöglichen.
+}
+{
+	Die Wahl der PID Ausgangs-Sättigung $u_\mathbf{satHigh}$ und $u_\mathbf{satLow}$
+	ist aufgrund der realen Spannungsbegrenzung des DC-Motors notwendig.
+	Die PID-Integrator-Sättigung $I_{\mathbf{SatHigh}}$ und $I_{\mathbf{SatLow}}$ hingegen
+	sind, wie viele andere dieser Hyperparameter, willkürlich gewählt und können auch andere Werte annehmen. 
+	Mehr zur Bestimmung der Hyperparameter ist im Kapitel
+	~\fullref{sec:objektivesFazitIterativesTuning} beschrieben.
+}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}clrc@{}}
+		\toprule
+		\textbf{Parameter} & \textbf{Beschreibung} & \textbf{Wert} \\
+		\midrule
+		$D$                 & Anzahl der einzelnen Optimierungsdurchläufe &10\\[0.5ex]
+		$N$                 & Anzahl Individuen in der Population &30\\[0.5ex]
+		$G$                 & Anzahl Generationen &5000\\[0.5ex]
+		$C$                 & Mutations-Wahrscheinlichkeit &0.05\\[0.5ex]
+		$\mathFunction{M}{k}$ & Mutationsstärke &$1 \cdot 0.999^{k}$\\[0.5ex]
+		Anti-Windup       & Verwendete Anti-Windup Methode & Clamping \\[0.5ex]
+		\hline
+		\textbf{Optimierungsziele} &  &  & \\[0.5ex]
+		$a_\mathbf{0}$     & Absoluter Regelungsfehler &3.8\\[0.5ex]
+		$a_\mathbf{1}$     & Stellwertänderungsrate &0.038\\[0.5ex]
+		$a_\mathbf{2}$     & Positives Überschwingen &111\\[0.5ex]
+		\hline
+		\textbf{Konstante Systemparameter} &  &  & \\[0.5ex]
+		$u_\mathbf{satHigh}$ & PID Ausgangs-Sättigung oberer Wert &10\\
+		$u_\mathbf{satLow}$  & PID Ausgangs-Sättigung unterer Wert &0\\
+		$I_{\mathbf{SatHigh}}$	     & PID-Integrator-Sättigung oberer Wert &10\\
+		$I_{\mathbf{SatLow}}$	     & PID-Integrator-Sättigung unterer Wert &-10\\
+		\hline
+		\textbf{PID-Startparameter} &  &  & \\[0.5ex]
+		$Kp$     & Proportionalitätsfaktor &$0 + \mathFunction{randG}{-10,10}*$\\[0.5ex]
+		$Ki$     & Integrationsfaktor &$0 + \mathFunction{randG}{-10,10}*$\\[0.5ex]
+		$Kd$     & Ableitungsfaktor &$0 + \mathFunction{randG}{-10,10}*$\\[0.5ex]
+		$Kn$     & Filterkonstante &$0 + \mathFunction{randG}{-10,10}*$\\[0.5ex]
+		\bottomrule
+\end{tabular}
+\caption{Hyper- \& Tuningparameter für Optimierung mit dem genetischen Algorithmus}
+\label{tab:SimpleMotorGenetic_OptimizationParameters}
+\end{table}
+\[
+    *\mathFunction{randG}{a,b} \text{ ist eine gleichverteilte Zufallsvariable im Intervall [a, b] } 
+\]
+\newpage
+
+%\horizontalLine
+\subsection{Optimierung auswerten}
+
+
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/SimpleMotor/Genetic_Simulation_LearningHistory_1.pdf}
+    \caption{Lernverlauf der Optimierung mit dem genetischen Algorithmus bei 10 Durchläufen}
+    \label{fig:SimpleMotorGenetic_SimulationLearningHistory_1}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+	Die \ref{fig:SimpleMotorGenetic_SimulationLearningHistory_1} zeigt den Lernverlauf
+	der 10 Optimierungsdurchläufe mit dem \gls{GA}.
+	Ohne den abklingenden Mutations-Parameter $\mathFunction{M}{k}$ würde die Lernkurve eher linear verlaufen.
+}
+{
+	Die hohe Mutationsstärke zu Beginn der Optimierung sorgt dafür, dass sich die Population schneller in Richtung
+	eines guten Lösungsbereichs bewegt.
+	Am Ende der Optimierung ist die Mutationsstärke klein, was eine feinere Suche im nach einer guten Lösung ermöglicht.
+}
+
+\horizontalLine
+\subsection{Optimierten Regler am realen System testen}
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/SimpleMotor/Genetic_realResult.pdf}
+    \caption{Antwort auf Stimulation des optimierten Reglers am DC-Motor, mit dem durch \gls{GA} optimierten PID-Regler}
+    \label{fig:SimpleMotorGenetic_realResult}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+
+}
+{
+	
+}
+
+%\subsubsection{Die Optimierung führt nicht immer zu einem guten Ergebnis}
+
+
+%\begin{figure}[H]
+%	\center
+%    %\vspace{-1.6cm}
+%    \includegraphics[width=\linewidth]{images/MotorSystemGenetic_Simulation_LearningHistory_2.pdf}
+%    \caption{Lernverlauf der Optimierung mit dem genetischen Algorithmus führt nicht immer zu einem guten Ergebnis}
+%    \label{fig:MotorSystemGenetic_SimulationLearningHistory_2}
+%\end{figure}
+%
+%\begin{figure}[H]
+%	\center
+%    %\vspace{-1.6cm}
+%    \includegraphics[width=\linewidth]{images/MotorSystemGenetic_Simulation_StepResponse_2.pdf}
+%    \caption{Sprungantwort der Systeme mit den Reglern + schlecht optimierter Regler}
+%    \label{fig:MotorSystemGenetic_SimulationStepResponse_2}
+%\end{figure}

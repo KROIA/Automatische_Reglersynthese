@@ -1,0 +1,114 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{pifont}
+
+% Define colors based on score ranges
+\definecolor{score10}{RGB}{144,238,144}  % Light green
+\definecolor{score8}{RGB}{173,255,47}    % Yellow-green
+\definecolor{score6}{RGB}{255,255,153}   % Light yellow
+\definecolor{score4}{RGB}{255,200,124}   % Light orange
+\definecolor{score2}{RGB}{255,160,122}   % Salmon
+\definecolor{crosscolor}{RGB}{255,182,193} % Light pink/red
+
+% Command for colored cell with number
+\newcommand{\scoreCell}[1]{%
+  \ifnum#1=10
+    \cellcolor{score10}#1
+  \else\ifnum#1=8
+    \cellcolor{score8}#1
+  \else\ifnum#1=6
+    \cellcolor{score6}#1
+  \else\ifnum#1=4
+    \cellcolor{score4}#1
+  \else\ifnum#1=2
+    \cellcolor{score2}#1
+  \fi\fi\fi\fi\fi
+}
+
+% Command for cross mark
+\newcommand{\crossMark}{\cellcolor{crosscolor}\textcolor{red}{\ding{55}}}
+
+% Command for check mark
+\newcommand{\checkMark}{\cellcolor{score10}\textcolor{green}{\ding{51}}}
+
+% Command for empty cell
+\newcommand{\emptyCell}{\cellcolor{white}}
+
+\begin{document}
+
+\begin{table}[htbp]
+\centering
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{2.2}  % Increased for better vertical spacing
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{} & 
+\rotatebox{90}{Lambda-Tuning} & 
+\rotatebox{90}{Pol-Platzierung} & 
+\rotatebox{90}{LQG} & 
+\rotatebox{90}{Zuger-Nichols} & 
+\rotatebox{90}{Matlab systune} & 
+\rotatebox{90}{Matlab looptune} & 
+\rotatebox{90}{Genetischer Algorithmen} & 
+\rotatebox{90}{Neuroevolution} \\
+\hline
+\multirow{4}{=}{\rotatebox{90}{Reglerverhalten}} 
+& \textbf{Stabilität} & \scoreCell{8} & & & & & & & \\
+\cline{2-10}
+& \textbf{Zeitverhalten} & \scoreCell{8} & & & & & & & \\
+\cline{2-10}
+& \textbf{Stationär} & \scoreCell{10} & & & & & & & \\
+\cline{2-10}
+& \textbf{Robustheit} & \scoreCell{8} & & & & & & & \\
+\hline
+\multirow{5}{=}{\rotatebox{90}{Systemvoraussetzung}} 
+& \textbf{Instabil möglich} & \crossMark & & & & & & & \\
+\cline{2-10}
+& \textbf{MIMO fähig} & \checkMark & & & & & & & \\
+\cline{2-10}
+& \textbf{Nichtlinear fähig} & \crossMark & & & & & & & \\
+\cline{2-10}
+& \textbf{Zeitvariant fähig} & \crossMark & & & & & & & \\
+\cline{2-10}
+& \textbf{Struktur offenheit} & \crossMark & & & & & & & \\
+\hline
+\multirow{3}{=}{\rotatebox{90}{Parametriesierung}} 
+& \textbf{Benutzerfreundlichkeit} & & & & & & & & \\
+\cline{2-10}
+& \textbf{Reglerstruktur Vorgabe} & & & & & & & & \\
+\cline{2-10}
+& \textbf{Flexibilität der Optimierungsvorgaben} & & & & & & & & \\
+\hline
+\multirow{2}{=}{\rotatebox{90}{Automatisierungsgrad}} 
+& \textbf{Tools/Technologien} & & & & & & & & \\
+\cline{2-10}
+& \textbf{Eingriff des Anwenders} & & & & & & & & \\
+\hline
+\end{tabular}
+\caption{Comparison table with colored scores and symbols}
+\end{table}
+
+% Example usage in a simpler table:
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Criterion} & \textbf{Method A} & \textbf{Method B} & \textbf{Method C} \\
+\hline
+Performance & \scoreCell{10} & \scoreCell{8} & \scoreCell{6} \\
+\hline
+Stability & \checkMark & \crossMark & \checkMark \\
+\hline
+Flexibility & \scoreCell{4} & \scoreCell{2} & \scoreCell{8} \\
+\hline
+\end{tabular}
+\caption{Simple example with scores and symbols}
+\end{table}
+
+\end{document}

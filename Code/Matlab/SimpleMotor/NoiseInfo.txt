@@ -1,0 +1,6 @@
+Die Messung für das emulieren des Rauschens am Encoder wurde nur schnell schnell gemacht.
+das Excel "noiseData" beinhaltet das gemessene Rauschen.
+Ich habe auf verschiedene Arten versucht das rauschen mathematisch mit matlab zu
+einem Simulink Block zusammenbasteln, das hat aber nicht geklappt, deshalb habe
+ich das Rauschsignal von hand im Simulink nachgebaut, bis es ungefair das gleiche verhalten, wie in 
+echt gezeigt hat.

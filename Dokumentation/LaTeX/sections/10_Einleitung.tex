@@ -1,0 +1,92 @@
+\section{Einleitung}
+
+\minipagedOrBelowEachOther
+{
+    \subsection{Problemstellung}
+    Für die \gls{Reglersynthese} gibt es
+    eine Vielzahl von Methoden. Diese unterscheiden sich zum
+    einen durch ihre mathematische Herangehensweise und zum
+    anderen durch das benötigte \gls{Modellwissen} über den \gls{Prozess}.
+    Ausserdem gibt es Unterschiede wie automatisiert die Reglersynthese
+    abläuft und wie die Methode parametrisiert wird.
+}{
+    \subsection{Aufgabenstellung}
+    Der Fokus dieser Arbeit soll auf der Parametrisierung der
+    Methode liegen, also darauf, wie und in welcher Form der Methode 
+    kommuniziert wird, welches Verhalten der geschlossene
+    Regelkreis haben soll. Diese Arbeit soll aufzeigen, welche Methoden 
+    zur automatischen Reglersynthese existieren und für
+    welche Anwendungsfälle diese geeignet sind.
+
+    Die besten Methoden sollen implementiert und an verschiedenen Prozessen getestet werden.
+    Zuletzt soll eine interaktive GUI erstellt werden mit der die unterschiedlichen Methoden
+    auf einem Prozess angewendet werden können.
+    Das Ziel der Arbeit ist es eine Aussage darüber zu treffen, welche
+    Methoden, je nach Prozess und gewünschtem Verhalten, 
+    zur automatischen Reglersynthese geeignet sind, wie diese funktionieren
+    und welche Vor- und Nachteile diese haben.
+    Zur besseren Vermittlung des gewonnenen Wissens sollen die Methoden
+    in einer GUI auf einem Beispielprozess implementiert werden.
+}
+
+\horizontalLine
+\subsection{Aufbau des Dokuments}
+    Das Dokument besteht aus 4 Teilen.
+    \begin{itemize}
+        \item Recherche zu verschiedenen Methoden für die automatische Reglersynthese
+        \item Implementierung und Testen der ausgewählten Methoden an zwei Prozessen
+        \begin{itemize}
+            \item DC-Motor
+            \item Motor-mit-Schwungmasse
+        \end{itemize}
+        \item Schlussteil mit Fazit
+        \item Anhang mit diversen theoretischen Erklärungen zu verschiedenen Themen die in der Arbeit vorkommen
+    \end{itemize}
+    
+\minipagedOrBelowEachOther
+{
+    \subsubsection{Abkürzungen}
+    \printglossary[type=acronyms, style=longheader]
+}
+{
+    \subsubsection{Randnotiz zu den getesteten Systemen}
+    In dieser Arbeit werden zwei verschiedene \gls{Prozess}e mit einem PID-Regler geregelt.\\
+    Mir ist durchaus bewusst, dass ein PID-Regler nicht zwingend die beste Wahl ist.
+    Es geht in dieser Arbeit jedoch nicht darum, einen optimalen Regler für die Prozesse zu entwerfen,
+    sondern die verschiedenen Methoden der automatischen Reglersynthese anzuwenden und zu vergleichen.
+    Die Wahl eines nicht für alle Prozesse optimalen Reglers, kann als Challenge gesehen werden,
+    ein möglichst gutes Ergebnis mit den gegebenen Mitteln zu erzielen. 
+}
+
+
+
+\horizontalLine
+\subsection{Verwendete Tools}
+In dieser Arbeit wurden folgende Tools verwendet:
+\begin{itemize}
+    \item \textbf{LaTeX} ~\cite{latexProject} für die Dokumentation
+    \item \textbf{MATLAB/Simulink} ~\cite{matlabAPP} für die Simulation der Systeme und die Verwendung der \textit{systune} Methode
+    \item \textbf{Visual Studio Community 2022} ~\cite{visualStudioAPP} \\
+        für die C++ Implementierung der Optimierungsalgorithmen \gls{GA} und \gls{DE} und die GUI.\\
+        \begin{itemize}
+            \item Verwendeter Compiler: \textbf{MSVC}
+            \item Build System: \textbf{CMake} ~\cite{cmakeAPP}
+            \item GUI Framework: \textbf{Qt 5.15.2} ~\cite{qtFrameworkLibrary}
+            \item SFML: \textbf{SFML 2.6.1} ~\cite{sfmlCPPLibrary} für die Visualisierung der Simulation
+            \item ImGui: \textbf{ImGui 1.91.5} ~\cite{imguiCPPLibrary} als Grundlage für ImPlot
+            \item ImPlot: \textbf{ImPlot 0.16} ~\cite{implotCPPLibrary} für die Plot Elemente in der GUI
+        \end{itemize}
+    \item \textbf{Visual Studio Code} ~\cite{visualStudioCodeAPP} für die Bearbeitung von LaTeX Dateien
+    \item \textbf{Processing} ~\cite{processingAPP} für die Erprobung und Visualisierung vom Differential Evolution Algorithmus in einer einfachen Umgebung
+    \item \textbf{Git} ~\cite{gitAPP} für die Versionskontrolle des Codes und der Dokumentation
+    \item \textbf{ChatGPT, ClaudeAI und GitHub Copilot}  ~\cite{llmChatGPT} ~\cite{llmClaude} ~\cite{llmGitHubCopilot} 
+    für die Unterstützung bei der Code Ergänzung und Hilfe
+    bei der Erstellung von MATLAB-Skripte und LaTeX Makros.
+\end{itemize}
+
+%\horizontalLine
+%\newpage
+\subsection{Quellcode und Dokumentation}
+Der Quellcode und die Dokumentation dieser Arbeit sind im GitHub Repository \cite{baRepository} verfügbar.
+Dort sind auch alle MATLAB-Skripte und Simulink-Modelle zu finden, die in dieser Arbeit verwendet wurden.
+

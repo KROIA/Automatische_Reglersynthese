@@ -1,0 +1,448 @@
+\subsection{Persönliches Fazit}
+\minipagedOrBelowEachOther
+{
+    Eigentlich war geplant den \gls{GA} und den \gls{DE} Algorithmus 
+    in Kombination mit der Ziegler-Nichols Methode zu verwenden. 
+    Die gewählten Prozesse lassen dies jedoch nicht zu, da sie entweder instabil sind
+    oder nur sehr kleine Zeitkonstanten haben.\\
+    
+
+    Die Optimierung, ohne die durch Ziegler-Nichols bestimmten Startwerte,
+    hat jedoch an beiden Prozessen gut funktioniert und deshalb bietet Ziegler-Nichols
+    keinen Mehrwert für diese Optimierungsmethoden.
+    Ausserdem wäre Ziegler-Nichols nur für PID-Regler anwendbar,
+    während die Optimierungsmethoden beliebige Reglerstrukturen optimieren können.\\
+
+    
+    Es konnten leider nicht alle geplanten Aufgaben umgesetzt werden.
+    Eine Demo Applikation zur Visualisierung der Optimierungsprozesse
+    ist nicht genug überarbeitet um sie mit dieser Arbeit abgeben zu können.
+    Mein Ziel ist es jedoch, auch nach der Abgabe der Arbeit die Applikation noch aufzuräumen 
+    und auf GitHub zu veröffentlichen \cite{baRepository}.
+}
+{
+    \subsubsection{\textit{Systune}}
+    Die Optimierung mit \textit{systune} hat aus meiner Sicht nicht so gut funktioniert wie ich 
+    das erhofft hatte.
+    Ich glaube, dass mit tieferem Wissen über \textit{systune} und die Tuning-Goals, 
+    ein besseres Ergebnis erzielt werden könnte.
+    Eine bessere Dokumentation von Seite Mathworks wäre sehr hilfreich gewesen.\\
+   
+
+    Teilweise habe ich mittels Testen von neuen Tuning-Goals festgestellt, dass die Optimierung völlig versagt.
+    Ohne Rückmeldung dazu, was genau an dem neu hinzugefügten Tuning-Goal falsch ist, ist es schwierig
+    zu verstehen, warum die Optimierung damit nicht funktioniert. Manchmal hatten auch bestimmte Tuning-Goals 
+    Einflüsse auf Dynamiken des Systems, welche ich nicht erwartet hätte oder nicht in diesem Ausmass.
+    Viele Tuning-Goals musste ich deshalb wieder aus der Optimierung entfernen, weil ich es nicht geschafft habe diese 
+    korrekt zu konfigurieren.
+}
+%\horizontalLine
+\minipagedOrBelowEachOther
+{
+    \subsubsection{Genetischer Algorithmus}
+    Der genetische Algorithmus ist nicht allzu kompliziert zu verstehen und lässt sich relativ einfach implementieren.
+    Es gibt sogar eine fertige Implementierung in MATLAB ~\cite{matlabGeneticAlgorithm}, aber diese habe ich nicht angeschaut.
+    Die eigene Implementierung hat es mir ermöglicht, einen kompletten Einblick in den Optimierungsprozess zu bekommen.
+}
+{
+    \subsubsection{Differential Evolution Algorithmus}
+    Der Differential Evolution Algorithmus ist ein wenig schwieriger zu verstehen als der genetische Algorithmus,
+    aber die Implementierung ist auch hier relativ einfach. 
+    Im Gegensatz zum genetischen Algorithmus kannte ich \gls{DE} vor der Arbeit noch nicht aber für zukünftige Projekte, 
+    welche einen Optimierungsalgorithmus benötigen, werde ich \gls{DE} definitiv ausprobieren.
+}
+
+
+\horizontalLine
+\subsubsection{Welches ist die beste Methode?}
+\minipagedOrBelowEachOther
+{
+    Ich persönlich bevorzuge den GA und den
+    DE-Algorithmus, da sie bessere Möglichkeiten für
+    spezifische Optimierungsziele bieten.\\
+
+
+    Ich glaube durchaus, dass \textit{systune} in der Lage wäre mit den geeigneten Optimierungszielen 
+    ein besseres Ergebnis zu liefern als das was ich es in der Arbeit erzielt habe, 
+    aber dennoch sehe ich den grösseren Vorteil darin ein nichtlineares System optimieren zu können. \\
+
+    Sättigungen sind da ein gutes Beispiel, welche bei realen Systemen immer vorhanden sind
+    und das Systemverhalten stark beeinflussen können.
+    Beispielsweise lassen sich stabile Regler für Systeme mit Sättigung umsetzen welche im linearisierten Fall ohne Sättigung 
+    instabil wären. Wird der Regler jedoch auf das linearisierte System optimiert, so ist das System zwar stabil, 
+    verschenkt aber im realen Prozess mögliche Leistungspotentiale.
+}
+{
+    Sättigungen im System in Kombination mit Integratoren im Regler führen zum Windup-Problem, welches leider mit \textit{systune} nicht
+    mitberücksichtigt werden kann.
+    Mit dem genetischen- oder dem Differential Evolution Algorithmus können unterschiedliche
+    Anti-Windup-Methoden sowie deren Parameter in die Optimierung einbezogen werden,
+    was auch dafür sorgt, dass die Nebeneffekte der Anti-Windup-Methoden berücksichtigt werden.
+}
+
+
+\newpage
+\subsubsection{Zu spät erkannte Fehler}
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Falsche Normierung der\\Fehler-Minimierungs-Funktion}
+
+    Während der Überarbeitung der Arbeit ist mir aufgefallen, 
+    dass die ~\fullref{form:SimpleMotorGeneticAlgorithmErrorMinimizationFunction}
+    fälschlicherweise wie folgt definiert wurde:
+
+    \begin{equation*}
+        %\label{form:SimpleMotorGeneticAlgorithmErrorMinimizationFunction}
+		\mathFunction{g}{I_{\mathbf{i}}} = 
+		\frac{1}{t_\mathbf{end}-t_\mathbf{start}}\sum_{k=0}^{K-1}(
+				\sum_{o=0}^{O-1}(
+					a_\mathbf{o} \cdot \mathFunction{g_\mathbf{o}}{k}
+				)
+			)
+	\end{equation*}
+
+    Der Fehler liegt in dem Skalierungsfaktor $\frac{1}{t_\mathbf{end}-t_\mathbf{start}}$,
+    dieser müsste eigentlich $\frac{1}{K}$ sein, also die Anzahl der Zeitschritte.
+    Da für jeden Simulationsschritt die jeweiligen Teilsummen addiert werden,
+    muss der \gls{Fehler} durch die Anzahl der Zeitschritte normiert werden und nicht durch die Simulationszeit.\\
+
+
+    Das gleiche Problem tritt beim zweiten getesteten Prozess auf.\\
+    ~\ref{form:MotorMitSchwungmasseGeneticAlgorithmErrorMinimizationFunction}:
+
+    \begin{equation*}
+		%\label{form:MotorMitSchwungmasseGeneticAlgorithmErrorMinimizationFunction}
+		\mathFunction{g}{I_{\mathbf{i}}} = 
+		\frac{1}{t_\mathbf{end}-t_\mathbf{start}}\sum_{k=0}^{K-1}(
+				\sum_{o=0}^{O-3}(
+					a_\mathbf{o} \cdot \mathFunction{g_\mathbf{o}}{k}
+				)
+			) + a_\mathbf{3} \cdot \mathFunction{g_\mathbf{3}}{I_{\mathbf{i}}}
+			  + a_\mathbf{4} \cdot \mathFunction{g_\mathbf{4}}{I_{\mathbf{i}}}
+	\end{equation*}
+
+    Beide Fehler sind in der Dokumentation korrigiert und haben auch keinen Einfluss auf die Resultate der Arbeit.
+    Die einzige Inkonsistenz die dadurch entsteht, ist dass die gemessenen Lernkurven falsch skaliert sind.\\
+
+    
+    Ich empfehle eine Normierung der Bewertungsfunktion, aber es ist theoretisch nicht zwingend notwendig,
+    solange die Anzahl der Zeitschritte in der Simulation pro Trainings-Iteration für jedes Individuum gleich bleibt.
+    Notwendig ist eine Normierung dann, wenn die Individuen mit unterschiedlichen Simulationszeiten oder Abtastzeiten bewertet werden,
+    da in diesem Fall z.B. für Individuum A, 10-mal die Regelabweichung integriert wird und für Individuum B nur 5 mal.
+    Das würde dafür sorgen, dass Individuum A einen grösseren Fehlerwert erhält als Individuum B und somit 
+    beim Selektionsprozess benachteiligt wird.
+}
+{
+    \paragraph*{Dynamisches anpassen der Bewertungsfunktion}
+    %\phantomsection
+    \label{par:objektivesFazitDynamischeAnpassungBewertungsfunktion}
+    Im Beispiel des Motors mit Schwungmasse wird die Teilbewertung $\mathFunction{g_\mathbf{4}}{I_{\mathbf{i}}}$ erst ab Epoche
+    100 in die Gesamtbewertung einbezogen. Dies hat zu starke Schwankungen in der Lernkurve geführt, wie in
+    \fullref{fig:MotorMitSchwungmasseGenetic_SimulationLearningHistory_1} zu sehen ist.
+
+
+    Im Test mit dem \gls{DE} ist jedoch kein solcher Sprung in der Lernkurve zu erkennen.
+    Der Grund dafür liegt in der Natur des \gls{DE} Algorithmus.
+    Der \gls{DE} bevorzugt immer das bessere Individuum in der Population, gegenüber dem jeweils neu getesteten Individuum.
+    Sobald die Teilbewertung $\mathFunction{g_\mathbf{4}}{I_{\mathbf{i}}}$ in die Gesamtbewertung einbezogen wird,
+    wird der Durchschnittsfehler der Population sofort schlechter.
+    Der \gls{DE} sorgt jedoch dafür, dass deshalb alle neuen Individuen verworfen werden weil sie 
+    schlechter sind als die bisherigen Individuen.
+    Dadurch sieht es so aus als würde \gls{DE} die hinzugefügte Teilbewertung sehr gut verkraften.
+    Dies ist jedoch nicht der Fall.\\
+
+
+    Im Gegensatz zum \gls{GA} ist \gls{DE} abhängig von den \gls{Fehler}werten der alten Population.
+    Deshalb darf eine solche Änderung der Bewertungsfunktion nicht vorgenommen werden, ausser es wird garantiert,
+    dass durch die Anpassung der Bewertungsfunktion, der durchschnittliche Fehlerwert der Population verbessert wird.\\
+
+    
+    Der \gls{GA} hingegen ist nicht von diesem Problem betroffen, da jede Generation komplett individuell betrachtet wird und
+    grosse Sprünge in den durchschnittlichen Fehler der Population keine Auswirkungen auf die Selektion der Individuen haben.\\
+
+    Dieses Problem ändert jedoch nicht grossartig das erzielte Resultat,
+    da der \gls{DE} zum Zeitpunkt als die Teilbewertung hinzugefügt wird, sowieso schon so
+    gut ist, dass die Fehlerwerte die durch die Teilbewertung $\mathFunction{g_\mathbf{4}}{I_{\mathbf{i}}}$
+    hinzugefügt werden, im Vergleich zu den anderen Teilbewertungen sehr klein sind.
+}
+
+%\horizontalLine
+%\subsubsection{Welches ist die beste Methode?}
+%\minipagedOrBelowEachOther
+%{
+%
+%}
+%{
+%
+%}
+
+\newpage
+%\horizontalLine
+\subsubsection{Herausforderungen \& Learnings}
+
+\minipagedOrBelowEachOther{
+    \paragraph*{Die erste Arbeit mit LaTeX}
+    Dies ist meine erste Arbeit, die ich mit LaTeX verfasst habe.
+    Schon seit längerer Zeit hatte ich mir vorgenommen, LaTeX zu erlernen, 
+    jedoch war die Hemmschwelle dafür stets sehr hoch.
+    Obwohl mir die Wahl des Werkzeugs freigestanden hätte, habe ich mich bewusst dafür entschieden, 
+    diese Arbeit in LaTeX zu schreiben.
+    Es bot sich dadurch eine gute Gelegenheit, mich intensiv mit LaTeX auseinanderzusetzen.
+
+    Die Arbeit mit LaTeX hat mich teilweise viel Geduld gekostet, 
+    dennoch bin ich froh, diesen Schritt gegangen zu sein.
+    Besonders störend empfand ich die Fehlersuche: Tritt ein Fehler auf, 
+    wird häufig nicht eindeutig angezeigt, wo dieser tatsächlich liegt.
+    Stattdessen meldet der Compiler Probleme an anderen Stellen, was die Fehlersuche erschwert.
+
+    Aus programmiertechnischer Sicht sehe ich ebenfalls Verbesserungspotenzial.
+    Meiner Meinung nach könnte LaTeX deutlich mächtiger sein, 
+    wenn es syntaktisch und strukturell besser aufgebaut wäre.
+}
+{
+    \paragraph*{MATLAB Programmierung für die Regleroptimierung und Erstellung von Grafiken}
+    Vor Beginn dieser Arbeit hatte ich nur wenig Erfahrung mit der Programmierung in MATLAB.
+    Für die automatisierte Erstellung der Grafiken erwies sich MATLAB jedoch als sehr hilfreich.
+    Um den Aufwand zu reduzieren, habe ich ein Skript entwickelt, 
+    das per Knopfdruck nahezu alle Grafiken der Arbeit erzeugt und automatisch im vorgesehenen Verzeichnis speichert.
+}
+\minipagedOrBelowEachOther{
+    \paragraph*{Implementierung der Systeme und\\Optimierungsalgorithmen in C++}
+    Für die Implementierung von GA und DE habe ich mich für C++ entschieden, 
+    da ich diese Sprache gut beherrsche und damit im Vergleich zu
+    anderen Sprachen schneller Ergebnisse erzielen kann. 
+    Als Grundlage für die C++-Applikation diente meine eigene, 
+    einfache Game-Engine \cite{cppLibraryQSFMLEditorWidget}, 
+    die es mir ermöglichte, mich rasch auf die wesentlichen Aspekte der Implementierung zu konzentrieren.
+    Zudem liessen sich grafische Visualisierungen mit dieser Basis unkompliziert realisieren.
+}
+{
+    \paragraph*{Auffrischung der Z-Transformation}
+    Für die diskrete Simulation der Systeme musste ich mich zum ersten Mal 
+    seit langer Zeit wieder mit der Z-Transformation befassen. 
+    Das Erreichen eines lauffähigen Ergebnisses erwies sich dabei als 
+    sehr motivierend und steigerte die Freude an der Thematik.
+}
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Implementierung von unterschiedlichen\\diskreten Integrationsverfahren}
+    Für die diskrete Simulation der Systeme habe ich mich entschieden, verschiedene Integrationsverfahren zu implementieren.
+    Dies ermöglicht es, problemlos zwischen den unterschiedlichen Verfahren zu wechseln,
+    um die Genauigkeit der Simulation gezielt zu optimieren.
+}
+{
+    \paragraph*{Modellbildung des Prozesses:\\Motor mit Schwungmasse}
+    Bei der Modellbildung des Prozesses konnte nicht auf die dokumentierten Modellbeschreibungen zurückgegriffen werden, 
+    da diese ein anderes Systemverhalten als der reale Prozess abbilden.
+    Daher wurde das Modell des Prozesses mithilfe einer Systemidentifikation erstellt. \ref{sec:MotorMitSchwungmasseModellidentifikation}
+    Mir kam die Idee, den GA in diesem Zusammenhang zu nutzen, anstatt mich lange mit manueller Parametrierung aufzuhalten. 
+    Um den GA für die Modellidentifikation zu nutzen, musste lediglich das strukturelle Modellgerüst definiert werden,
+    während die Parameteroptimierung automatisch durch den Algorithmus erfolgte.
+}
+\minipagedOrBelowEachOther{
+    \paragraph*{Alternative Darstellung des Nyquist-Diagramms}
+    Um das Nyquist-Diagramm darzustellen, habe ich mich gegen die klassische Darstellung von
+    MATLAB entschieden, da ich sie nicht besonders übersichtlich finde.
+    Stattdessen habe ich das Nyquist-Diagramm mit eines externen MATLAB-Skript \cite{matlabScriptNyquistLog} 
+    in einer logarithmischen Darstellung geplottet.
+    Um mehrere Systeme innerhalb desselben Diagramms darstellen zu können, 
+    waren einige Anpassungen am Skript erforderlich.
+    Die resultierende Darstellung bietet meiner Ansicht nach eine übersichtlichere und verständlichere Visualisierung.
+    Das Skript ist nicht perfekt aber für die Zwecke dieser Arbeit ausreichend.
+}
+{
+    \paragraph*{Alternative Darstellung der Stabilitätsgrenzen}
+    Bei der Recherche zur Interpretation des Resultatdiagramms vom Optimierungskriterium \textbf{TuningGoal.Margins} \cite{matlabTuningGoals_Margins},
+    bin ich auf ein Video von Brian Douglas gestossen \cite{matlabScriptStabilityRegionPlot}.
+    In diesem Video wird eine alternative Darstellung der Stabilitätsgrenzen eines Systems erläutert.
+    Die dort gezeigte Visualisierung wurde jedoch nicht vollständig übernommen, 
+    da sie einen Teil des möglichen Stabilitätsbereichs ausblendet.
+    Stattdessen konzentrierte ich mich auf den Teil des Videos, in dem er zeigte, 
+    wie man für jeden Punkt berechnet, ob das System stabil ist oder nicht. 
+    Auf dieser Grundlage entstand der\\
+    \fullref{sec:StabilitaetsPhaseMarginPlot}.
+
+    Nach einer Diskussion mit \Betreuer~wurde deutlich, 
+    dass diese Darstellung in der praktischen Anwendung nur eingeschränkt hilfreich ist.
+    Sie setzt voraus, dass die Phasenverschiebung über den gesamten Frequenzbereich konstant ist.
+    In realen Systemen entstehen Phasenverschiebungen jedoch unter anderem auch durch Totzeiten, 
+    welche dann in frequenzabhängigen Phasenverschiebungen enden.
+    Aus diesem Grund wurde ein weiteres Diagramm entwickelt, 
+    das den Einfluss von Verstärkung und Totzeit auf die Stabilität des Systems veranschaulicht.\\
+    \fullref{sec:StabilitaetsDelayMarginPlot}
+}
+\newpage
+
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Stabilitätsanalysen}
+    Im Verlauf der Arbeit sind immer wieder neue Möglichkeiten zur Stabilitätsanalyse aufgetaucht.\\
+   ~\fullref{sec:StabilitaetsPhaseMarginPlot},\\
+   ~\fullref{sec:StabilitaetsDelayMarginPlot}\\
+    und das Sensitivitäts-Diagramm wurden zu einem Zeitpunkt hinzugefügt,
+    an dem ich schon alle Tests und Messungen abgeschlossen hatte.
+    Die zusätzlichen Stabilitätsanalysen haben aber gezeigt, dass z.B. die optimierten Systeme für den DC-Motor
+    zwar gute Verstärkungs- und Phasenreserven haben, aber sehr empfindlich auf Totzeiten reagieren. 
+    Für ein robusteres Systemverhalten wäre es notwendig gewesen, 
+    die Tuning-Goals und die Fitnessfunktionen dementsprechend anzupassen.
+}
+{
+    \paragraph*{Dynamisches anpassen der\\Bewertungsfunktion für \gls{DE}}
+    Wie bereits auf Seite \pageref{par:objektivesFazitDynamischeAnpassungBewertungsfunktion}: '\textbf{Dynamisches anpassen der Bewertungsfunktion}' beschrieben,
+    ist es heikel, die Bewertungsfunktion für \gls{DE} während des Optimierungsprozesses zu verändern.\\
+
+
+    Mir ist es während den Tests bereits aufgefallen, dass die Lernkurve des \gls{DE} ein ungewöhnliches Verhalten zeigt,
+    da auch dort ein kleiner anstieg im durchschnittlichen Fehlerwert der Population erkennbar sein müsste.
+    Ich konnte den Fehler jedoch auch nach längerer Suche nicht finden und habe das Problem deshalb ignoriert,
+    schliesslich war das Ergebnis trotzdem mehr als zufriedenstellend.\\
+
+
+    Mir ist die Lösung dieses Problems erst in der letzten Woche vor der Abgabe der Arbeit eingefallen.
+    Deshalb blieb mir leider die Zeit nicht, um die Tests mit dem \gls{DE} zu wiederholen.
+}
+
+
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Irrtum bei der Kombination von\\Ziegler-Nichols mit Optimierungsalgorithmen}
+    In \fullref{sec:KombinationMehrererMethoden} habe ich beschrieben, dass die Kombination von Ziegler-Nichols mit Optimierungsalgorithmen
+    gut sein könnte. Wie bereits erwähnt war geplant eine solche Kombination zu testen.
+    Dies hat sich aber leider ziemlich schnell als nicht umsetzbar herausgestellt.
+    Selbst wenn der Prozess die Anforderungen für die Verwendung von Ziegler-Nichols erfüllt,
+    haben die durch Ziegler-Nichols bestimmten Startwerte keinen Mehrwert für die Optimierung mit \gls{GA} oder \gls{DE} gebracht.
+    Im Gegenteil, der Prozess: DC-Motor hat eine sehr kleine Totzeit ($T_u$),
+    wodurch Ziegler-Nichols zu sehr aggressiven Startwerten führt, 
+    die den Optimierungsprozess eher behindern als unterstützen.
+    Durch die Verwendung von Ziegler-Nichols werden die möglichen Regler automatisch auf PID-Regler beschränkt,
+    wodurch die Flexibilität der Optimierungsalgorithmen stark eingeschränkt wird.
+    Ich sehe deshalb den die Kombination von Ziegler-Nichols mit anderen Optimierungsalgorithmen
+    nicht weiter als nützlich an.
+}
+{
+    \paragraph*{Performance-Optimierung der\\C++ Implementierung}
+    Die Performance der C++ Implementierung war während der Tests bis auf den Zeitpunkt,
+    als die approximierten Frequenzgang-Berechnungen hinzugefügt wurden, immer zufriedenstellend.
+    Die Berechnung des Frequenzgangs für die Verstärkungs- und Phasenreserve ist jedoch sehr rechenintensiv,
+    da diese am nichtlinearen Modell im Zeitbereich durchgeführt werden.
+    Die Berechnung des Frequenzgangs wurde in C++ implementiert, um weiterhin davon zu profitieren,
+    unabhängig von MATLAB zu sein. 
+    Der Nachteil war jedoch, dass die Optimierungsdauer dadurch stark angestiegen ist.
+    Ich habe mich deshalb dazu entschieden, den \gls{GA} und \gls{DE} so zu optimieren,
+    dass die einzelnen Simulationen der Individuen dank Multithreading parallel ausgeführt werden können.
+    Die Population wird dabei gleichmässig auf die verfügbaren Prozessorkerne verteilt,
+    wodurch die Optimierungsdauer deutlich reduziert wird.\\
+
+    
+    Trotz dieser Optimierung wäre noch viel Potential zur Performance-Verbesserung vorhanden,
+    da ich keinen Fokus auf die Effizienz der Implementierung gelegt habe.
+    Dies wäre bei einer weiterführenden, vertieften Entwicklung dieser Infrastruktur eine Überlegung wert.
+}
+
+
+\newpage
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Verfeinerung der Simulink-Modelle}
+    Im Verlauf der Arbeit habe ich die Simulink-Modelle der Prozesse immer wieder verfeinert,
+    um ein realistischeres Verhalten zu erzielen. Mein Ziel war es, 
+    so viel wie möglich mit diesen Modellen zu testen um nicht zu viele Experimente am realen Prozess durchführen zu müssen.\\
+
+    
+    Einige dieser Verfeinerungen haben nicht so viel Einfluss auf das Systemverhalten gehabt,
+    was aber nicht weiter schlimm ist, da es mir trotzdem Spass gemacht hat, die Modelle zu verbessern.
+    Beispielsweise habe ich die nichtlineare DC-Verstärkung des Motors modelliert,
+    das hat ziemlich gut funktioniert. \\
+
+    
+    Für die Modellierung der Wirbelstrombremse hingegen habe ich kaum Aufwand betrieben und habe einfach 
+    einen Faktor für die Drehzahlabhängigkeit des Bremsmoments erfunden, da sich dieser sowieso, mit 
+    der auf die Bremse gegebene Spannung, kompensieren lassen würde.
+}
+{
+    \paragraph*{Rauschunterdrückung der Regler}
+    Bei den ersten Tests der Regler auf dem realen Prozess sind mir, vor allem bei den mit \textit{systune} optimierten Reglern,
+    ein starkes Rauschverhalten am Ausgang des Reglers aufgefallen.
+    Es war teilweise so stark, dass dies sogar durch die Motoren hörbar wurde.
+    Aufgrund dessen habe ich für den DC-Motor eine Rauschmessung durchgeführt und ein möglichst ähnliches 
+    Rauschsignal im Simulink-Modell für die modellbasierten Tests hinzugefügt.\\
+
+    
+    Das hat es mir ermöglicht bereits vorgängig zu erkennen wie stark sich auch am realen Prozess das Rauschverhalten auswirken wird.
+    Aufgrund dessen konnten die Tuning-Goals und die Fitness-Funktionen so angepasst werden,
+    um ein besseres Rauschverhalten der Regler zu erzielen.\\
+
+    
+    Für den Prozess mit der Schwungmasse habe ich keine Rauschmessung durchgeführt, 
+    habe aber dennoch ein Rauschsignal in das modellbasierte Testmodell hinzugefügt,
+    um auch bereits vor den Tests am realen Prozess ein Rauschverhalten der Regler zu erkennen.
+    Für die Optimierung der \gls{GA} und \gls{DE} konnte ich ein kleines Rauschsignal bereits mit in die Simulation einbauen,
+    wodurch die Optimierung automatisch dazu veranlasst wurde, das Rauschverhalten der Regler zu goss werden zu lassen.\\
+
+    Ich habe daraus gelernt, dass es sich lohnt, bereits für die modellbasierten Tests 
+    das Rauschen des realen Prozesses zu berücksichtigen. Alternativ können natürlich auch Filter helfen,
+    das Rauschsignal der Sensoren zu reduzieren. In der Praxis wäre dies natürlich die bevorzugte Lösung.
+}
+
+\minipagedOrBelowEachOther
+{
+    \paragraph*{Frequenzgang-Approximationen im Zeitbereich}
+    Für die Berechnung der Verstärkungs- und Phasenreserven im Optimierungsprozess
+    musste ich eine Methode finden, um den Frequenzgang des Systems im Zeitbereich zu approximieren.
+    Ich habe mich dabei für die Methode entschieden,
+    bei der für eine Reihe von Frequenzen Sinus-Signale in das System eingespeist werden
+    und die Amplitude sowie die Phase des Ausgangssignals nach einer vordefinierten Einschwingzeit gemessen werden.\\
+
+
+    Diese Methode hat aber nur in den Fällen gut funktioniert, als das System bereits stabil war und die nichtlinearen Effekte
+    (z.B. Sättigungen) nur noch eine geringe Rolle gespielt haben.
+    Das war überhaupt der Grund, warum die Bewertung der Verstärkungs- und Phasenreserven
+    im Test mit dem Motor mit Schwungmasse, erst ab Epoche 100 in die Gesamtbewertung einbezogen wurde.
+    Davor hat die Frequenzgang-Approximation zu unbrauchbaren Ergebnissen geführt, welche die Optimierung stark gestört haben.\\
+
+
+    Zudem muss bei der Nutzung der berechneten Phase auf die Winkel-Wrap-Around Problematik geachtet werden.
+    Die Quadratische Abweichung der Phase ist nur dann sinnvoll, wenn sich die Phase des Systems in der Nähe der Zielphase befindet.
+    Eine Phase von 270° ist z.B. weit weg von -90°, obwohl sie mit Winkel-Wrap-Around auf demselben Punkt liegen.\\
+
+
+    Für eine Verbesserung müsste die Frequenzgang-Approximation sorgfältiger implementiert werden,
+    und bei der Verwendung der berechneten Phase müsste der Winkel-Wrap-Around Acht genommen werden.
+}
+{
+    \paragraph*{Der weltbeste Taschenrechner (MATLAB) \&\\Support von Mathworks}
+    MATLAB ist ein sehr mächtiges Werkezeug für viele Anwendungsbereiche.
+    Dennoch bin ich während der Arbeit immer wieder an Grenzen gestossen wie bei der Auswahl der Tuning-Goals in \textit{systune},
+    oder bei der Interpretation der Resultate von \textit{systune}.
+    Auch die Dokumentation von MATLAB ist nicht immer vollständig oder fehlerfrei.
+
+    Apropos Fehler: Bezüglich der in \ref{sec:Description_SimulinkPID_ClampingLogic_Problem}
+    beschriebenen Problematik mit der Simulink PID-Regler Anti-Windup-Logik,
+    habe ich den Support von Mathworks kontaktiert und
+    das Problem genau beschrieben, eine Lösung vorgeschlagen und ein Beispiel mit der implementierten Lösung bereitgestellt.
+    Der Technische Support hat mir bestätigt, dass die Dokumentation tatsächlich nicht mit der Implementierung des Simulink Blocks übereinstimmt
+    und hat das Problem an die Entwickler weitergeleitet.
+    Ich sollte benachrichtigt werden, wenn das Problem behoben ist.\\
+
+    Wie einst ein sehr geschätzter Professor in einem Praktikum zu mir sagte:\\
+    \begin{quote}
+        \textit{Warum nutzt du den Windows Taschenrechner, wenn du Zugriff zum weltbesten Taschenrechner hast?!}
+    \end{quote}
+    Jetzt weiss ich weshalb
+    \begin{quote}
+        \textit{Auch der weltbeste Taschenrechner kann Fehler haben. \text{;)}}
+    \end{quote}
+
+
+}
+
+%\minipagedOrBelowEachOther
+%{
+%
+%}
+%{
+%
+%}
+
+\paragraph*{\Author}
+\newpage

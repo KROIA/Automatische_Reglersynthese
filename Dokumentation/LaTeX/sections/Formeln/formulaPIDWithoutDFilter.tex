@@ -1,0 +1,71 @@
+\formulaWithDerivationDeclaration{formulaPIDWithoutDFilter}
+{   % Dargestellte Formel
+    \mathFunctionD{u_{\mathbf{d1}}}{k}=Kd \cdot \frac{\mathFunctionD{e}{k}-\mathFunctionD{e}{k-1}}{Ts}
+}
+{   % Herleitung der Formel
+    Im Simulink wird der D-Anteil der Übertragungsfunktion des PID-Reglers ohne Filter definiert als:
+    \begin{equation*}
+        \frac{\mathFunction{U_{\mathbf{d1}}}{z}}{\mathFunction{E}{z}} = Kd \cdot \frac{1}{Ts} \cdot \frac{z-1}{z}
+    \end{equation*}
+
+    \begin{table}[H]
+        \center
+        \begin{tabular}{@{}rl@{}}
+                \toprule
+                \textbf{Parameter}              & \textbf{Beschreibung} \\
+                \midrule
+                $Ts$                & Abtastzeit \\[0.5ex]
+                $Kd$                & Verstärkung des D-Anteils im PID-Regler \\[0.5ex]
+                $z$                 & Komplexe Variable in der z-Transformation \\[0.5ex]
+                $\mathFunction{U_{\mathbf{d1}}}{z}$           & Ausgang 1 für den D-Anteil im PID-Regler \\[0.5ex]
+                $\mathFunction{E}{z}$           & Eingangssignal des PID-Reglers \\[0.5ex]
+                \bottomrule
+        \end{tabular}
+        \caption{Symbole für die Herleitung des D-Anteils ohne Filter}
+    \end{table}
+
+    Ziel ist es jetzt die Differenzengleichung zu bestimmen, welche dann im C++ Code umgesetzt werden kann.
+
+    \begin{table}[h]
+    \begin{tabular}{m{0.5\textwidth} m{0.5\textwidth}}
+        \hline
+        %\centering
+        Dazu wird die Gleichung umgestellt um die Brüche in $z$ zu eliminieren
+        &
+        \begin{equation*}
+            z \cdot \mathFunction{U_{\mathbf{d1}}}{z} = Kd \cdot \frac{1}{Ts} \cdot (z-1) \cdot \mathFunction{E}{z}
+        \end{equation*}\\
+        \hline
+
+        Da eine Multiplikation mit $z$ im Zeitbereich einer Verschiebung um eine Abtastperiode entspricht und nicht in die 
+        Zukunft geschaut werden kann, wird die Gleichung noch mit $z^{-1}$ multipliziert damit die Transformation in 
+        den diskreten Zeitbereich auch gleich die richtige Verschiebung beinhaltet
+        &
+        \begin{equation*}
+            \mathFunction{U_{\mathbf{d1}}}{z} = \frac{Kd}{Ts} \cdot (1 - z^{-1}) \cdot \mathFunction{E}{z}
+        \end{equation*} \\
+        \hline
+        
+        Klammer auflösen
+        &
+        \begin{equation*}
+        \mathFunction{U_{\mathbf{d1}}}{z} = \frac{Kd}{Ts} \cdot \mathFunction{E}{z} - \frac{Kd}{Ts} \cdot z^{-1} \cdot \mathFunction{E}{z}
+        \end{equation*} \\
+        \hline
+
+        Transformation in den diskreten Zeitbereich, wobei $k$ der aktuelle Zeitpunkt und $k-1$ der vorherige Zeitpunkt ist
+        &
+        \begin{equation*}
+        \mathFunctionD{u_{\mathbf{d1}}}{k} = \frac{Kd}{Ts} \cdot \mathFunctionD{e}{k} - \frac{Kd}{Ts} \cdot \mathFunctionD{e}{k-1}
+        \end{equation*} \\
+        \hline
+
+        Zusammengefasst ergibt sich die Differenzengleichung
+        &
+        \begin{equation*}
+        \mathFunctionD{u_{\mathbf{d1}}}{k}=Kd \cdot \frac{\mathFunctionD{e}{k}-\mathFunctionD{e}{k-1}}{Ts}
+        \end{equation*}
+    \end{tabular}
+    \end{table}
+    \newpage
+}

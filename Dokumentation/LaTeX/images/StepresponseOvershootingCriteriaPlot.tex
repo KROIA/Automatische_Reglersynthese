@@ -1,0 +1,45 @@
+\begin{tikzpicture}
+\begin{axis}[
+    width=8cm,
+    height=4cm,
+    axis lines = middle,
+    xlabel = $t$,
+    ylabel = {$ $},
+    xmin = 0, xmax = 6,
+    ymin = 0, ymax = 1.4,
+    grid = both,
+    legend pos = south east,
+]
+
+% Step signal r(t)
+\addplot[
+    thick,
+    orange,
+    name path=ref,
+    domain=0:6,
+    samples=400,
+] {x < 1 ? 0 : 1};
+\addlegendentry{$r$}
+
+% Output response y(t)
+\addplot[
+    thick,
+    blue,
+    name path=resp,
+    samples=300,
+    domain=0:6,
+] {x < 1 ? 0 : 1 - exp(-(x-1)) * (cos(deg(2.5*(x-1))) + 0.2*sin(deg(2.5*(x-1))))};
+\addlegendentry{$y$}
+
+% --- Filled overshoot area (first bump) ---
+\addplot[
+    blue!40,
+    opacity=0.4,
+] 
+fill between[
+    of=resp and ref,
+    soft clip={domain=1.72:2.95},
+];
+
+\end{axis}
+\end{tikzpicture}

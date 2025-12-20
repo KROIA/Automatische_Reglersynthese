@@ -1,0 +1,365 @@
+\section{GA am Motor mit Schwungmasse}
+
+% Commands already define in GA am DC-Motor
+%\newcommand{\individuumI}{\overrightarrow{I_{\mathbf{i}}}}
+%\newcommand{\funcGOfk}[1]{\mathFunction{g_\mathbf{#1}}{\individuumI,k}}
+%\newcommand{\funcGOf}[1]{\mathFunction{g_\mathbf{#1}}{\individuumI}}
+
+\minipagedOrBelowEachOther
+{
+    Weil der \gls{GA} kein MATLAB voraussetzt, ist diese Methode auch ohne MATLAB implementiert worden.
+	Das hat den Vorteil, dass ein System auch ohne MATLAB Lizenz optimiert werden kann.
+}
+{
+	Die Funktionsweise des GA ist im Kapitel\\
+	\fullref{sec:Description_GenetischerAlgorithmus} beschrieben.
+	
+}
+
+\subsection{System Definieren}
+\begin{figure}[H]
+    \centering
+    \input{images/MotorMitSchwungmasse/MotorMitSchwungmasseRegelkreisTikzDiagram}
+    \caption{Regelkreis Motor mit Schwungmasse}
+    \label{fig:MotorMitSchwungmasseTikzDiagram_genetic}
+\end{figure}
+In der C++ Anwendung werden die Teilsysteme objektorientiert implementiert und anschliessend 
+als ein gesamtheitliches Objekt zusammengeführt und verbunden.
+Der Kernteil der Implementierungslogik spielt sich dabei in den Update-Funktionen der jeweiligen Teilsysteme ab.
+Aufgrund des Codes-Umfangs werden deshalb in den nachfolgenden Unterkapiteln nur die Update-Funktionen gezeigt.
+
+
+\horizontalLine
+\subsubsection{Motor definieren}
+Die Implementierung im C++ Code ist auf der Grundlage der Modellidentifikation des Systems im Kapitel
+\fullref{sec:MotorMitSchwungmasseModellidentifikation} durchgeführt worden.
+Die dazugehörige C++ Implementierung ist unter
+\fullref{lst:MotorMitSchwungmasseDefinitionCPP} zu finden.
+%\minipagedOrBelowEachOther
+%{
+%	
+%}{
+%	
+%}
+
+
+
+\horizontalLine
+\subsubsection{PID-Regler definieren}
+Der PID-Regler wurde bereits im Kapitel \fullref{sec:ErweiterterPIDRegler} beschrieben und 
+auch die C++ Implementierung wird dort aufgeführt. Deshalb wird hier nicht weiter darauf eingegangen.
+
+
+
+
+\horizontalLine
+\subsubsection{Alle Teilsysteme verbinden}
+\begin{cppcode}{Update-Funktion des Gesamtsystems im Code}{lst:MotorMitSchwungmasseRegelkreisCPP}
+// Update Funktion des Gesamtsystems im C++ Code. class TestSystem
+void update(double deltaTime) override
+{
+	double y = m_motorWithMass.getOutputs()[1];	// y(t)
+    double measurementNoise = AutoTuner::Solver::getRandomDouble(-1, 1) * 0.1;
+    m_errorValue = m_referenceValue - y + measurementNoise;				// e(t) = r(t) - y(t)
+
+    m_pidController.setInput(m_errorValue);
+
+	m_pidController.update(deltaTime);
+    m_pidOutputValue = m_pidController.getOutput();
+    m_motorWithMass.setInputSignal(0, m_pidOutputValue);
+    m_motorWithMass.setInputs(1, m_disturbanceValue);
+    m_motorWithMass.update(deltaTime);
+}
+\end{cppcode}
+\minipagedOrBelowEachOther{
+	Wie im Code ersichtlich ist, wird dem System ein zusätzliches Messrauschen hinzugefügt.
+	Dieses begünstigt die Eigenschaft der Rauschunterdrückung des Reglers durch die Bewertungsteilfunktion
+	$\mathFunction{g_\mathbf{1}}{\individuumI}$ (Stellwertänderungsrate).
+}{
+
+}
+
+
+\newpage
+\subsection{Optimierungsziele definieren}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Stimuli.pdf}
+    \caption{Anregungssignale für die Systemsimulation}
+    \label{fig:MotorMitSchwungmasseStimuli}
+\end{figure}
+Um die Bewertungsfunktion zu definieren wird eine zeitliche Simulation des Systems benötigt.
+Dazu wird ein vordefiniertes Anregungssignal verwendet.
+Das Anregungssignal besteht aus $r$ (Ziel-Winkel) und $d$ (Störungsmoment).
+
+
+\newpage
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}clrc@{}}
+		\toprule
+		\textbf{Symbol} & \textbf{Beschreibung} & \textbf{Wert} & \textbf{Einheit} \\
+		\midrule
+		$Ts$                & Abtastzeit &0.01& s\\[0.5ex]
+		$t_\mathbf{start}$  & Startzeit &0& s\\[0.5ex]
+		$t_\mathbf{end}$    & Endzeit &50& s\\[0.5ex]
+		$u_\mathbf{satHigh}$   & Obere Sättigungsgrenze der Stellgrösse &10& \\[0.5ex]
+		$u_\mathbf{satLow}$   & Untere Sättigungsgrenze der Stellgrösse &-10& \\[0.5ex]
+		%$N$                 & Anzahl Individuen in der Population &30\\[0.5ex]
+		$K$                 & Anzahl Zeitschritte in der Simulation & 5000\\[0.5ex]
+		$D$				  & Anzahl der Optimierungs-Parameter & 4 & \\[0.5ex]
+		$\individuumI$    & \gls{Individuum} $\mathbf{i}$ in der \gls{Population} & $\individuumI \in \mathbb{R}^D$ \\[0.5ex]
+		%$\mathFunction{f}{\individuumI}$ & Maximierungs-Fitness-Funktion.& $f(\individuumI) \in \mathbb{R}^{+}$ \\[0.5ex]
+		$\mathFunction{g}{\individuumI}$ & Fehler-Minimierungs-Funktion. & $\mathFunction{g}{\individuumI} \in \mathbb{R}$ \\[0.5ex]
+		$a_\mathbf{o}$      & Gewichtungsfaktor für das Optimierungsziel $\mathbf{o}$ & $a_\mathbf{o} \in \mathbb{R}^{+_0}$ \\[0.5ex]
+		$O$                 & Anzahl Optimierungsziele & 5 \\[0.5ex]
+		$\funcGOfk{o}$ & Optimierungsfunktion für das Ziel $\mathbf{o}$ zum Zeitpunkt $k$ & $\funcGOfk{o} \in \mathbb{R}$ \\[0.5ex]
+		\bottomrule
+\end{tabular}
+\caption{Symbole für die Simulation am Motor mit Schwungmasse}
+\end{table}
+
+
+Für die Abtastzeit $Ts$ wurde ein realistischer Wert von 10ms gewählt.\\
+
+
+\minipagedOrBelowEachOther
+{
+	Die Anzahl Zeitschritte $K$ wird aus der Abtastzeit $T_\mathbf{s}$ und 
+	dem Simulationszeitraum $[t_\mathbf{start}, t_\mathbf{end}]$ berechnet.  
+}{
+	\centering
+    \begin{equation}
+		K = \frac{t_\mathbf{end}-t_\mathbf{start}}{T_\mathbf{s}}
+	\end{equation}
+}
+
+\horizontalLine
+
+\minipagedOrBelowEachOther
+{
+	Der \gls{GA} ist für \gls{Maximierungsproblem}e ausgelegt. 
+	Für diese Anwendung wäre es aber sinnvoller die Optimierungsziele als \gls{Minimierungsproblem}e zu formulieren.
+	Es gibt jedoch eine Möglichkeit zur Umrechnung von \gls{Minimierungsproblem}en in Maximierungsprobleme.
+	Dies ist im Kapitel \fullref{sec:Description_GenetischerAlgorithmus_FitnessFunction_TransformationSteps} beschrieben.
+	Dank dieser Umrechnung können die Optimierungsziele als Minimierungsproblem formuliert werden.
+
+	Die Fehler-Minimierungs-Funktion $\mathFunction{g}{\individuumI}$
+	wird aus mehreren Teilsummen zusammengesetzt. Die Teilsummen bewerten verschiedene Aspekte des Regelverhaltens.
+	Allgemein lässt sich die Fehler-Minimierungs-Funktion $\mathFunction{g}{\individuumI}$ wie in der 
+\ref{form:MotorMitSchwungmasseGeneticAlgorithmErrorMinimizationFunction} darstellen.
+}{
+	
+    \begin{equation}
+		\label{form:MotorMitSchwungmasseGeneticAlgorithmErrorMinimizationFunction}
+		\mathFunction{g}{\individuumI} = 
+		\frac{1}{K} \cdot \sum_{k=0}^{K-1}\bigg(
+				\sum_{o=0}^{O-3}\Big( 
+					a_\mathbf{o} \cdot \funcGOfk{o}
+				\Big)
+			\bigg) + a_\mathbf{3} \cdot \funcGOf{\mathbf{3}}
+			  + a_\mathbf{4} \cdot \funcGOf{\mathbf{4}}
+	\end{equation}
+	
+	\begin{itemize}
+		\item $\frac{1}{K}$ dient zur Normierung der Fehlerbewertung auf die Anzahl der Zeitschritte.
+		\item $\sum_{k=0}^{K-1}$ summiert die Fehlerbewertung über alle Zeitschritte der Simulation.
+		\item $\sum_{o=0}^{O-3}\left( 
+					a_\mathbf{o} \cdot \funcGOfk{o}
+				\right) $ summiert die gewichteten Optimierungsziele $\funcGOfk{o}$ für den Zeitschritt $k$.
+		\item $a_\mathbf{3} \cdot \funcGOf{\mathbf{3}}$ bewertet die Verstärkungsreserve des Systems.
+		\item $a_\mathbf{4} \cdot \funcGOf{\mathbf{4}}$ bewertet die Phasenreserve des Systems.
+	\end{itemize}
+
+	$\funcGOf{\mathbf{3}}$ und $\funcGOf{\mathbf{4}}$ 
+	werden nicht über die Zeitschritte während der Simulation summiert, 
+	da sie nicht abhängig von der Laufzeit der Simulation sind, 
+	sondern approximiert im Frequenzbereich berechnet werden.
+}
+
+
+
+
+
+
+
+%\begin{equation}
+%	\mathFunction{g}{\individuumI} = 
+%	\frac{1}{t_\mathbf{end}-t_\mathbf{start}}\sum_{k=0}^{K}(
+%		a_\mathbf{1} \cdot \mathFunction{g_\mathbf{1}}{k} + 
+%		a_\mathbf{2} \cdot \mathFunction{g_\mathbf{2}}{k}
+%		)
+%\end{equation}
+
+%\horizontalLine
+
+
+
+\newpage
+Folgende Optimierungsziele wurden bereits im Kapitel 
+~\fullref{sec:Description_GenetischerAlgorithmus_FitnessFunction_OptimizationGoals_SimpleMotor} 
+im Zusammenhang mit dem DC-Motor beschrieben und werden hier deshalb nicht nochmals erklärt:
+\begin{itemize}
+    \item $\funcGOfk{\mathbf{0}}$: Absoluter Regelungsfehler mit Sättigungsbedingung 
+    \item $\funcGOfk{\mathbf{1}}$: Stellwertänderungsrate
+    \item $\funcGOfk{\mathbf{2}}$: Positives Überschwingen unterdrücken
+\end{itemize}
+
+\horizontalLine
+\subsubsection{$\funcGOf{\mathbf{3}}$: Verstärkungsreserve}
+\minipagedOrBelowEachOther
+{
+	$\funcGOf{\mathbf{3}}$ bewertet die quadratische Abweichung der Verstärkungsreserve des Systems
+    von dem gewünschten Wert von 2. 	      
+}{
+	Diese Bewertung wurde für den Test deaktiviert ($a_\mathbf{3} = 0$), 
+    da die Optimierung dem System von sich aus eine weitaus bessere Verstärkungsreserve verpasst als gefordert und so
+    wie die Bewertung formuliert ist, würde der \gls{Solver} versuchen, die Verstärkungsreserve wieder zu verschlechtern.
+}
+\vspace{0.1cm}
+\horizontalLine
+\subsubsection{$\funcGOf{\mathbf{4}}$: Phasenreserve}
+\minipagedOrBelowEachOther
+{
+	$\funcGOf{\mathbf{4}}$ bewertet die quadratische Abweichung der Phasenreserve des Systems
+    von dem gewünschten Wert von 90°.
+	Die Bewertung wird erst ab Epoche 100 durchgeführt, damit der Algorithmus
+	zuerst eine grobe Lösung finden kann, bevor die Stabilitätskriterien berücksichtigt werden.
+	Die Frequenzanalyse wird mit dem nicht linearisierten System im Zeitbereich durchgeführt.
+	Zu Beginn der Simulation ist das System noch instabil, was zu einer falsch berechneten Frequenzanalyse führt 
+	und somit ist die Frequenzanalyse erst ab Epoche 100 sinnvoll.
+}{
+    Es wurde 90° gewählt, weil damit versucht wird, möglichst nah an 90° zu kommen.
+    \textit{Systune} hat gezeigt, dass es möglich ist, nah an die 90° zu kommen, ohne das System zu träge zu machen.
+}
+
+
+\horizontalLine
+\subsubsection{$\mathFunction{g}{\individuumI}$: Gesamte Fehlerbewertung}
+\minipagedOrBelowEachOther
+{
+	Die Teilbewertungen werden jeweils mit einem \\
+	Gewichtungsfaktor $a_\mathbf{o}$ skaliert. Diese müssen vom Anwender\\
+	passend gewählt werden, um das gewünschte Verhalten zu erzielen.
+	Es ist zu beachten, dass $\funcGOf{\mathbf{4}}$ nicht über 
+	die Simulationszeit summiert wird, sondern nur einmal pro Individuum berechnet wird,
+	weil sich der Frequenzgang im Verlauf einer Simulationsdurchführung nicht ändert.
+}{
+	\centering
+    \begin{equation}
+		\mathFunction{g}{\individuumI} = 
+		\frac{1}{K} \cdot \sum_{k=0}^{K-1}\Big(
+			a_\mathbf{0} \cdot \funcGOfk{\mathbf{0}} + 
+			a_\mathbf{1} \cdot \funcGOfk{\mathbf{1}} +
+			a_\mathbf{2} \cdot \funcGOfk{\mathbf{2}}
+			\Big)
+             +
+            a_\mathbf{4} \cdot \funcGOf{\mathbf{4}}
+	\end{equation}
+}
+
+
+
+\newpage
+\subsection{Optimierung durchführen}
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Genetic_SimulationSoftware.png}
+    \caption{Software der Systemsimulation für die Optimierung}
+    \label{fig:MotorMitSchwungmasseGenetic_SimulationSoftware}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+	Wie beim Beispiel mit dem DC-Motor \ref{fig:SimpleMotorGenetic_SimulationSoftware} wird die Optimierung 10-mal durchgeführt
+	und bestimmte Hyperparameter werden willkürlich gewählt.
+
+}
+{
+	Mehr zur Bestimmung der Hyperparameter ist im Kapitel\\
+	\fullref{sec:objektivesFazitIterativesTuning} beschrieben.
+}
+
+\begin{table}[H]
+\centering
+\vspace{-0.2cm}
+\begin{tabular}{@{}clrc@{}}
+		\toprule
+		\textbf{Parameter} & \textbf{Beschreibung} & \textbf{Wert} \\
+		\midrule
+		$D$                 & Anzahl der einzelnen Optimierungsdurchläufe &10\\[0.5ex]
+		$N$                 & Anzahl Individuen in der Population &30\\[0.5ex]
+		$G$                 & Anzahl Generationen &1000\\[0.5ex]
+		$C$                 & Mutations-Wahrscheinlichkeit &0.05\\[0.5ex]
+		$\mathFunction{M}{k}$ & Mutationsstärke &$1 \cdot 0.999^{k}$\\[0.5ex]
+		Anti-Windup       & Verwendete Anti-Windup Methode & Clamping \\[0.5ex]
+		\hline
+		\textbf{Optimierungsziele} &  &  & \\[0.5ex]
+		$a_\mathbf{0}$     & Absoluter Regelungsfehler &2.8\\[0.5ex]
+		$a_\mathbf{1}$     & Stellwertänderungsrate &0.1\\[0.5ex]
+		$a_\mathbf{2}$     & Positives Überschwingen &111\\[0.5ex]
+        $a_\mathbf{3}$     & Verstärkungsreserve (6dB) &0\\[0.5ex]
+        $a_\mathbf{4}$     & Phasenreserve (90°) &99 Ab Epoche 100\\[0.5ex]
+		\hline
+		\textbf{Konstante Systemparameter} &  &  & \\[0.5ex]
+		$u_\mathbf{satHigh}$         & PID Ausgangs-Sättigung oberer Wert &10\\
+		$u_\mathbf{satLow}$          & PID Ausgangs-Sättigung unterer Wert &-10\\
+		$I_{\mathbf{SatHigh}}$	     & PID-Integrator-Sättigung oberer Wert &100000000\\
+		$I_{\mathbf{SatLow}}$	     & PID-Integrator-Sättigung unterer Wert &-100000000\\
+		\hline
+		\textbf{PID-Startparameter} &  &  & \\[0.5ex]
+		$Kp$     & Proportionalitätsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Ki$     & Integrationsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Kd$     & Ableitungsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Kn$     & Filterkonstante &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		\bottomrule
+\end{tabular}
+\caption{Hyper- \& Tuningparameter für Optimierung mit dem genetischen Algorithmus}
+\label{tab:MotorMitSchwungmasse_OptimizationParameters}
+\end{table}
+
+\[
+    *\mathFunction{randG}{a,b} \text{ ist eine gleichverteilte Zufallsvariable im Intervall [a, b] } 
+\]
+\newpage
+
+%\horizontalLine
+\subsection{Optimierung auswerten}
+
+
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Genetic_Simulation_LearningHistory_1.pdf}
+    \caption{Lernverlauf der Optimierung mit dem genetischen Algorithmus bei 10 Durchläufen}
+    \label{fig:MotorMitSchwungmasseGenetic_SimulationLearningHistory_1}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+    Bis die Bewertungsfunktion der Phasen- und Verstärkungsreserve aktiviert werden, konvergiert der \gls{GA} sehr zuverlässig.
+    Der Sprung bei Epoche 100 ist zu erwarten, da dort die Gewichtung der Phasenreserve in der Bewertungsfunktion aktiviert wird.
+    Ein Grossteil der Durchläufe finden ein schlechtes Ergebnis, besonders die Phasen- und Verstärkungsreserve-Kriterien bringen
+    die Optimierung oft aus dem Gleichgewicht.
+}
+{
+    Die Bewertungen der Phasen- und Verstärkungsreserve wird erst nach 100 Epochen aktiviert, da die Frequenzanalyse des
+    im Code implementierten, zeitlichen und nichtlinearen Systems bei nicht optimalen Reglerparametern
+    falsche und sprunghafte Ergebnisse liefert. 
+    Dies führt zu einem Chaos in der Bewertungsfunktion und kann die Optimierung stark behindern.
+    Nach ca. 100 Epochen sind die Reglerparameter meistens so gut, dass die Frequenzanalyse auch im Zeitbereich
+    verlässliche Ergebnisse liefert und deshalb in die Bewertungsfunktion aufgenommen werden kann.
+}
+
+%\newpage
+\horizontalLine
+\subsection{Optimierten Regler am realen System testen}
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Genetic_realResult.pdf}
+    \caption{Antwort auf Stimulation des optimierten Reglers am Motor mit Schwungmasse, mit dem durch \gls{GA} optimierten PID-Regler}
+    \label{fig:MotorMitSchwungmasseGenetic_realResult}
+\end{figure}
+\newpage

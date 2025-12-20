@@ -1,0 +1,33 @@
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \newcommand{\labeloffset}{0.2}
+    % Draw grid
+    %\draw[step=1cm,gray,very thin] (0,0) grid (10,10);
+    
+    % Draw blocks
+    \sumNode{sum}{1,0};
+
+    %\saturationBlockNode{saturation1}{-1, 0}{-10}{10};
+    \saturationBlockNode{saturation3}{4.5, 2}{-10}{10};
+    \blockNode{controller}{2.5,0}{$PID$};
+    \saturationBlockNode{saturation2}{4.5,0}{-10}{10};
+    \gainNode[east]{u1gain}{$(saturation2.east) + (1,0)$}{300};
+    \gainNode[east]{u2gain}{$(saturation3.east) + (1,0)$}{300};
+    \blockNode{plant}{$(u1gain.east) + (2,-0.25)$}{M=$|$w$|$=M};
+
+    % Draw connections
+    %\connect{(-2.5,0)             (saturation1.west)          }{->};
+    \connect[label={-3.6,\labeloffset}{$\mathbf{d}$}              ]{(0,2)             (saturation3.west)          }{->};
+    \connect[label={-0.5,\labeloffset}{$\mathbf{r}$}              ]{(0,0)             (sum.west)          }{->};
+    \connect[label={-0.5,\labeloffset}{$\mathbf{e}$}   ]{(sum.east)        (controller.west)   }{->};
+    \connect{(controller.east) (saturation2.west)   }{->};
+    
+    \connect{(saturation2.east) (u1gain.west)        }{->};
+    \connect[label={-0.25, \labeloffset}{$\mathbf{u_{1}}$}   ]{(u1gain.east) ($(plant.west) + (0, 0.25)$)        }{->};
+    \connectionNode{output}{$(plant.east) + (0.5,-0.25)$};
+    \connect[label={0.2,0}{$\mathbf{y_{2}}$}               ]{\vectorAdd{plant.east}{0,-0.25} (output.center) \vectorAdd{output}{0.5,0}}{->};
+    \connect[label={0.2,0}{$\mathbf{y_{1}}$}               ]{\vectorAdd{plant.east}{0,0.25} \vectorAdd{plant.east}{1,0.25}}{->};
+    \connect{(saturation3.east) (u2gain.west)}{->};
+    \connect[label={-0.25, -\labeloffset}{$\mathbf{u_{2}}$}]{(u2gain.east) ($(plant.west) + (-0.6, 2.25)$) ($(plant.west) + (-0.6, -0.25)$) ($(plant.west) + (0, -0.25)$)}{->};
+
+    \feedback[sign={-0.3,-0.1}              ]{output.center}{-1}{sum.south}{->};
+\end{tikzpicture}

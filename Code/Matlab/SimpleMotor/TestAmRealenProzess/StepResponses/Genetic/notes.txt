@@ -1,0 +1,10 @@
+P: 7.16
+I: 109
+D: 0.0013
+N: 1.27e-5
+
+Integral Sat: +-10
+AntiWindup: Clamping
+
+Trainings Model:
+simplified

@@ -1,0 +1,569 @@
+% ========================================================================================
+% Autor:   Alex Krieg
+% Datum:   06.11.2025
+% Zweck:   Makros für einfacheres Zeichnen von Regelungssystemen mit TikZ
+% ========================================================================================
+\usepackage{tikz}
+\usepackage{xkeyval}
+\usepackage{etoolbox}
+\usetikzlibrary{shapes,arrows,positioning,calc}
+\usetikzlibrary{shapes,arrows,positioning}
+
+
+%\tikzstyle{block} = [draw, rectangle, minimum height=1cm, minimum width=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{sum} = [draw, circle, node distance=1cm, minimum size=0.5cm]
+
+\tikzset{
+  block/.style={
+    draw,
+    thick,
+    rectangle,
+    minimum height=1cm, 
+    minimum width=1cm,
+    font=\large
+  }
+}
+
+\tikzset{
+  gain block/.style={
+    draw,
+    thick,
+    shape=isosceles triangle,
+    isosceles triangle apex angle=60,
+    minimum height=1cm,
+    minimum width=1cm,
+    inner sep=0pt,
+    outer sep=0pt,
+    shape border rotate=0,
+    anchor=west,
+    font=\large
+  }
+}
+
+
+\newcommand{\tikzSystemStyleSignScale}{0.8} % Scale for minus sign in feedback and connect commands
+\newcommand{\tikzSystemStyleSumNodeScale}{0.8} % Offset for minus sign in feedback and connect commands
+
+\newcommand{\drawGrid}[2]
+{
+    \definecolor{lightGrayColor}{rgb}{0.8,0.8,0.8};
+    \draw[step=1cm,lightGrayColor,very thin] (0,0) grid (#1,#2);
+}
+
+
+% Param 1: position
+% Param 2: label text
+% Usage: \drawLabel{position}{label text}
+\newcommand{\drawLabel}[2]{%
+    \node[font=\large] at (#1) {#2};
+}
+
+% Param 1: from coordinate
+% Param 2: to coordinate
+% Param 3: color
+% Usage: \definecolor{color}{rgb}{0.8,0.8,0.8};
+%        \drawArrow{from}{to}{color}
+\newcommand{\drawArrow}[3]{%
+    \draw[->, color=#3] (#1) -- (#2);
+}
+
+% Custom command to add two vectors
+% Param 1: point1
+% Param 2: point2
+% Usage: \vectorAdd{point1}{point2}
+\newcommand{\vectorAdd}[2]{
+    ($(#1) + (#2)$)
+}
+
+
+
+
+% Custom command to draw a block with label and formula
+% Param 1: node name
+% Param 2: position
+% Param 3: label text
+% Usage: \blockNode{node_name}{position}{label}
+\newcommand{\blockNode}[3]{
+    \node [block] at (#2) (#1) {#3};
+}
+
+% Custom command to draw a summation node
+% Param 1: node name
+% Param 2: position
+% Usage: \sumNode{node_name}{position}
+\newcommand{\sumNode}[2]{
+    \node [sum, scale=\tikzSystemStyleSumNodeScale] at (#2) (#1) {$+$};
+}
+
+% Custom command to draw a filled connection node at a coordinate
+% Param 1: node name
+% Param 2: position
+% Usage: \connectionNode{node_name}{position}
+\newcommand{\connectionNode}[2]{
+    \node[circle, fill, inner sep=1.5pt] (#1) at (#2) {};
+}
+
+
+
+%% ============================================
+%% COMMAND: \feedback
+%% ============================================
+% Custom command to draw feedback connection with optional minus sign
+% Optional parameters:
+%   label={<xOffset,yOffset>}{text}  - Adds a label at the position (xOffset,yOffset) relative to the to_coordinate with the text "text"
+%   sign={<xOffset,yOffset>}         - Adds a minus sign at the position (xOffset,yOffset) relative to the to_coordinate
+% Usage: \feedback{from_coordinate}{yOffsetOfLoop}{to_coordinate}{arrow style}
+% example: \feedback{output}{yOffsetOfLoop}{sum}{->};
+%          \feedback{7,5}{-2}{3,5}{->};
+\makeatletter
+% Define keys for feedback command
+\define@key{feedbackparams}{label}{\feedback@parselabel#1\@nil}
+\def\feedback@parselabel#1#2\@nil{%
+  \def\feedback@labelcoords{#1}%
+  \def\feedback@labeltext{#2}%
+}
+\define@key{feedbackparams}{sign}{\def\feedback@sign{#1}}
+
+% Helper to check if label was set for feedback
+\newcommand{\feedback@iflabelset}[2]{%
+  \@ifundefined{feedback@labelcoords}{#2}{#1}%
+}
+
+% Helper to check if parameter was set for feedback
+\newcommand{\feedback@ifparamset}[3]{%
+  \@ifundefined{feedback@#1}{#3}{#2}%
+}
+
+% Reset parameters for feedback
+\newcommand{\feedback@resetparams}{%
+  \let\feedback@labelcoords\undefined
+  \let\feedback@labeltext\undefined
+  \let\feedback@sign\undefined
+}
+\newcommand{\feedback}[5][]{%
+    \feedback@resetparams% Clear previous values
+    \setkeys{feedbackparams}{#1}% Parse the optional parameters
+    \begingroup
+        % draw the path and create a coordinate at the path's end
+        \draw[#5] (#2) -| ($ (#2) + (0,#3) $) -| (#4);
+
+        % Check if label was set
+        \feedback@iflabelset{%
+        \node[font=\small] at ($(#4)+(\feedback@labelcoords)$) {\feedback@labeltext};
+        }{}
+        
+        % Check if sign was set
+        \feedback@ifparamset{sign}{%
+        \node[scale=\tikzSystemStyleSignScale] at ($(#4)+(\feedback@sign)$) {$-$};
+        }{}
+    \endgroup
+}
+\makeatother
+
+
+
+
+%% ============================================
+%% COMMAND: \connect
+%% ============================================
+% Parameters:
+%  Optional parameter:
+%   label={<xOffset,yOffset>}{text}  - Adds a label at the position (xOffset,yOffset) relative to the end of the path with the text "text"
+%   sign={<xOffset,yOffset>}         - Adds a minus sign at the position (xOffset,yOffset) relative to the end of the path
+%  Mandatory parameters:
+%   {<coordinate list>}               - A list of coordinates or node names to connect, e.g. (A) (B) (C) ...
+%   {<arrow style>}                   - The arrow style, e.g. ->, <->, etc.
+%
+% Example usage:
+%   \connect{(0,0) (3,2) (5,1) (7,3)}{->};
+%   \connect[label={0.5,0.5}{\textbf{Path}}]{(0,0) (3,2) (5,1) (7,3)}{->};
+%   \connect[sign={0.5,0.5}]{(0,0) (3,2) (5,1) (7,3)}{->};  
+\makeatletter
+% Define keys for connect command
+\define@key{connectparams}{label}{\connect@parselabel#1\@nil}
+\def\connect@parselabel#1#2\@nil{%
+  \def\connect@labelcoords{#1}%
+  \def\connect@labeltext{#2}%
+}
+\define@key{connectparams}{sign}{\def\connect@sign{#1}}
+
+% Helper to check if label was set for connect
+\newcommand{\connect@iflabelset}[2]{%
+  \@ifundefined{connect@labelcoords}{#2}{#1}%
+}
+
+% Helper to check if parameter was set for connect
+\newcommand{\connect@ifparamset}[3]{%
+  \@ifundefined{connect@#1}{#3}{#2}%
+}
+
+% Reset parameters for connect
+\newcommand{\connect@resetparams}{%
+  \let\connect@labelcoords\undefined
+  \let\connect@labeltext\undefined
+  \let\connect@sign\undefined
+}
+
+% The connect command
+\newcommand{\connect}[3][]{%
+  \connect@resetparams% Clear previous values
+  \setkeys{connectparams}{#1}% Parse the optional parameters
+  \begingroup
+    % draw the path and create a coordinate at the path's end
+    \draw[#3] plot coordinates {#2} coordinate (connect@last);
+    
+    % Check if label was set
+    \connect@iflabelset{%
+      \node[font=\small] at ($(connect@last)+(\connect@labelcoords)$) {\connect@labeltext};
+    }{}
+    
+    % Check if sign was set
+    \connect@ifparamset{sign}{%
+      \node[scale=\tikzSystemStyleSignScale] at ($(connect@last)+(\connect@sign)$) {$-$};
+    }{}
+  \endgroup
+}
+
+\makeatother
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Custom command to draw a gain block
+% Param 1: node name
+% Param 2: position
+% Param 3: gain text
+% Param 4 (optional): orientation (east, south, west, north) - default: east
+% Usage: \gainNode[orientation]{node_name}{x,y}{K}
+\newcommand{\gainNode}[4][east]{
+    \ifstrequal{#1}{east}{%
+        \node[gain block, shape border rotate=0, anchor=center] at (#3) (#2) {#4};
+    }{}
+    \ifstrequal{#1}{south}{%
+        \node[gain block, shape border rotate=-90, anchor=center] at (#3) (#2) {#4};
+    }{}
+    \ifstrequal{#1}{west}{%
+        \node[gain block, shape border rotate=180, anchor=center] at (#3) (#2) {#4};
+    }{}
+    \ifstrequal{#1}{north}{%
+        \node[gain block, shape border rotate=90, anchor=center] at (#3) (#2) {#4};
+    }{}
+  
+}
+
+
+%\makeatletter
+%% Define keys for gainNode command
+%\define@key{gainNodeParams}{label}{\gainNode@parselabel#1\@nil}
+%\def\gainNode@parselabel#1#2\@nil{%
+%  \def\gainNode@labelcoords{#1}%
+%  \def\gainNode@labeltext{#2}%
+%}
+%\define@key{gainNodeParams}{showCoordinates}{\def\gainNode@showCoordinates{#1}}
+%\define@key{gainNodeParams}{scale}{\def\gainNode@scale{#1}}
+%
+%% Helper to check if label was set for gainNode
+%\newcommand{\gainNode@iflabelset}[2]{%
+%  \@ifundefined{gainNode@labelcoords}{#2}{#1}%
+%}
+%
+%% Helper to check if parameter was set for gainNode
+%\newcommand{\gainNode@ifparamset}[3]{%
+%  \@ifundefined{gainNode@#1}{#3}{#2}%
+%}
+%
+%% Reset parameters for gainNode
+%\newcommand{\gainNode@resetparams}{%
+%  \let\gainNode@labelcoords\undefined
+%  \let\gainNode@labeltext\undefined
+%  \let\gainNode@showCoordinates\undefined
+%  \let\gainNode@scale\undefined
+%}
+%
+%% Debugging command to mark coordinates and show their values
+%% Usage: \debugCoordinate{coordinate_name}
+%\newcommand{\gainNode}[3][]{%
+%    \gainNode@resetparams% Clear previous values
+%    \setkeys{gainNodeParams}{#1}% Parse the optional parameters (now #1 is the optional arg)
+%
+%    % if scale is not set, set it to 1
+%    \gainNode@ifparamset{scale}{%
+%      % scale is set, do nothing
+%    }{%
+%      \def\gainNode@scale{1}%
+%    }%
+%
+%    \draw[fill=white] \vectorAdd{(1,0)}{} -- (0,0.5) -- (0,-0.5) -- cycle;
+%    % Gain-Text in der Mitte
+%    \node at (0.3,0) {$K$};
+%}
+%
+%\makeatother
+
+
+
+
+
+
+
+
+
+
+
+
+
+\makeatletter
+
+% Define keys for debugCoordinate command
+\define@key{debugCoordinateParams}{label}{\debugCoordinate@parselabel#1\@nil}
+\def\debugCoordinate@parselabel#1#2\@nil{%
+  \def\debugCoordinate@labelcoords{#1}%
+  \def\debugCoordinate@labeltext{#2}%
+}
+\define@key{debugCoordinateParams}{showCoordinates}{\def\debugCoordinate@showCoordinates{#1}}
+\define@key{debugCoordinateParams}{scale}{\def\debugCoordinate@scale{#1}}
+
+% Helper to check if label was set for debugCoordinate
+\newcommand{\debugCoordinate@iflabelset}[2]{%
+  \@ifundefined{debugCoordinate@labelcoords}{#2}{#1}%
+}
+
+% Helper to check if parameter was set for debugCoordinate
+\newcommand{\debugCoordinate@ifparamset}[3]{%
+  \@ifundefined{debugCoordinate@#1}{#3}{#2}%
+}
+
+% Reset parameters for debugCoordinate
+\newcommand{\debugCoordinate@resetparams}{%
+  \let\debugCoordinate@labelcoords\undefined
+  \let\debugCoordinate@labeltext\undefined
+  \let\debugCoordinate@showCoordinates\undefined
+  \let\debugCoordinate@scale\undefined
+}
+
+% Debugging command to mark coordinates and show their values
+% Usage: \debugCoordinate{coordinate_name}
+\newcommand{\debugCoordinate}[2][]{%
+    \debugCoordinate@resetparams% Clear previous values
+    \setkeys{debugCoordinateParams}{#1}% Parse the optional parameters (now #1 is the optional arg)
+
+    % if scale is not set, set it to 1
+    \debugCoordinate@ifparamset{scale}{%
+      % scale is set, do nothing
+    }{%
+      \def\debugCoordinate@scale{1}%
+    }%
+
+    % #2 is now the coordinate name
+    \begingroup
+      % Draw cross at coordinate
+      \draw[red, scale=\debugCoordinate@scale] ($(#2) + (-0.1, -0.1)$) -- ($(#2) + (0.1, 0.1)$);
+      \draw[red, scale=\debugCoordinate@scale] ($(#2) + (-0.1, 0.1)$) -- ($(#2) + (0.1, -0.1)$);
+
+      % Label coordinate name
+      %\node[red, above right, scale=0.5] at ($(#2)+(0.1,0.0)$) {\detokenize{#2}};
+      
+      % Check if custom label was set
+      \debugCoordinate@iflabelset{%
+        \node[red, scale=0.5] at ($(#2)+(\debugCoordinate@labelcoords)$) {\debugCoordinate@labeltext};
+      }{}
+
+      % Check if sign was set
+    \debugCoordinate@ifparamset{showCoordinates}{%
+      \node[red, scale=0.5] at ($(#2)+(\debugCoordinate@showCoordinates)$) {\detokenize{#2}};
+    }{}
+    \endgroup
+}
+
+\makeatother
+
+
+% Custom command to draw a normally closed switch
+% Param 1: (optional) orientation (east, south, west, north) - default: east
+% Param 2: position
+% Usage: \switchNC[orientation]{x,y}
+\newcommand{\switchNC}[2][east]{
+    \begin{scope}[shift={(#2)}, scale=0.25]    
+      \ifstrequal{#1}{east}{%
+          \draw (0,0) -- (1,0);
+          \draw (1,0) -- (3.2,0.8);  % slanted line showing closed position
+          \draw (3,0) -- (4,0);
+          \draw (3,0) -- (3,1);
+      }{}
+      \ifstrequal{#1}{south}{%
+          \draw (0,-4) -- (0,-3);
+          \draw (0,-1) -- (0.8,-3.2);  % slanted line showing closed position
+          \draw (0,-1) -- (0,0);
+          \draw (0,-3) -- (1,-3);
+      }{}
+      \ifstrequal{#1}{west}{%
+          \draw (0,0) -- (1,0);
+          \draw (3,0) -- (0.8,0.8);  % slanted line showing closed position
+          \draw (3,0) -- (4,0);
+          \draw (1,0) -- (1,1);
+      }{}
+      \ifstrequal{#1}{north}{%
+          \draw (0,0) -- (0,1);
+          \draw (0,1) -- (0.8,3.2);  % slanted line showing closed position
+          \draw (0,3) -- (0,4);
+          \draw (0,3) -- (1,3);
+      }{}
+    \end{scope}
+}
+
+\newcommand{\switchNO}[2][east]{
+    \begin{scope}[shift={(#2)}, scale=0.25]    
+      \ifstrequal{#1}{east}{%
+          \draw (0,0) -- (1,0);
+          \draw (1,0) -- (3.2,0.8);  
+          \draw (3,0) -- (4,0);
+      }{}
+      \ifstrequal{#1}{south}{%
+          \draw (0,-4) -- (0,-3);
+          \draw (0,-1) -- (0.8,-3.2);  
+          \draw (0,-1) -- (0,0);
+      }{}
+      \ifstrequal{#1}{west}{%
+          \draw (0,0) -- (1,0);
+          \draw (3,0) -- (0.8,0.8);  
+          \draw (3,0) -- (4,0);
+      }{}
+      \ifstrequal{#1}{north}{%
+          \draw (0,0) -- (0,1);
+          \draw (0,1) -- (0.8,3.2); 
+          \draw (0,3) -- (0,4);
+      }{}
+    \end{scope}
+}
+
+\newcommand{\switchTwo}[2][east]{
+    \begin{scope}[shift={(#2)}, scale=0.25]    
+      \ifstrequal{#1}{east}{%
+          \draw (4,2)   -- (3,2);      % In1 
+         % \draw (4,0)   -- (3,0);      % In2
+          \draw (4,-2)  -- (3,-2);      % In3
+          \draw (3,2)   -- (3,1);
+          \draw (3,-2)   -- (3,-1);
+          \draw (1,0)   -- (3.2,1.4);  % slanted line showing closed position
+          \draw (1,0)   -- (0,0);
+      }{}
+      \ifstrequal{#1}{south}{%
+          \draw (2,-4)  -- (2,-3);      % In1 
+       %   \draw (0,-4)   -- (0,-3);      % In2
+          \draw (-2,-4)  -- (-2,-3);      % In3
+          \draw (2,-3)   -- (1,-3);
+          \draw (-2,-3)   -- (-1,-3);
+          \draw (0,-1)   -- (1.4,-3.2);  % slanted line showing closed position
+          \draw (0,-1)   -- (0,0);
+      }{}
+      \ifstrequal{#1}{west}{%
+          \draw (-4,2)   -- (-3,2);      % In1 
+          %\draw (-4,0)   -- (-3,0);      % In2
+          \draw (-4,-2)  -- (-3,-2);      % In3
+          \draw (-3,2)   -- (-3,1);
+          \draw (-3,-2)   -- (-3,-1);
+          \draw (-1,0)   -- (-3.2,1.4);  % slanted line showing closed position
+          \draw (-1,0)   -- (0,0);          
+      }{}
+      \ifstrequal{#1}{north}{%
+          \draw (2,4)  -- (2,3);      % In1 
+        %  \draw (0,4)   -- (0,3);      % In2
+          \draw (-2,4)  -- (-2,3);      % In3
+          \draw (2,3)   -- (1,3);
+          \draw (-2,3)   -- (-1,3);
+          \draw (0,1)   -- (1.4,3.2);  % slanted line showing closed position
+          \draw (0,1)   -- (0,0);
+      }{}
+    \end{scope}
+}
+
+\newcommand{\switchThree}[2][east]{
+    \begin{scope}[shift={(#2)}, scale=0.25]    
+      \ifstrequal{#1}{east}{%
+          \draw (4,2)   -- (3,2);      % In1 
+          \draw (4,0)   -- (3,0);      % In2
+          \draw (4,-2)  -- (3,-2);      % In3
+          \draw (3,2)   -- (3,1);
+          \draw (3,-2)   -- (3,-1);
+          \draw (1,0)   -- (3.2,1.4);  % slanted line showing closed position
+          \draw (1,0)   -- (0,0);
+      }{}
+      \ifstrequal{#1}{south}{%
+          \draw (2,-4)  -- (2,-3);      % In1 
+          \draw (0,-4)   -- (0,-3);      % In2
+          \draw (-2,-4)  -- (-2,-3);      % In3
+          \draw (2,-3)   -- (1,-3);
+          \draw (-2,-3)   -- (-1,-3);
+          \draw (0,-1)   -- (1.4,-3.2);  % slanted line showing closed position
+          \draw (0,-1)   -- (0,0);
+      }{}
+      \ifstrequal{#1}{west}{%
+          \draw (-4,2)   -- (-3,2);      % In1 
+          \draw (-4,0)   -- (-3,0);      % In2
+          \draw (-4,-2)  -- (-3,-2);      % In3
+          \draw (-3,2)   -- (-3,1);
+          \draw (-3,-2)   -- (-3,-1);
+          \draw (-1,0)   -- (-3.2,1.4);  % slanted line showing closed position
+          \draw (-1,0)   -- (0,0);          
+      }{}
+      \ifstrequal{#1}{north}{%
+          \draw (2,4)  -- (2,3);      % In1 
+          \draw (0,4)   -- (0,3);      % In2
+          \draw (-2,4)  -- (-2,3);      % In3
+          \draw (2,3)   -- (1,3);
+          \draw (-2,3)   -- (-1,3);
+          \draw (0,1)   -- (1.4,3.2);  % slanted line showing closed position
+          \draw (0,1)   -- (0,0);
+      }{}
+    \end{scope}
+}
+
+
+% Custom command to draw a saturation block
+% Param 1: node name
+% Param 2: position
+% Param 3: lower limit text
+% Param 4: upper limit text
+% Usage: \saturationBlockNode{node_name}{x,y}{lower_limit}{upper_limit}
+\newcommand{\saturationBlockNode}[4]{
+    \begin{scope}[shift={(#2)}, scale=0.25]  
+        % draw light gray
+        \definecolor{lightGrayColor}{rgb}{0.8,0.8,0.8};
+        \draw[lightGrayColor,very thin, dashed] (-2,-1) -- (2,-1);
+        \draw[lightGrayColor,very thin, dashed] (-2,1)  -- (2, 1);
+
+        \draw plot coordinates {(-2,-1) (-1,-1) (1,1) (2,1)};
+       %\draw (-2,-1)  -- (-1,-1);
+       %\draw (-1,-1)  -- (1,1);
+       %\draw (1,1)  -- (2,1);
+
+        \node[font=\small] at (0,-1.9) {#3};
+        \node[font=\small] at (0, 1.9) {#4};
+    \end{scope}
+    
+    \node[draw, rectangle, minimum height=1.5cm, minimum width=1.3cm, thick] at (#2) (#1) {};
+}

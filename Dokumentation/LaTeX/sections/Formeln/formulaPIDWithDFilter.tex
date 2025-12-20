@@ -1,0 +1,87 @@
+\formulaWithDerivationDeclaration{formulaPIDWithDFilter}
+{  % Dargestellte Formel
+    \mathFunctionD{u_{\mathbf{d2}}}{k}=Kd \cdot Kn \cdot (\mathFunctionD{e}{k}-\mathFunctionD{e}{k-1}) - \mathFunctionD{u_{\mathbf{d2}}}{k-1} \cdot (Kn \cdot Ts -1)
+}
+{  % Herleitung der Formel
+    
+    In Simulink wird der D-Anteil der Übertragungsfunktion des PID-Reglers mit Filter definiert als:
+    
+    \begin{equation*}
+        \frac{\mathFunction{U_{\mathbf{d2}}}{z}}{\mathFunction{E}{z}} = Kd \cdot \frac{Kn}{1 + Kn \cdot Ts \cdot \frac{1}{z-1}}
+    \end{equation*}
+    
+    \begin{table}[H]
+        \center
+        \begin{tabular}{@{}rl@{}}
+                \toprule
+                \textbf{Parameter}              & \textbf{Beschreibung} \\
+                \midrule
+                $Kn$                & Filterkonstante \\[0.5ex]
+                $Ts$                & Abtastzeit \\[0.5ex]
+                $Kd$                & Verstärkung des D-Anteils im PID-Regler \\[0.5ex]
+                $z$                 & Komplexe Variable in der z-Transformation \\[0.5ex]
+                $k$                 & Diskreter Zeitpunkt \\[0.5ex]
+                $\mathFunction{U_{\mathbf{d2}}}{z}$           & Ausgang 2 für den D-Anteil im PID-Regler \\[0.5ex]
+                $\mathFunction{E}{z}$           & Eingangssignal des PID-Reglers \\[0.5ex]
+                \bottomrule
+        \end{tabular}
+        \caption{Symbole für die Herleitung des D-Anteils mit Filter}
+    \end{table}
+
+
+    Ziel ist es jetzt die diskrete Differenzengleichung zu bestimmen, welche dann im C++ Code umgesetzt werden kann.
+
+    \begin{table}[h]
+    \begin{tabular}{m{0.4\textwidth} m{0.6\textwidth}}
+        \hline
+        Dazu wird die Gleichung umgestellt um die Brüche in $z$ zu eliminieren
+
+        Doppelbruch auflösen: Erweitern mit $(z-1)$ 
+        &
+        \begin{equation*}
+            \frac{\mathFunction{U_{\mathbf{d2}}}{z}}{\mathFunction{E}{z}} = Kd \cdot \frac{Kn \cdot (z-1)}{(z-1) + Kn \cdot Ts}
+        \end{equation*}\\
+        \hline
+
+        Gleichung umstellen: Mit $\mathFunction{E}{z}$ und $((z-1) + Kn \cdot Ts)$ multiplizieren
+        &
+        \begin{equation*}
+            \mathFunction{U_{\mathbf{d2}}}{z} \cdot (z-1 + Kn \cdot Ts) = Kd \cdot Kn \cdot (z-1) \cdot \mathFunction{E}{z}
+        \end{equation*}\\
+        \hline
+
+        Ausmultiplizieren, damit $\mathFunction{U_{\mathbf{d2}}}{z}$ und $\mathFunction{E}{z}$ mit den jeweiligen $z$-Termen alleine stehen
+        &
+        \begin{equation*}
+            \mathFunction{U_{\mathbf{d2}}}{z} \cdot z + \mathFunction{U_{\mathbf{d2}}}{z} \cdot (Kn \cdot Ts - 1) = Kd \cdot Kn \cdot ( z \cdot \mathFunction{E}{z} - \mathFunction{E}{z})
+        \end{equation*}\\
+        \hline
+
+        Da eine Multiplikation mit $z$ im Zeitbereich einer Verschiebung um eine Abtastperiode entspricht und nicht in die 
+        Zukunft geschaut werden kann, wird die Gleichung noch mit $z^{-1}$ multipliziert damit die Transformation in 
+        den diskreten Zeitbereich auch gleich die richtige zeitliche Verschiebung beinhaltet
+        &
+        \begin{equation*}
+            \mathFunction{U_{\mathbf{d2}}}{z} + \mathFunction{U_{\mathbf{d2}}}{z} \cdot z^{-1} \cdot (Kn \cdot Ts - 1) = Kd \cdot Kn \cdot (\mathFunction{E}{z} - \mathFunction{E}{z} \cdot z^{-1})
+        \end{equation*}\\
+        \hline
+
+
+        Umstellen nach $\mathFunction{U_{\mathbf{d2}}}{z}$
+        &
+        \begin{equation*}
+            \mathFunction{U_{\mathbf{d2}}}{z} = Kd \cdot Kn \cdot (\mathFunction{E}{z} - \mathFunction{E}{z} \cdot z^{-1}) - \mathFunction{U_{\mathbf{d2}}}{z} \cdot z^{-1} \cdot (Kn \cdot Ts - 1)
+        \end{equation*}\\
+        \hline
+
+        Transformation in den diskreten Zeitbereich
+        &
+        \begin{equation*}
+            \mathFunctionD{u_{\mathbf{d2}}}{k} = Kd \cdot Kn \cdot (\mathFunctionD{e}{k} - \mathFunctionD{e}{k-1}) - \mathFunctionD{u_{\mathbf{d2}}}{k-1} \cdot (Kn \cdot Ts -1)
+        \end{equation*}\\
+        \hline
+    \end{tabular}
+    \end{table}
+
+    \newpage
+}

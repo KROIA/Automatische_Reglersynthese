@@ -1,0 +1,37 @@
+#pragma once
+
+
+#include "AutoTuner.h"
+#include "Scene/Objects/DCMotorProblem.h"
+#include "Scene/Objects/DCMotorWithMassProblem.h"
+#include "Scene/Objects/IntegrationTest.h"
+#include "Scene/Objects/MotorWithMassIdentification.h"
+
+class Scene
+{
+public:
+	Scene();
+	~Scene();
+
+	void setupScene(QWidget* parent);
+
+	PIDTuningProblem *getPIDTuningProblem() const
+	{
+		// Return either DCMotorProblem or DCMotorWithMassProblem based on which one is initialized
+		if (m_dcMotorProblem)
+			return m_dcMotorProblem;
+		else
+			return m_dcMotorWithMassProblem;
+	}
+	DCMotorProblem* getDCMotorProblem() const { return m_dcMotorProblem; }
+	DCMotorWithMassProblem* getDCMotorWithMassProblem() const { return m_dcMotorWithMassProblem; }
+	MotorWithMassIdentification* getMotorWithMassIdentification() const { return m_motorWithMassIdentification; }
+
+private:
+	QSFML::Scene* m_scene;
+
+	DCMotorProblem* m_dcMotorProblem = nullptr;
+	DCMotorWithMassProblem* m_dcMotorWithMassProblem = nullptr; // corrected variable name for consistency
+	MotorWithMassIdentification* m_motorWithMassIdentification = nullptr; // corrected variable name for consistency
+
+};

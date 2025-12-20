@@ -1,0 +1,190 @@
+% =======================================================================================
+% Methodik
+% =======================================================================================
+\subsection{Methodik}
+\label{sec:Methodik}
+\minipagedOrBelowEachOther
+{
+  Durch eine Literaturrecherche sollen automatisierbare Optimierungsverfahren ermittelt werden.
+  Anschliessend werden die gefundenen Methoden verglichen.
+  MATLAB dient in diesem Teil der Arbeit dazu, die Methoden grob zu testen und zu erproben.
+  Für den Vergleich und die daraus folgende Auswahl der zu vertiefenden Methoden werden
+  verschiedene Aspekte betrachtet.
+}{
+  Es muss sich die Frage gestellt werden, wie ein guter Regler definiert ist.
+  Jede Anwendung hat unterschiedliche Anforderungen an einen guten Regler und demnach kann nicht 
+  eindeutig bestimmt werden, wie das Verhalten eines guten Reglers aussieht. 
+  Es können jedoch einige Eigenschaften des gesamten \gls{System}s gemessen werden, 
+  um eine Aussage über die Qualität des Reglers zu treffen.
+}
+
+% ---------------------------------------------------------------------------------------
+% Aspekte zur bewertung eines Reglers
+% ---------------------------------------------------------------------------------------
+\horizontalLine
+\subsubsection{Aspekte zur Bewertung eines Reglers}
+\minipagedOrBelowEachOther
+{
+  \subparagraph{Stabilität}
+  \noindent
+  \\ 
+  Ein stabiler Regelkreis ist im Normalfall eine Grundvoraussetzung an ein System. 
+  In sehr spezifischen Anwendungen kann jedoch auch ein instabiles Verhalten explizit gesucht sein.
+  Im weiteren Verlauf dieser Arbeit wird jedoch nur auf stabile Regelkreise eingegangen.
+  \begin{itemize}
+    \item Der Regler muss in der Lage sein das System zu stabilisieren
+    \item Der Regler muss in der Lage sein, ein System stabil zu halten
+  \end{itemize}
+}
+{
+  \subparagraph{Zeitliches Verhalten}
+  \noindent
+  \\ 
+  Das zeitliche Verhalten des Systems beschreibt, 
+  wie der Regler auf eine plötzliche Änderung des Sollwerts reagiert.
+  Abhängig von der jeweiligen Anwendung kann gefordert sein, 
+  dass der Regler sehr schnell oder eher langsam auf Sollwertänderungen anspricht.
+  Schnelle Regler haben jedoch häufig den Nachteil, 
+  dass sie weniger robust gegenüber Störungen und Modellabweichungen sind und stärker zu Schwingungen neigen.
+  \begin{itemize}
+    \item Wie schnell lässt sich die Regelstrecke auf den gewünschten Sollwert bringen?
+    \item Wie verhält sich der Regler dabei? (Überschwingen?, Einschwingzeit?, etc.)
+  \end{itemize}
+}
+
+
+\minipagedOrBelowEachOther
+{
+  \subparagraph{Stationäres Verhalten}
+  \noindent
+  \\ 
+  Beim stationären Verhalten wird untersucht, wie sich das System verhält, 
+  nachdem eine ausreichend lange Zeit vergangen ist.
+  Dies ist entscheidend, um festzustellen, ob das System den Sollwert tatsächlich erreicht 
+  oder ob dauerhaft eine bestimmte Abweichung bestehen bleibt.
+  \begin{itemize}
+    \item Wie genau wird der Sollwert im stationären Zustand erreicht/gehalten, wie klein wird der stationäre Fehler (Abweichung zum Sollwert)?
+  \end{itemize}
+}
+{
+  \subparagraph{Robustheit}
+  \noindent
+  \\ 
+  Die Robustheit beschreibt die Fähigkeit des Reglers, 
+  auch bei Störungen, Parameteränderungen oder Modellunsicherheiten ein stabiles und 
+  gewünschtes Systemverhalten sicherzustellen.
+  Ein robuster Regler gewährleistet dabei, 
+  dass Leistungsanforderungen und Toleranzen trotz dieser Einflüsse eingehalten werden.
+  \begin{itemize}
+    \item Wie gut kann der Regler mit Störungen umgehen?
+    \item Wie gut kann der Regler mit Modellabweichungen umgehen?
+    \item Wie gut kann der Regler mit Änderungen eines realen Prozesses umgehen?\\
+    Z.B. durch Verschleiss
+    \item Wie gut kann der Regler mit den realen Nichtlinearitäten eines Prozesses umgehen?
+    \item Betrachtung der Phasen- und Amplitudengangreserve als Indikator für die Robustheit
+  \end{itemize}
+}
+\minipagedOrBelowEachOther
+{
+\subparagraph{Komplexität des Reglers}
+\noindent
+\\
+Wie viele Parameter des Reglers müssen durch die Methode optimiert werden. 
+Die Anzahl dieser Parameter, definiert die Dimension des Suchraums der Optimierung.
+
+}{
+
+
+}
+% ---------------------------------------------------------------------------------------
+% Methodenspezifische Aspekte
+% ---------------------------------------------------------------------------------------
+\horizontalLine
+
+\subsubsection{Methodenspezifische Aspekte}
+Neben den oben genannten Aspekten, die zur Bewertung eines Reglers dienen können, 
+werden für die Auswahl der zu vertiefenden Methoden noch weitere Aspekte betrachtet.
+Diese beziehen sich auf die Methode selbst und nicht auf den Regler. 
+
+\subparagraph{Voraussetzungen der Systeme}
+\noindent
+\\
+Voraussetzungen die das System erfüllen muss, um von der jeweiligen Methode optimiert zu werden.
+\begin{itemize}
+  \item Kann ein stabiles und instabiles System optimiert werden?
+  \item Kann ein \gls{SISO}- und \gls{MIMO}-System optimiert werden?
+  \item Kann nur ein lineares System optimiert werden, oder auch ein \gls{nichtlineares System} oder sogar \gls{zeitvariantes System}?
+\end{itemize}
+
+
+\subparagraph{Die Schwierigkeit der Parametrierung}
+\noindent
+\\
+\begin{itemize}
+  \item Wie komplex ist die Parametrierung der Methode?
+  \item Wie viele und welche Informationen muss der Anwender der Methode bereitstellen, 
+  um eine Optimierung durchzuführen?
+  \item Lässt sich die Informationsbereitstellung einfach für den Anwender gestalten?
+  \item Bestimmung der \gls{Hyperparameter} der Methode und deren Einflussbereich.
+\end{itemize}
+
+
+
+\subparagraph{Automatisierungsgrad}
+\noindent
+\\
+\begin{itemize}
+  \item Wie automatisiert läuft die Optimierung ab?
+  \item Welche Tools/Technologien werden benötigt um die Methode anzuwenden?
+  \item Wie viel Eingriff des Anwenders ist notwendig um eine Optimierung durchzuführen?
+\end{itemize}
+
+% ---------------------------------------------------------------------------------------
+% Zusammenfassend
+% ---------------------------------------------------------------------------------------
+\newpage
+\subsubsection{Zusammenfassend}
+Insgesamt gibt es viele verschiedene Aspekte und Kriterien, die bei der Auswahl und Bewertung von 
+Methoden zur Reglersynthese berücksichtigt werden müssen. 
+Die oben genannten Punkte bieten eine gute Grundlage, um die Eignung einer Methode für ein bestimmtes System zu 
+beurteilen. Die Auswahl der zu vertiefenden Methoden erfolgt demnach zusammenfassend anhand folgender Punkte:
+
+\newcommand*{\methodeCriterias}  {
+  \begin{itemize}
+  \item Mögliches Verhalten das durch den resultierenden Regler erreicht werden kann.
+  \begin{itemize}
+    \item Stabilität
+    \item Zeitliches Verhalten
+    \item Stationäres Verhalten
+    \item Robustheit
+  \end{itemize}
+
+  \item Voraussetzungen der Systeme, an denen die jeweilige Methode angewendet werden kann
+  \begin{itemize}
+    \item stabile/instabile Systeme
+    \item SISO/MIMO Fähigkeit
+    \item linearese/nichtlineare Systeme \& zeitinvariante/zeitvariante Systeme
+    \item Regler Strukturen, Anzahl der zu optimierenden Parameter
+  \end{itemize}
+
+  \item Die Schwierigkeit der Parametrierung
+  \begin{itemize}
+    \item Benutzerfreundlichkeit der Parametrisierung
+    \item Benötigtes Vorwissen des Anwenders bezüglich Regelungstechnik
+  \end{itemize}
+
+  \item Automatisierungsgrad
+  \begin{itemize}
+    \item Tools/Technologien
+    \item Eingriffe des Anwenders
+  \end{itemize}
+\end{itemize}}
+\methodeCriterias
+
+Einige der besten Methoden, werden an verschiedenen Prozessen getestet und bewertet.
+
+
+
+
+
+

@@ -1,0 +1,276 @@
+\subsubsection{Differential Evolution Algorithmus}
+\label{sec:Description_DifferentialEvolutionAlgorithmus}
+
+
+\minipagedOrBelowEachOther
+{
+    \paragraph{Idee}
+    Differential Evolution (\gls{DE}) \cite{storn1997differentialEvolution} ist ein evolutionärer Optimierungsalgorithmus.
+    Eine Population von Lösungskandidaten entwickelt sich über mehrere Generationen hinweg, 
+    wobei bessere Lösungen eine höhere Überlebenschance haben.
+    Der entscheidende Unterschied zu anderen evolutionären Algorithmen liegt in der Art und Weise, 
+    wie neue Kandidaten erzeugt werden. Differential Evolution nutzt die Differenz zwischen zwei 
+    zufällig ausgewählten Populationsmitgliedern, 
+    um Mutationen zu erzeugen. Diese Differenzvektoren werden skaliert und zu einem dritten Vektor addiert, 
+    wodurch neue Suchrichtungen im Lösungsraum entstehen. 
+    Dieser Mechanismus ermöglicht es dem Algorithmus, sich selbst an die Topologie des Optimierungsproblems anzupassen: 
+    In Regionen mit grosser Streuung der Population werden grössere Schritte unternommen, 
+    während in konvergenten Bereichen feinere Anpassungen erfolgen.
+    Die Eleganz von Differential Evolution liegt in seiner Einfachheit und Robustheit. 
+    Mit nur wenigen Kontrollparametern kann der Algorithmus auf eine Vielzahl 
+    kontinuierlicher Optimierungsprobleme angewendet werden, 
+    von der Parameterschätzung über technische Designprobleme bis hin zu komplexen multidimensionalen Optimierungsaufgaben. 
+    Die Methode benötigt keine Ableitungsinformationen der Zielfunktion und kommt mit nichtlinearen und
+    nicht-differenzierbaren Problemen gut zurecht.
+}{
+    \paragraph{Ablauf}
+    \begin{figure}[H]
+        \centering
+        \input{images/DifferentialEvolutionAlgoFlowChart.tex}
+        \caption{Flussdiagramm des Differential Evolution Algorithmus}
+        \label{fig:DifferentialEvolutionAlgoFlowChart}
+    \end{figure}
+}
+
+
+\horizontalLine
+\minipagedOrBelowEachOther
+{
+    \subparagraph{Initialisierung}
+    \noindent
+    \\
+     Zu Beginn wird eine Population von N Lösungsvektoren zufällig im Suchraum verteilt. 
+     Jeder Vektor repräsentiert eine potenzielle Lösung des Optimierungsproblems und besteht aus D Parametern, 
+     wobei D die Dimensionalität des Problems darstellt. 
+     Die Anfangswerte werden typischerweise gleichverteilt innerhalb der definierten Grenzen des Suchraums gewählt.
+}
+{
+    \subparagraph{Simulation und Bewertung}
+    \noindent
+    \\
+    Für jedes Individuum in der Population wird eine Simulation mit den Parametern des Individuums durchgeführt.
+    Während der Simulation wird das Verhalten des Individuums beobachtet und bewertet. Am Ende des Simulationsdurchlaufs
+    hat jedes Individuum einen Fitness Wert, welcher angibt, wie gut das Individuum das Optimierungsziel erfüllt hat.
+    Die \gls{Fitnessfunktion} ist dabei spezifisch für das zu optimierende Problem und muss entsprechend definiert werden.
+    Im Gegensatz zum \gls{GA} kann der \gls{DE} Algorithmus problemlos mit 
+    \gls{Minimierungsproblem}en und \gls{Maximierungsproblem}en umgehen.
+}
+
+
+
+
+
+
+\definecolor{lightGenomColor}{rgb}{0.8,0.8,1}
+\definecolor{darkGenomColor}{rgb}{0.4,0.4,1}  
+
+\definecolor{colorA}{rgb}{0.8,0.8,1}
+\definecolor{colorB}{rgb}{0.6,0.6,1}
+\definecolor{colorC}{rgb}{0.4,0.4,1}
+\definecolor{colorD}{rgb}{0.2,0.2,1}
+
+\horizontalLine
+\begin{figure}[H]
+{
+    \vspace{-0.2cm}
+    %\centering
+    \begin{minipage}[t]{0.35\textwidth}
+        \paragraph{Optimierung}
+        Nachfolgend werden die einzelnen Schritte des Optimierungsprozesses,
+        wie sie in~\ref{fig:DifferentialEvolutionAlgoFlowChart} \\
+        dargestellt sind, erläutert.
+        
+        Für die Optimierung werden diverse Symbole verwendet,
+        welche in der~\ref{tab:DifferentialEvolutionAlgo_Symbole} \\
+        zusammengefasst sind.
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.6\textwidth}
+        \begin{table}[H]
+        \centering
+        \begin{tabular}{@{}clr@{}}
+                \toprule
+                \textbf{Symbol} & \textbf{Beschreibung} \\
+                \midrule
+                $N$                 & Anzahl Individuen in der Population \\[0.5ex]
+                $D$                 & Anzahl Gene pro Individuum / Anzahl Parameter \\[0.5ex]
+                $\overrightarrow{I_{\mathbf{i}}}$    & Individuum $\mathbf{i}$ in der Population $\overrightarrow{I_{\mathbf{i}}} \in \mathbb{R}^D$ \\[0.5ex]
+                $\mathFunction{f}{\overrightarrow{I_{\mathbf{i}}}}$ & Minimierungs-Fehler-Funktion. $f(\overrightarrow{I_{\mathbf{i}}}) \in \mathbb{R}$ \\[0.5ex]
+                $k_{\mathbf{ij}}$   & Gen $\mathbf{j}$ des Individuums $\mathbf{i}$ \\[0.5ex]
+                $\alpha$            & Mutationsstärke (Skalierungsfaktor für die Normalverteilung). $\alpha \in \mathbb{R}^{+}$ \\[0.5ex]
+                $\beta$             & Kreuzungswahrscheinlichkeit. $\beta \in [0, 1]$ \\[0.5ex]
+                \bottomrule
+        \end{tabular}
+        \caption{Symbole für die nachfolgenden Erklärungen des Differential Evolution Algorithmus}
+        \label{tab:DifferentialEvolutionAlgo_Symbole}
+        \end{table}
+    \end{minipage}
+}
+\end{figure}
+
+
+\newpage
+%\horizontalLine
+\subparagraph{Mutation} 
+\noindent
+\\
+\minipagedOrBelowEachOther
+{
+    Für jedes Individuum $\overrightarrow{I_{\mathbf{i}}}$ wird ein Mutationsvektor $\overrightarrow{M_{\mathbf{i}}}$ erzeugt. 
+    Für die Mutation werden zufällig drei verschiedene Vektoren aus der Population ausgewählt 
+    ($\overrightarrow{I_{\mathbf{a}}}$, $\overrightarrow{I_{\mathbf{b}}}$, $\overrightarrow{I_{\mathbf{c}}}$). 
+    Der Mutationsvektor wird berechnet, indem die gewichtete Differenz zwischen zwei dieser Vektoren zum dritten addiert wird. 
+    Der Skalierungsfaktor $\alpha$ (typischerweise zwischen 0.5 und 1.0) kontrolliert die Amplifikation der 
+    Differenzvektoren und beeinflusst damit die Schrittweite der Suche.
+
+
+    \begin{equation}
+        \overrightarrow{M_{\mathbf{i}}} =
+        \overrightarrow{I_{\mathbf{c}}} + \alpha \cdot (\overrightarrow{I_{\mathbf{b}}} - \overrightarrow{I_{\mathbf{a}}})
+    \end{equation}
+}
+{
+    \vspace{-1cm}
+    \begin{figure}[H]
+    {
+        \begin{tikzpicture}[
+            >=Stealth,
+            vector/.style={->,very thick,line width=1.5pt},
+            point/.style={circle,fill,inner sep=3pt},
+            label/.style={font=\Large\bfseries}
+        ]
+
+        % Define colors
+        \definecolor{colorA}{rgb}{0.8,0.8,1};
+        \definecolor{colorB}{rgb}{0.6,0.6,1};
+        \definecolor{colorC}{rgb}{0.4,0.4,1};
+        \definecolor{colorD}{rgb}{0,0.9,0};
+        \definecolor{colorE}{rgb}{0.3,0.9,0.3};
+
+        % Define the three vectors
+        \coordinate (origin) at (0,0);
+        \coordinate (vecA) at (3,2);
+        \coordinate (vecB) at (1,4);
+        \coordinate (vecC) at (6,2);
+
+        % Calculate difference vector (vecB - vecA)
+        \coordinate (diff) at ($(vecB)-(vecA)+(origin)$);
+
+        % Calculate the result: vecC + (vecB - vecA)
+        \coordinate (result) at ($(vecC)+0.8*(diff)$);
+
+        % Draw coordinate system
+        \draw[->,thick,gray] (-0.5,0) -- (7,0) node[right] {$k_1$};
+        \draw[->,thick,gray] (0,-0.5) -- (0,5) node[above] {$k_2$};
+
+        % Draw the three base vectors
+        \draw[vector,colorA] (origin) -- (vecA) node[point,colorA] {} 
+            node[above right,label,colorA] {$\overrightarrow{I_{\mathbf{a}}}$};
+        \draw[vector,colorB] (origin) -- (vecB) node[point,colorB] {} 
+            node[above right,label,colorB] {$\overrightarrow{I_{\mathbf{b}}}$};
+        \draw[vector,colorC] (origin) -- (vecC) node[point,colorC] {} 
+            node[below right,label,colorC] {$\overrightarrow{I_{\mathbf{c}}}$};
+            
+        % Draw the difference vector (vecB - vecA) starting from vecC
+        \draw[vector,colorD,line width=2pt, dashed] (vecA) -- (vecB) {};
+        \draw[vector,colorD,line width=2pt, dashed] (vecC) -- (result) node[point,colorD] {}
+            node[midway,above,sloped,font=\large,colorD] {$\alpha \cdot (\overrightarrow{I_{\mathbf{b}}} - \overrightarrow{I_{\mathbf{a}}})$};
+        \draw[vector,colorD,line width=2pt] (origin) -- (result) node[point,colorE] {}
+            node[above left,label,  colorE] {$\overrightarrow{M_{\mathbf{i}}}$};
+
+        % Add origin label
+        %\node[below left,font=\large] at (origin) {$\mathbf{0}$};
+
+        % Add coordinate labels
+        %\node[font=\small,colorA] at (vecA) [above left=2pt] {$(1,2)$};
+        %\node[font=\small,colorB] at (vecB) [below right=2pt] {$(2,1)$};
+        %\node[font=\small,colorC] at (vecC) [below=2pt] {$(3,1)$};
+        %\node[font=\small,colorD] at (result) [above right=2pt] {$(4,2)$};
+
+        \end{tikzpicture}
+    }
+    \caption{Grafische Darstellung des Mutationsvektors $\overrightarrow{M_{\mathbf{i}}}$}
+    \label{tab:DifferentialEvolutionAlgo_MutationVector}
+    \end{figure}
+}
+
+
+
+
+
+
+
+
+
+\horizontalLine
+\minipagedWithHFillOrBelowEachOther
+{
+       \subparagraph{Kreuzung} 
+        \noindent
+        \\
+        Der Mutationsvektor $\overrightarrow{M_{\mathbf{i}}}$ wird mit dem Individuum Vektor $\overrightarrow{I_{\mathbf{i}}}$ kombiniert, 
+        um einen Testvektor $\overrightarrow{T_{\mathbf{i}}}$ zu erzeugen. 
+        Dabei wird für jedes Element im Vektor mit der Kreuzungswahrscheinlichkeit $\beta$
+        (typischerweise zwischen 0.8 und 1.0) entschieden, 
+        ob der Wert vom Mutationsvektor $\overrightarrow{M_{\mathbf{i}}}$ oder vom Individuum Vektor $\overrightarrow{I_{\mathbf{i}}}$ übernommen wird. 
+        Dieser Schritt erhält erfolgreiche Merkmale aus der bestehenden Population, 
+        während gleichzeitig neue Variationen eingeführt werden.
+
+        \begin{equation}
+        k_{\mathbf{ij\_neu}} = 
+        \begin{cases} 
+            m_{\mathbf{ij}} & \text{wenn } \mathFunction{randG}{0,1} \leq \beta \\ 
+            k_{\mathbf{ij}} & \text{sonst} 
+        \end{cases}
+        \end{equation}
+        \[
+        \mathFunction{randG}{a,b} \text{ ist eine gleichverteilte Zufallsvariable im Intervall [a, b] } 
+        \]
+}
+{
+        \subparagraph{Selektion} 
+        \noindent
+        \\
+        Der Testvektor $\overrightarrow{T_{\mathbf{i}}}$ wird anhand der Zielfunktion bewertet und 
+        mit dem ursprünglichen Individuum $\overrightarrow{I_{\mathbf{i}}}$ verglichen. 
+        Bei Minimierungsproblemen ersetzt der Testvektor das Individuum $\overrightarrow{I_{\mathbf{i}}}$ nur dann, 
+        wenn er einen besseren (kleineren) Funktionswert aufweist. $\overrightarrow{I_{\mathbf{i neu}}} = \overrightarrow{T_{\mathbf{i}}}$
+        Andernfalls bleibt der ursprüngliche Vektor in der Population erhalten. $\overrightarrow{I_{\mathbf{i neu}}} = \overrightarrow{I_{\mathbf{i}}}$.
+        Dieses gierige Selektionsschema garantiert, dass die Population nie schlechter wird.
+
+        \begin{equation}
+            \overrightarrow{I_{\mathbf{i neu}}} = 
+            \begin{cases} 
+                \overrightarrow{T_{\mathbf{i}}} & \text{wenn } \mathFunction{f}{\overrightarrow{T_{\mathbf{i}}}} < \mathFunction{f}{\overrightarrow{I_{\mathbf{i}}}} \\ 
+                \overrightarrow{I_{\mathbf{i}}} & \text{sonst} 
+            \end{cases}
+        \end{equation}
+}
+
+
+\horizontalLine
+%\begin{figure}[H]
+%{
+%    \vspace{-0.2cm}
+%    %\centering
+%    \begin{minipage}[t]{0.48\textwidth}
+%        
+%    \end{minipage}
+%\hfill
+%\vrule width 0.5pt % vertical line
+%\hfill
+%    \begin{minipage}[t]{0.48\textwidth}
+%
+%    \end{minipage}
+%}
+%\end{figure}
+\minipagedOrBelowEachOther{
+    \subparagraph{Abbruchbedingung}
+    \noindent
+    \\
+    Der Optimierungsprozess wird wiederholt, bis eine Abbruchbedingung erfüllt ist.
+    Dies kann eine vordefinierte Anzahl von Generationen sein,
+    eine bestimmte Fitness-Schwelle, die erreicht werden muss,
+    oder eine Kombination aus beiden.
+    Sobald die Abbruchbedingung erfüllt ist,
+    wird das beste Individuum in der Population als die optimale Lösung des Problems betrachtet.
+}{}

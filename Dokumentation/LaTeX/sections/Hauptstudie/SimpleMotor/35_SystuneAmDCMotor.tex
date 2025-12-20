@@ -1,0 +1,362 @@
+\section{\textit{Systune} am DC-Motor}
+\label{sec:SystuneAmDCMotor}
+Für \textit{systune} wird MATLAB benötigt, nachfolgend wird Schritt für Schritt aufgezeigt,
+wie die Optimierung in MATLAB umgesetzt wird.
+
+
+\subsection{Regelkreis Definieren}
+\minipagedOrBelowEachOther
+{
+    %\vspace{0.8cm}
+    Der verwendete Regelkreis ist im Kapitel\\~\fullref{sec:DCMotorModell} genauer beschrieben.
+	Da der Regelkreis für \textit{systune} linear sein muss, werden die nichtlinearen Sättigungsblöcke vernachlässigt und 
+    erst beim Testen des optimierten Systems wieder berücksichtigt.
+    Das komplette MATLAB-Skript kann im GitHub Repository \cite{baRepository} eingesehen werden.
+}{
+	%\centering
+    \begin{figure}[H]
+    \centering
+    \input{images/SimpleMotor/SimpleMotorTikzDiagram_systune}
+    \caption{Regelkreis für den DC-Motor}
+    \label{fig:SimpleMotorTikzDiagram_systune}
+    \end{figure}
+}
+
+\horizontalLine
+\subsubsection{Motor definieren}
+\begin{matlabcode}{Definition des DC-Motors}{lst:DCMotorDC_MotorDefinition_systune}
+T = 0.14;  % Zeitkonstante
+K1 = 0.9;  % DC-Verstärkung
+plantSys = tf(K1, [T, 1]);
+plantSys.InputName = 'uIn';
+plantSys.OutputName = 'y';
+plantSys.Name = 'plantSys';
+\end{matlabcode}
+
+\horizontalLine
+\subsubsection{Tunable PID-Regler definieren}
+Mit der Funktion \textit{tunablePID} aus der Control System Toolbox \cite{matlabControlSystemToolbox}
+kann ein PID-Regler erstellt werden, der sogenannte \textit{tunable} Parameter besitzt.
+Diese Parameter können anschliessend mit \textit{systune} optimiert werden.
+
+\begin{matlabcode}{Definition des PID-Reglers}{lst:DCMotorPID_ReglerDefinition_systune}
+controllerSysInitial = tunablePID('controllerSys', 'PID');
+% Set initial values (optional)
+controllerSysInitial.Kp.Value = 1;
+controllerSysInitial.Ki.Value = 1;
+
+% Name the controller inputs and outputs
+controllerSysInitial.InputName = 'e';
+controllerSysInitial.OutputName = 'uOut';
+\end{matlabcode}
+
+
+\horizontalLine
+\subsubsection{Analysis-Point definieren}
+Ein Analysis-Point kann verwendet werden um während der Optimierung
+bestimmte Signale zu überwachen oder zu beeinflussen \cite{matlabSystune}.
+Dieser Analysis-Point kann später bei den~\fullref{sec:Optimierungsziele_definieren} verwendet werden.
+\begin{matlabcode}{Definition des Analysis-Points}{lst:DCMotorAnalysisPointDefinition_systune}
+G_ap = AnalysisPoint('uAP');
+G_ap.InputName = 'uOut';
+G_ap.OutputName = 'uIn';
+\end{matlabcode}
+
+
+\horizontalLine
+\subsubsection{Feedback Summation definieren}
+\begin{matlabcode}{Definition des Feedback Summation Blocks}{lst:DCMotorFeedbackSummationDefinition_systune}
+sum_block = sumblk('e = r - y');
+\end{matlabcode}
+
+
+\horizontalLine
+\subsubsection{Alle Teilsysteme verbinden}
+\begin{matlabcode}{Definition des Gesamtsystems}{lst:DCMotorGesamtsystemDefinition_systune}
+% System inputs: 'r'
+% System outputs: 'y', 'uIn', 'e'
+sys0 = connect(plantSys, G_ap, controllerSysInitial, sum_block, {'r'}, {'y', 'uIn', 'e'});
+sys0.Name = 'Untuned system';
+\end{matlabcode}
+$sys0$ ~\ref{fig:SimpleMotorTikzDiagram_systune} ist nun das nicht optimierte \gls{Gesamtsystem}, welches den DC-Motor, 
+den PID-Regler, den Analysis-Point und das Feedback beinhaltet. 
+
+
+
+
+\newpage
+\subsection{Optimierungsziele definieren}
+\label{sec:Optimierungsziele_definieren}
+Bei den Optimierungszielen können verschiedene Kriterien verwendet werden. 
+In diesem Beispiel werden zwei Ziele definiert:
+\begin{itemize}
+    \item \textbf{Step-Tracking}: Das System soll der Sprungantwort des Motors folgen.
+    \item \textbf{Overshoot}: Das Überschwingen soll begrenzt werden.
+\end{itemize}
+Diese Ziele benötigen keinen Analyis-Point, deshalb wurde dieser nur zur Demonstration definiert.
+Es gibt aber andere Optimierungsziele, die auf einen Analysis-Point angewiesen sind.
+
+
+\subsubsection{TuningGoal.StepTracking \cite{matlabTuningGoals_StepTracking}}
+\minipagedOrBelowEachOther
+{
+    Das Step-Tracking Ziel sorgt dafür, dass das \gls{Gesamtsystem} einer Sprungantwort folgt.
+    In diesem Fall wird nur eine Zahl angegeben, welche vom Step-Tracking als PT1 System interpretiert wird:  
+}{
+	\begin{equation}
+        H_{\mathbf{ref}}(s) = \frac{\frac{1}{\tau}}{s + \frac{1}{\tau}} \quad \text{mit} \quad \tau = 0.014
+    \end{equation}
+}
+
+% math
+%\minipagedOrBelowEachOther{
+Das Referenzsystem $H_{\mathbf{ref}}(s)$ entspricht, abgesehen von der DC-Verstärkung, der Übertragungsfunktion des Motors.
+Damit wird ein möglichst schnelles Ansprechverhalten des geschlossenen Regelkreises angestrebt.
+%}
+%{
+
+%}
+
+\begin{matlabcode}{Definition des Step-Tracking Ziels}{lst:DCMotorStepTrackingZielDefinition_systune}
+TR1 = TuningGoal.StepTracking('r', 'y', 0.014);  
+\end{matlabcode}
+
+
+\subsubsection{TuningGoal.Overshoot \cite{matlabTuningGoals_Overshoot}}
+Das Overshoot Ziel begrenzt das Überschwingen des Systems.
+Ziel ist es, vom Referenzsignal $r$ zur Ausgangsgrösse $y$ nicht mehr als 10\% Überschwingen zuzulassen.
+
+\begin{matlabcode}{Definition des Overshoot Ziels}{lst:DCMotorOvershootZielDefinition_systune}
+TR2 = TuningGoal.Overshoot('r', 'y', 10);  
+\end{matlabcode}
+
+\subsubsection{Optimierungsziele kombinieren}
+Die beiden definierten Ziele werden in zwei Vektoren gesammelt, es können beliebig viele Ziele definiert werden.
+Die Ziele werden in harte und weiche Ziele unterteilt.
+Harte Ziele müssen zwingend erfüllt werden, während weiche Ziele nur angestrebt werden.
+\begin{matlabcode}{Kombinieren der Optimierungsziele}{lst:DCMotorOptimierungszieleKombinieren_systune}
+targetSoftGoals = [TR1]; % Step Tracking
+targetHardGoals = [TR2]; % Overshoot
+\end{matlabcode}
+
+\horizontalLine
+\subsection{Optimierung durchführen}
+\label{sec:Optimierung_durchfuehren}
+Mit dem Befehl \textit{systune} wird die Optimierung durchgeführt \cite{matlabSystune}.
+Als Eingabe werden das nicht optimierte System $sys0$ sowie die definierten Optimierungsziele übergeben.
+Als Ausgabe wird das optimierte System $sysTuned$ sowie die Optimierungsergebnisse der 
+weichen $fSoft$ und harten $fHard$ Ziele zurückgegeben.
+\begin{matlabcode}{Optimierung durchführen}{lst:DCMotorOptimierungDurchfuehren_systune}
+    [sysTuned, fSoft, fHard] = systune(sys0, targetSoftGoals, targetHardGoals);
+    sysTuned.Name = 'Tuned system';
+\end{matlabcode}
+
+\subsubsection{Regler extrahieren}
+Nach der Optimierung kann der optimierte Regler aus dem Gesamtsystem extrahiert werden.
+\begin{matlabcode}{Regler extrahieren}{lst:DCMotorReglerExtrahieren_systune}
+    controllerSysTuned = getBlockValue(sysTuned, 'controllerSys');
+    disp(controllerSysTuned);
+\end{matlabcode}
+
+
+
+\begin{matlabcode}{Optimierter Regler}{lst:DCMotorcontrollerSysTunedOutput_systune}
+  pid with properties:
+
+              Kp: 11.1112
+              Ki: 79.3650
+              Kd: -1.8759e-04
+              Tf: 1.9757
+              ...
+\end{matlabcode}
+
+
+\newpage
+\subsection{Optimierung auswerten}
+\label{sec:Optimierung_auswerten}
+
+
+
+\textit{Systune} liefert für jedes Optimierungsziel einen Wert zurück, der angibt, wie gut das jeweilige Ziel erfüllt wurde.
+\begin{matlabcode}{TuningGoals auswerten}{lst:DCMotorTuningGoalsAuswerten_systune}
+% Display final objective value
+fprintf('Final soft objective: %.4f (< 1 is good)\n', fSoft);
+fprintf('Final hard objective: %.4f (< 1 is good)\n', fHard);
+\end{matlabcode}
+
+
+
+Das erste Soft-Ziel (Step-Tracking) wurde sehr gut erfüllt, da der Wert nahe bei 0 liegt.
+Das zweite Hard-Ziel (Overshoot) wurde ebenfalls erfüllt, da der Wert unter 1 liegt.
+\begin{matlabcode}{TuningGoals Auswertung}{lst:DCMotorTuningGoalsAuswertungOutput_systune}
+Final soft objective: 0.0000 (< 1 is good)
+Final hard objective: 0.6893 (< 1 is good)
+\end{matlabcode}
+
+
+
+Es können auch noch mehr Analysen durchgeführt werden, um die Optimierung zu bewerten.
+\begin{matlabcode}{Optimierung analysieren}{lst:DCMotorOptimierungAnalysieren_systune}
+% Create closed-loop systems
+CL_initial = feedback(controllerSysInitial*plantSys, 1);
+CL_tuned   = feedback(controllerSysTuned*plantSys, 1);
+
+% Get step response info
+info_initial = stepinfo(CL_initial);
+info_tuned = stepinfo(CL_tuned);
+
+fprintf('\n=== Performance Comparison ===\n');
+fprintf('                  Initial    Tuned\n');
+fprintf('Rise Time:        %.3f s    %.3f s\n', info_initial.RiseTime, info_tuned.RiseTime);
+fprintf('Settling Time:    %.3f s    %.3f s\n', info_initial.SettlingTime, info_tuned.SettlingTime);
+fprintf('Overshoot:        %.2f %%    %.2f %%\n', info_initial.Overshoot, info_tuned.Overshoot);
+
+% Check margins
+[Gm_i, Pm_i] = margin(plantSys*controllerSysInitial);
+[Gm_t, Pm_t] = margin(plantSys*controllerSysTuned);
+
+fprintf('\nGain Margin:      %.2f dB   %.2f dB\n', 20*log10(Gm_i), 20*log10(Gm_t));
+fprintf('Phase Margin:     %.2f °    %.2f °\n', Pm_i, Pm_t);
+\end{matlabcode}
+
+\begin{matlabcode}{Optimierungsanalyse Ausgabe}{lst:DCMotorOptimierungsanalyseOutput_systune}
+%=== Performance Comparison ===
+%                  Initial    Tuned
+%Rise Time:        3.370 s    0.031 s
+%Settling Time:    6.662 s    0.055 s
+%Overshoot:        0.00 %     0.00 %
+%
+%Gain Margin:      Inf dB     Inf dB
+%Phase Margin:     136.74 °   90.00 °
+\end{matlabcode}
+
+
+
+\newpage
+\subsubsection{Step-Tracking Ergebnis visualisiert}
+\begin{matlabcode}{Step-Tracking Diagramm}{lst:DCMotorOptimierungsanalyseOutput_systuneStepTracking}
+viewGoal(targetSoftGoals(1), sysTuned);
+\end{matlabcode}
+\minipagedOrBelowEachOther
+{
+    \vspace{1.1cm}
+    Das Diagramm in \ref{fig:SimpleMotorSystuneTuningGoalStepTrackingResult} zeigt die Sprungantwort des 
+    optimierten Systems. Die Kurve mit dem Namen \textit{Desired} entspricht der gewünschten Sprungantwort,
+    die durch das Step-Tracking Ziel definiert wurde: $H_{\mathbf{ref}}(s) = \frac{1}{\tau \cdot s + 1}$ mit $\tau = 0.014$.\\
+    In blau ist die Sprungantwort des optimierten Systems dargestellt.
+    Diese deckt sich sehr gut mit der gewünschten Sprungantwort, was zeigt, dass das Step-Tracking Ziel sehr gut erfüllt wurde.
+
+
+    
+}{
+	%\centering
+    %\vspace{-1cm}
+    \begin{figure}[H]
+        %\centering
+        \includegraphics[width=\linewidth]{images/SimpleMotor/SystuneTuningGoalSoft_1.pdf}
+        \caption{Step-Tracking Optimierungsergebnis mit \textit{systune} am DC-Motor}
+        \label{fig:SimpleMotorSystuneTuningGoalStepTrackingResult}
+    \end{figure}
+}
+
+\horizontalLine
+\subsubsection{Overshoot Ergebnis visualisiert}
+\begin{matlabcode}{Overshoot Diagramm}{lst:DCMotorOptimierungsanalyseOutput_systuneOvershoot}
+viewGoal(targetHardGoals(1), sysTuned);
+\end{matlabcode}
+\minipagedOrBelowEachOther
+{
+    \vspace{0.7cm}
+	Das Diagramm in \ref{fig:SimpleMotorSystuneTuningGoalOvershootResult} zeigt den Frequenzgang des optimierten geschlossenen Systems.
+    Der orange Bereich stellt den Teil der Verstärkung dar, welcher grösser als die erlaubten 10\% Überschwingen ist.
+    Die blaue Kurve zeigt die Verstärkung des optimierten Systems, diese ist im gesamten Frequenzbereich unterhalb der
+    10\% Grenze, was zeigt, dass das Overshoot Ziel erfolgreich erfüllt wurde.\\
+
+    %\begin{matlabcode}{Overshoot Diagramm}{lst:DCMotorOptimierungsanalyseOutput_systuneOvershoot}
+    %viewGoal(targetHardGoals(1), sysTuned);
+    %\end{matlabcode}
+
+    Mehr Informationen darüber, wie die Optimierungsergebnisse visualisiert werden,
+    ist in der MATLAB Dokumentation zu den Tuning-Goals beschrieben. \cite{matlabTuningGoals_VisualizeTuningGoals}
+
+    
+}{
+	%\centering
+    \begin{figure}[H]
+        %\vspace{-1cm}
+        \includegraphics[width=\linewidth]{images/SimpleMotor/SystuneTuningGoalHard_1.pdf}
+        \caption{Overshoot Optimierungsergebnis mit systune am DC-Motor}
+        \label{fig:SimpleMotorSystuneTuningGoalOvershootResult}
+    \end{figure}
+}
+
+
+
+
+\newpage
+\subsection{Optimierten Regler am realen System testen}
+%\subsubsection{Simulink Resultat}
+%\label{sec:Optimierten_Regler_testen}
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=\linewidth]{images/MotorSystemSystune_simulinkResult.pdf}
+%    \caption{Simulink Simulationsergebnis des optimierten Reglers am DC-Motor}
+%    \label{fig:MotorSystemSystune_simulinkResult}
+%\end{figure}
+%
+%\minipagedOrBelowEachOther
+%{
+%    Für den Test sind im Simulink Modell unterschiedliche Sprünge vorbereitet. Auch die Sättigungen sind wieder eingebaut.
+%    Da der PID-Regler am Ausgang einen Sättigungsblock besitzt, entsteht das Problem des Integrator Windups.
+%    Deshalb wird die \textit{Clamping} Anti-Windup Methode verwendet, da diese keinen weiteren Tuning-Parameter benötigt.
+%    Mit systune kann leider kein Anti-Windup Tuning-Parameter optimieren.
+%}
+%{
+%    Mit der Clamping Methode des Simulink PID-Blocks entstehen aber schwingungen am ausgang des Reglers wenn $r$ auf 0 wechselt.
+%    Dies ist im~\ref{fig:MotorSystemSystune_simulinkResult} bei den Zeiten um 3s oder 5s zu erkennen.
+%    Mehr zu diesem Verhalten und wie man dies verhindern kann, ist im~\fullref{sec:Description_SimulinkPID_ClampingLogic_Problem} beschrieben.
+%}
+
+%\subsubsection{Reales System Resultat}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/SimpleMotor/Systune_realResult.pdf}
+    \caption{Antwort auf Stimulation des optimierten Reglers am DC-Motor, mit dem durch \textit{systune} optimierten PID-Regler}
+    \label{fig:SimpleMotorSystune_realResult}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+    Für den Test am Realen Prozess sind im Simulink Modell unterschiedliche Sprünge vorbereitet. 
+    Das Signal $r$ definiert eine Spannung die proportional für eine gewünschte Drehzahl steht.
+    Die Last $l$ steuert zwei Wirbelstrombremsen an, wobei ein Wert von 1 bedeutet, 
+    dass nur eine Bremse aktiv ist und ein Wert von 2 bedeutet, dass beide Bremsen aktiv sind.
+    Auch die Sättigungen sind wieder eingebaut.\\
+
+
+    Da der PID-Regler am Ausgang einen Sättigungsblock besitzt, entsteht das Problem des Integrator Windups.
+    Die \textit{Clamping} Anti-Windup Methode wird verwendet, da diese keinen weiteren Tuning-Parameter erzeugt.
+    \textit{Systune} kann leider keinen Anti-Windup Tuning-Parameter optimieren.\\
+
+
+    Mit der Clamping Methode des Simulink PID-Blocks entsteht ein ungewöhnliches Verhalten am Ausgang des Reglers, wenn $r$ auf 0 wechselt.
+    Dies ist im~\ref{fig:SimpleMotorSystune_realResult} z.B. bei der Zeit um 3s zu erkennen.
+    Mehr zu diesem Verhalten und wie man dies verhindern kann, ist in folgendem Kapitel beschrieben:\\
+    ~\fullref{sec:Description_SimulinkPID_ClampingLogic_Problem}\\
+
+
+    Was deutlich auffällt ist, dass der Regler-Ausgang $u$ sehr starkes Rauschen aufweist.
+    Dieses Rauschen wird an den Motor weitergegeben und ist deshalb auch in der 
+    Drehzahl $y$ zu erkennen. 
+}
+{
+    
+
+    \begin{figure}[H]
+		\centering
+		\input{images/SimpleMotor/SimpleMotorTikzDiagram_realSystem}
+		\caption{Regelkreis des DC-Motors}
+		\label{fig:SimpleMotorTikzDiagram_realSystem}
+	\end{figure}
+}
+\newpage

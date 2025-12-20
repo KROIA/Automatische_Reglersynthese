@@ -1,0 +1,56 @@
+{
+  "latex-workshop.latex.outDir": "out",
+  "latex-workshop.latex.clean.enabled": false,
+  "latex-workshop.latex.tools": [
+    {
+      "name": "pdflatex",
+      "command": "pdflatex",
+      "args": [
+        "-interaction=nonstopmode",
+        "-synctex=1",
+        "-output-directory=out",
+        "-pdf",
+        "%DOC%"
+      ]
+    },
+    {
+        "name": "latexmk",
+        "command": "latexmk",
+        "args": [
+          "-pdf",
+          "-outdir=out",
+          "-interaction=nonstopmode",
+          "%DOC%"
+        ]
+    },
+    {
+      "name": "bibtex",
+      "command": "bibtex",
+      "args": [
+        "%DOCFILE%"
+      ]
+    },
+    {
+      "name": "makeglossaries",
+      "command": "makeglossaries",
+      "args": [
+        "-d",
+        "out",
+        "%DOCFILE%"
+      ]
+    }
+  ],
+
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk → bibtex → makeglossaries → latexmk",
+      "tools": [
+        "latexmk",
+        "bibtex",
+        "makeglossaries",
+        "latexmk",
+        "latexmk"
+      ]
+    }
+  ]
+}

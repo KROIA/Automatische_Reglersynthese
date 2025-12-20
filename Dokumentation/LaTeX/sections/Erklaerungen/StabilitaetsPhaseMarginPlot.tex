@@ -1,0 +1,53 @@
+\subsubsection{Phasen- \& Verstärkungsreserve Diagramm}
+\label{sec:StabilitaetsPhaseMarginPlot}
+
+\minipagedOrBelowEachOther
+{
+    Das Phasen- \& Verstärkungsreserve Diagramm \cite{matlabScriptStabilityRegionPlot} in 
+    \ref{fig:stabilitaetsPhaseMarginPlot} zeigt die Verstärkungs- und Phasenreserven 
+    des optimierten geschlossenen Systems in logarithmischer Darstellung.
+    Der Rote Bereich stellt die instabilen Verstärkungs- und Phasen- Paare dar.
+    Der Grüne Bereich stellt die stabilen Verstärkungs- und Phasen- Paare dar.
+    Das Diagramm gibt an, wie viel Verstärkung und Phase dem open loop System $G$ hinzugefügt werden kann,
+    bis das closed loop System instabil wird.\\
+
+
+    Ermittelt wird das Diagramm, indem das zu testende System $G$ mit einem komplexen Faktor $K$ multipliziert wird
+    und anschliessend geprüft wird, ob sich ein Pol des geschlossenen Systems in der rechten Halbebene befindet.
+    \[
+        G_{test}(s) = \frac{K \cdot G(s)}{1 + K \cdot G(s)}
+    \]
+    \[
+        K = (r \cdot e^{j \cdot \phi}) \quad \text{mit} \quad r \in (0, \infty), \phi \in [-\pi, \pi)
+    \]
+
+
+
+    \begin{figure}[H]
+        \centering
+        \input{images/StabilitaetsMarginPlotSystemTikz.tex}
+        \caption{Testsystem für Phasen- \& Verstärkungsreserve Diagramm}
+        \label{fig:stabilitaetsMarginPlotSystem}
+    \end{figure}
+    Für jeden möglichen Wert von $K$ wird die Stabilität des geschlossenen Systems überprüft.
+    Wenn es stabil ist, wird der Punkt $K$ in der komplexen Ebene mit grüner Farbe markiert, 
+    andernfalls mit rot.
+    Weil es natürlich nicht möglich ist alle möglichen Werte von $K$ zu testen,
+    wird der Bereich in einem Raster getestet.
+    Damit ein möglichst grosser Bereich abgedeckt und dargestellt werden kann, wird die komplexe Ebene 
+    für beide Achsen logarithmisch skaliert.\\
+
+
+    
+    
+}
+{
+    %\centering
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/GeneticStabilityPhaseMarginsPlot.pdf}
+        \caption{Phasen- \& Verstärkungsreserve Diagramm für System $G$}
+        \label{fig:stabilitaetsPhaseMarginPlot}
+    \end{figure}
+}
+

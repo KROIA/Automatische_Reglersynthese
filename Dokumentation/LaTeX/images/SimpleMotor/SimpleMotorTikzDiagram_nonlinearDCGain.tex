@@ -1,0 +1,26 @@
+\begin{tikzpicture}[scale=2]
+    % Draw axes
+    \draw[thick,->] (0,0) -- (3,0) node[right] {$x$};
+    \draw[thick,->] (0,0) -- (0,3) node[above] {$y$};
+    
+    % Draw the first part of the function (x < 1): y = 0.43*x^2 + 0.21*x
+    % Using cyan color for segment 1
+    \draw[cyan, thick, domain=0:1, samples=50] 
+        plot (\x, {0.43*\x*\x + 0.21*\x});
+    
+    % Draw the second part of the function (x >= 1): y = 1.07*x - 0.43
+    % Using orange color for segment 2
+    \draw[orange, thick, domain=1:2.8, samples=50] 
+        plot (\x, {1.07*\x - 0.43});
+    
+    % Mark the transition point at x = 1
+    \fill (1, 0.64) circle (0.5pt);
+    
+    % Add labels for the segments
+    \node[cyan] at (0.5, 0.4) {\textbf{1}};
+    \node[orange] at (2, 1.9) {\textbf{2}};
+    
+    % Add tick mark at x = 1
+    \draw (1, -0.05) -- (1, 0.05);
+    \node[below] at (1, -0.05) {\small $1$};
+\end{tikzpicture}

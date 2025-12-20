@@ -1,0 +1,348 @@
+
+% Erstelle 2 Verzeichnisse "Abkürzungen" & "Beschreibungen"
+\newglossary[gal]{acronyms}{gax}{gad}{Abkürzungen}
+\newglossary[gsl]{symbols}{gsx}{gsd}{Beschreibungen}
+
+\makeglossaries
+
+%\newpage % Damit de nöchst Itrag: sgn(x) uf de nöchste Site chunnt und nöd zerhackt wird uf zwei Site... 
+
+% Symbole, Wörter mit genauer Beschreibung
+% Usage: \gls{Pol-Nullstellekürzung}
+\newglossaryentry{Pol-Nullstelle-Kürzung}{
+    type=symbols,
+    name={Pol-Nullstelle-Kürzung},
+    description={Methode bei welcher versucht wird ein Pol durch eine Nullstelle aufzuheben. 
+    In der Theorie verschwindet dadurch der Pol an dieser Position und kann durch einen Pol an einer anderen Stelle
+    ersetzt werden. In der Praxis lässt sich diese Methode nur Näherungsweise umsetzen, da die exakte Position des Pols nie genau getroffen werden kann
+    und sich der Pol auch verschieben kann mit der Zeit.}
+}
+
+\newglossaryentry{PolePlacement}{
+    type=symbols,
+    name={Polplatzierung},
+    description={Methode bei welcher die vorhandenen Pole der geschlossenen Regelstrecke, mit Hilfe der 
+    Zustandsrückführung, gezielt in der S-Ebene platziert werden können um das gewünschte 
+    Systemverhalten zu erreichen.
+    }
+}
+
+\newglossaryentry{Beobachter}{
+    type=symbols,
+    name={Beobachter},
+    description={Eine möglichst realistische Kopie des \gls{System}s, welche mit Hilfe der gemessenen Ein- und Ausgangssignale
+    den internen Zustand des Systems schätzt. Dies ist notwendig, 
+    wenn nicht alle Zustandsgrössen des Systems gemessen werden können.}
+}
+
+\newglossaryentry{System}{
+    type=symbols,
+    name={System},
+    text={System}, % Schreibweise im Fliesstext
+    plural={Systeme},
+    description={
+        Ein System bezeichnet in der Regelungstechnik ein technisches Gebilde,
+        das Eingangsgrössen in Ausgangsgrössen umwandelt.
+        In den meisten Fällen wird ein System als ein \gls{LTI} System modelliert.
+    }
+}
+
+\newglossaryentry{nichtlineares System}{
+    type=symbols,
+    name={Nichtlineares System},
+    text={nichtlineares System}, % Schreibweise im Fliesstext
+    plural={nichtlineare Systeme},
+    description={Ein System, bei welchem die Beziehung zwischen Ein- und Ausgang nicht linear im mathematischen Sinne ist.
+    Nichtlinearitäten entstehen beispielsweise durch: Sättigungen, Hysteresen, Trigonometrische Funktionen, Totzeiten, etc.
+    Da jedes reale System nichtlineares Verhalten aufweist, wird in der Praxis das \gls{Modell} des Systems durch eine 
+    linearisierte Näherung beschrieben. Der Arbeitspunkt der Linearisierung ist dabei Anwendungsspezifisch zu wählen.}
+}
+
+\newglossaryentry{zeitvariantes System}{
+    type=symbols,
+    name={Zeitvariantes System},
+    text={zeitvariantes System}, % Schreibweise im Fliesstext
+    plural={zeitvariante Systeme},
+    description={
+        Ein System, bei welchem die Beziehung zwischen Ein- und Ausgang nicht konstant ist, sondern sich über die Zeit verändert.
+        Alterung des realen \gls{System}s führt zur Veränderung des Systems. Z.B. mehr Reibung durch altes Schmiermittel oder Verschleiss von Teilen.
+        In der Regel werden solche Systeme durch zeitkonstante \gls{Modell}e angenähert.
+    }
+}
+
+\newglossaryentry{minimalphasiges System}{
+    type=symbols,
+    name={Minimalphasiges System},
+    text={minimalphasiges System}, % Schreibweise im Fliesstext
+    plural={minimalphasige Systeme},
+    description={Ein System ist minimalphasig, wenn alle Nullstellen des \gls{System}s in der linken Halbebene der S-Ebene liegen.
+    Ein \textbf{nicht} minimalphasiges System kann daran erkannt werden, dass die Sprungantwort zu beginn des Sprunges in die entgegengesetzte Richtung des Sprunges verläuft.}
+    \newpage % Damit de nöchst Itrag: sgn(x) uf de nöchste Site chunnt und nöd zerhackt wird uf zwei Site... 
+}
+
+\newglossaryentry{Hyperparameter}{
+    type=symbols,
+    name={Hyperparameter},
+    description={Parameter, die nicht direkt im Optimierungsprozess angepasst werden, sondern vorab festgelegt werden.
+    Diese Parameter beeinflussen das Verhalten des Optimierungsprozesses selbst und können Einfluss auf die Qualität der Lösung haben.}
+}
+
+
+\newglossaryentry{Integral Windup}{
+    type=symbols,
+    name={Integral Windup},
+    description={Ein Phänomen bei PID-Reglern, bei dem der I-Anteil aufgrund von Sättigungen am 
+    Ausgang des Reglers übermässig ansteigt, was zu einer Verzögerung oder Überschwingung im Regelverhalten führt.
+    Der Integrator im Regler weiss nicht, dass der Ausgang gesättigt ist und somit der Aktor nicht mehr steuern kann.
+    Dadurch kann es sein, dass der Fehler nie auf Null sinkt wodurch der Integrator immer weiter ansteigt.
+    Das Problem dabei ist, wenn der Fehler plötzlich in die andere Richtung kippt, weil z.B. die Referenz verändert wird,
+    wird der Regler am Ausgang immer noch den gesättigten Wert liefern bis der Integrator wieder entladen ist.
+    Dies kann zu grossen Überschwingern und langen Einschwingzeiten führen.
+    Anti-Windup Mechanismen verhindern dieses Verhalten durch verschiedene Lösungsansätze.}
+}
+
+\newglossaryentry{Solver}{
+    type=symbols,
+    name={Solver},
+    description={
+        Ein Werkzeug oder ein Algorithmus, das mathematische Probleme löst, 
+        entweder indem es eine exakte Lösung findet oder eine annähernde Lösung durch iterative Berechnungen liefert
+    }
+}
+
+\newglossaryentry{Reglersynthese}{
+    type=symbols,
+    name={Reglersynthese},
+    description={
+        Der Prozess der Entwicklung und Gestaltung eines Reglers, 
+        der die gewünschten Leistungsanforderungen für ein gegebenes System erfüllt.
+    }
+}
+
+\newglossaryentry{Modellwissen}{
+    type=symbols,
+    name={Modellwissen},
+    description={
+        Das Verständnis und die Kenntnisse über das Verhalten und die Eigenschaften eines \gls{System}s,
+        die zur Erstellung eines genauen \gls{Modell}s des Systems verwendet werden können.
+        Modellwissen umfasst Informationen über die physikalischen Gesetze, 
+        die das System steuern, sowie über die Parameter und Dynamiken des Systems.
+    }
+}
+
+\newglossaryentry{Gesamtsystem}{
+    type=symbols,
+    name={Gesamtsystem},
+    description={
+        Das Gesamtsystem bezeichnet in der Regelungstechnik die Kombination aus dem zu regelnden \gls{Prozess} 
+        und dem Regler, der den Prozess steuert.
+        Das Gesamtsystem umfasst alle Komponenten, die an der Regelung beteiligt sind,
+        einschließlich Sensoren, Aktoren und Rückkopplungsschleifen.
+    }
+}
+
+\newglossaryentry{Minimierungsproblem}{
+    type=symbols,
+    name={Minimierungsproblem},
+    description={
+        \begin{minipage}[t]{\linewidth}
+        Ein mathematisches Problem, bei dem das Ziel darin besteht, 
+        die Parameter einer Funktion zu finden, welche zu dem kleinsten möglichen Resultat der Funktion führen.
+        \begin{equation}
+            \min_{x \in \mathcal{X}} f(x)
+        \end{equation}
+        Wobei:
+        \begin{itemize}
+            \item $x \in \mathbb{R}^n$ sind die Parameter (Entscheidungsvariablen)
+            \item $\mathcal{X} \subseteq \mathbb{R}^n$ ist die zulässige Menge (Beschränkungsmenge)
+            \item $f: \mathcal{X} \rightarrow \mathbb{R}$ ist die Zielfunktion
+            \item $x^* \in \mathcal{X}$ ist die optimale Lösung
+        \end{itemize}
+        So dass:
+        \begin{equation}
+            f(x^*) \leq f(x), \quad \forall x \in \mathcal{X}
+        \end{equation}
+        \end{minipage} 
+    }
+}
+
+\newglossaryentry{Maximierungsproblem}{
+    type=symbols,
+    name={Maximierungsproblem},
+    description={
+        \begin{minipage}[t]{\linewidth}
+            Ein mathematisches Problem, bei dem das Ziel darin besteht, 
+            die Parameter einer Funktion zu finden, welche zu dem grösstmöglichen Resultat der Funktion führen.
+            \begin{equation}
+                \max_{x \in \mathcal{X}} f(x)
+            \end{equation}
+            Wobei:
+            \begin{itemize}
+                \item $x \in \mathbb{R}^n$ sind die Parameter (Entscheidungsvariablen)
+                \item $\mathcal{X} \subseteq \mathbb{R}^n$ ist die zulässige Menge (Beschränkungsmenge)
+                \item $f: \mathcal{X} \rightarrow \mathbb{R}$ ist die Zielfunktion
+                \item $x^* \in \mathcal{X}$ ist die optimale Lösung
+            \end{itemize}
+            So dass:
+            \begin{equation}
+                f(x^*) \geq f(x), \quad \forall x \in \mathcal{X}
+            \end{equation}
+        \end{minipage}
+    }
+}
+
+\newglossaryentry{sgn}{
+    type=symbols,
+    name={sgn(x)},
+    description=
+    {
+        \needspace{3cm}
+        \begin{minipage}[t]{\linewidth}
+        Der Signum-Operator gibt das Vorzeichen einer Zahl zurück.
+        \begin{equation}
+            \mathrm{sgn}(x) = 
+            \begin{cases} 
+            1 & \text{wenn } x >= 0 \\ 
+            -1 & \text{wenn } x < 0 
+            \end{cases}
+        \end{equation}
+        \end{minipage}
+    }
+}
+
+\newglossaryentry{Konvergenz}{
+    type=symbols,
+    name={Konvergenz},
+    description=
+    {
+        Der Prozess, bei dem eine Folge von Werten oder eine iterative Methode sich einem festen Punkt oder einer Lösung annähert.
+        Im Kontext dieser Arbeit bezieht sich Konvergenz auf den Prozess,
+        bei dem ein Optimierungsalgorithmus schrittweise bessere Lösungen findet,
+        bis er eine optimale oder zufriedenstellende Lösung erreicht.
+    }
+}
+
+\newglossaryentry{Fitnessfunktion}{
+    type=symbols,
+    name={Fitnessfunktion},
+    description=
+    {
+        Eine Funktion, die verwendet wird, um die Qualität oder Eignung einer Lösung in einem Optimierungsproblem zu bewerten.
+        In der Regel wird die Fitnessfunktion so gestaltet, dass sie höhere Werte für bessere Lösungen liefert.
+        Im Kontext dieser Arbeit wird die Fitnessfunktion jedoch als Minimierungsproblem formuliert,
+        sodass niedrigere Werte für bessere Lösungen stehen. 
+        Die Fitnessfunktion wird als Sammelbegriff für die Fehler-Minimierungs-Funktion und die Maximierungs-Fitness-Funktion verwendet.
+    }
+}
+
+
+\newglossaryentry{Prozess}{
+    type=symbols,
+    name={Prozess},
+    description=
+    {
+        Ein technisches System oder eine Anlage, die physikalische, chemische oder biologische Vorgänge durchführt.
+        In der Regel wird ein Prozess durch Eingangsgrössen beeinflusst und liefert Ausgangsgrössen als Resultat.
+        In der Regelungstechnik wird ein Prozess oft als das zu regelnde System betrachtet,
+        das durch einen Regler gesteuert wird, um ein gewünschtes Verhalten zu erreichen.
+    }
+}
+
+\newglossaryentry{LTI}{
+    type=symbols,
+    name={LTI},
+    description=
+    {
+        Abkürzung für "Linear Time-Invariant" (Linear Zeitinvariant).
+        Ein LTI-System ist ein System, das sowohl linear als auch zeitinvariant ist.
+        Linearität bedeutet, dass das System die Prinzipien der Superposition erfüllt,
+        während Zeitinvarianz bedeutet, dass die Systemparameter sich nicht mit der Zeit ändern.
+        LTI-Systeme sind in der Regelungstechnik und Signalverarbeitung weit verbreitet,
+        da sie mathematisch gut handhabbar sind und viele nützliche Eigenschaften besitzen.\\
+        (Dies ist nur eine Übersichtsbeschreibung und entspricht nicht der genauen Definition von LTI-Systemen)
+    }
+}
+
+
+\newglossaryentry{Modell}{
+    type=symbols,
+    name={Modell},
+    description=
+    {
+        Eine mathematische Darstellung eines realen \gls{System}s oder Prozesses,
+        die dessen Verhalten und Eigenschaften beschreibt.
+        Modelle sind immer vereinfachte Darstellungen der Realität und können unterschiedliche Komplexitätsgrade aufweisen.
+        Modelle werden verwendet, um das Verhalten von Systemen zu analysieren, vorherzusagen und zu steuern.
+        In der Regelungstechnik können Modelle in verschiedenen Formen vorliegen,
+        wie z.B. Differentialgleichungen, Übertragungsfunktionen oder Zustandsraumdarstellungen.
+    }
+}
+
+
+\newglossaryentry{Fitness}{
+    type=symbols,
+    name={Fitness},
+    description=
+    {
+        Die Fitness ist ein Mass für die Qualität oder Eignung einer Lösung in einem Optimierungsproblem.
+        In der Regel wird die Fitnessfunktion so gestaltet, dass höhere Werte bessere Lösungen darstellen.
+        Im Kontext dieser Arbeit wird die Fitnessfunktion jedoch als Minimierungsproblem formuliert,
+        sodass niedrigere Werte für bessere Lösungen stehen.
+        Synonyme dieses Begriffs sind: 
+        \begin{itemize}
+            \item Fehler
+            \item Score 
+        \end{itemize}
+    }
+}
+
+\newglossaryentry{Fehler}{
+    type=symbols,
+    name={Fehler},
+    description=
+    {
+        Der Fehler ist ein Mass für die Qualität oder Eignung einer Lösung in einem Optimierungsproblem.
+        In der Regel wird die Fehlerfunktion so gestaltet, dass sie niedrige Werte bessere Lösungen darstellen.
+        Synonyme dieses Begriffs sind: 
+        \begin{itemize}
+            \item Fitness
+            \item Score 
+        \end{itemize}
+    }
+}
+
+
+\newglossaryentry{Population}{
+    type=symbols,
+    name={Population},
+    description=
+    {
+        In der Evolutionären Optimierung bezeichnet die Population 
+        eine Menge von Individuen (Lösungen), die gleichzeitig optimiert werden.
+        Jedes Individuum repräsentiert eine mögliche Lösung des Optimierungsproblems.
+        Die Population entwickelt sich über Generationen hinweg durch Auswahl, Kreuzung und Mutation.
+    }
+}
+
+\newglossaryentry{Individuum}{
+    type=symbols,
+    name={Individuum},
+    description=
+    {
+        In der Evolutionären Optimierung bezeichnet ein Individuum 
+        eine einzelne Lösung innerhalb einer Population.
+        Ein Individuum wird durch einen Satz von Parametern (Genotyp) definiert,
+        die das Verhalten oder die Eigenschaften der Lösung bestimmen.
+        Die Qualität eines Individuums wird durch die Fitnessfunktion bewertet.
+    }
+}
+
+% Abkürzungen
+\newacronym[type=acronyms]{OST}{OST}{Ostschweizer Fachhochschule}
+\newacronym[type=acronyms]{SISO}{SISO}{Single Input Single Output}
+\newacronym[type=acronyms]{MIMO}{MIMO}{Multiple Input Multiple Output}
+%\newacronym[type=acronyms]{Reglersynthese}{Reglersynthese}{Entwicklung eines Reglers}
+\newacronym[type=acronyms]{GA}{GA}{Genetischer Algorithmus}
+\newacronym[type=acronyms]{DE}{DE}{Differential Evolution}
+\newacronym[type=acronyms]{NEAT}{NEAT}{NeuroEvolution of Augmenting Topologies}
+\newacronym[type=acronyms]{NN}{NN}{Neuronales Netzwerk}

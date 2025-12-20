@@ -1,0 +1,36 @@
+## description: Matlab API Wrapper for QT c++ applications 
+
+function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB INCLUDE_PATHS)
+
+	find_package(Matlab REQUIRED COMPONENTS ENG_LIBRARY MX_LIBRARY MAT_LIBRARY)
+
+    # Define the git repository and tag to download from
+    set(LIB_NAME MatlabAPI)		
+    set(LIB_MACRO_NAME MATLAB_API_LIBRARY_AVAILABLE)
+    set(GIT_REPO https://github.com/KROIA/MatlabAPI.git)	
+    set(GIT_TAG main)		
+	set(NO_EXAMPLES True)	
+	set(NO_UNITTESTS True)
+	set(ADDITIONAL_INCLUDE_PATHS ${Matlab_INCLUDE_DIRS})
+	
+	set(MATLAB_LIBS
+        ${Matlab_ENGINE_LIBRARY}
+        ${Matlab_DATAARRAY_LIBRARY}
+        ${Matlab_ENG_LIBRARY}
+        ${Matlab_MX_LIBRARY}
+        ${Matlab_MEX_LIBRARY}
+        ${Matlab_MAT_LIBRARY}
+    )
+	
+	set(ADDITIONAL_SHARED_LIB_DEPENDENCIES ${MATLAB_LIBS})
+	set(ADDITIONAL_STATIC_LIB_DEPENDENCIES ${MATLAB_LIBS})
+	set(ADDITIONAL_STATIC_PROFILE_LIB_DEPENDENCIES ${MATLAB_LIBS})
+
+    downloadStandardLibrary()
+endfunction()
+
+dep(DEPENDENCY_NAME_MACRO 
+    DEPENDENCIES_FOR_SHARED_LIB 
+    DEPENDENCIES_FOR_STATIC_LIB 
+    DEPENDENCIES_FOR_STATIC_PROFILE_LIB 
+    DEPENDENCIES_INCLUDE_PATHS)

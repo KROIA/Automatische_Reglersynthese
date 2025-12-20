@@ -1,0 +1,42 @@
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm,
+    minimum height=1cm, text centered, draw=black, fill=gray!20]
+
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm,
+    text centered, draw=black, fill=blue!10]
+
+\tikzstyle{decision} = [diamond, aspect=2, text centered, draw=black,
+    fill=green!10, minimum width=3cm, minimum height=1cm]
+
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\begin{tikzpicture}[node distance=2cm, scale=0.8, every node/.style={transform shape}]
+
+% Nodes
+\node (init)     [startstop]  {Initialisiere Population};
+\node (eval)     [process, below of=init] {Fitness evaluieren};
+
+\node (mut)      [process, below of=eval] {Mutation};
+\node (cross)    [process, below of=mut] {Kreuzung};
+\node (sel)      [process, below of=cross] {\begin{tabular}{c}Selektion /\\Fitness evaluieren\end{tabular}};
+
+\node (dec)      [decision, below of=sel, yshift=-0.5cm] {Abbruchbedingung?};
+\node (stop)     [startstop, below of=dec, yshift=-0.5cm] {Stop};
+
+% Group box around Selection, Crossover, Mutation
+\node (optbox) [draw, dashed, rounded corners,
+    inner sep=0.3cm,
+    fit=(mut)(cross)(sel),
+    label={[xshift=0.5cm, rotate=90, anchor=center]right:Optimierung}] {};
+
+% Arrows
+\draw [arrow] (init) -- (eval);
+\draw [arrow] (eval) -- (mut);
+\draw [arrow] (mut) -- (cross);
+\draw [arrow] (cross) -- (sel);
+\draw [arrow] (sel) -- (dec);
+\draw [arrow] (dec) -- node[anchor=east] {Ja} (stop);
+
+% Loopback arrow
+\draw [arrow] (dec.west) --++ (-2,0) |- node[pos=0.25, anchor=west] {Nein} (mut.west);
+
+\end{tikzpicture}

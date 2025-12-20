@@ -1,0 +1,113 @@
+\documentclass[a4paper,12pt]{article}
+
+
+\input{formulasWithDerivationPreamble}
+
+
+
+% Dokumentbeginn
+\begin{document}
+
+\title{Beispieldokument mit Formeln und Herleitungen}
+\author{Autor}
+\date{\today}
+\maketitle
+
+\section{Einleitung}
+Dies ist ein Beispiel für die Verwendung des Makros.
+
+\section{Mathematische Formeln}
+
+\[
+  E = mc^2
+\]
+
+\subsection{Quadratische Formel}
+Die Lösungen einer quadratischen Gleichung $ax^2 + bx + c = 0$ sind gegeben durch:
+
+\formulaWithDerivationDeclaration{quadratic}{
+  x_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+}{
+    
+  Wir beginnen mit der quadratischen Gleichung:
+  \begin{equation*}
+    ax^2 + bx + c = 0
+  \end{equation*}
+  
+  Dividieren durch $a$:
+  \begin{equation*}
+    x^2 + \frac{b}{a}x + \frac{c}{a} = 0
+  \end{equation*}
+  
+  Quadratische Ergänzung:
+  \begin{equation*}
+    x^2 + \frac{b}{a}x + \left(\frac{b}{2a}\right)^2 = \left(\frac{b}{2a}\right)^2 - \frac{c}{a}
+  \end{equation*}
+  
+  \begin{equation*}
+    \left(x + \frac{b}{2a}\right)^2 = \frac{b^2 - 4ac}{4a^2}
+  \end{equation*}
+  
+  Wurzel ziehen und nach $x$ auflösen:
+  \begin{equation*}
+    x = -\frac{b}{2a} \pm \frac{\sqrt{b^2-4ac}}{2a} = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
+  \end{equation*}
+  \newpage
+}
+% Formel ANZEIGEN (beliebig oft!)
+\formulaWithDerivationShow{quadratic}
+
+
+\subsection{Binomische Formel}
+Die erste binomische Formel lautet:
+
+\formulaWithDerivationDeclaration{binomial}{
+  (a+b)^2 = a^2 + 2ab + b^2
+}{
+  Ausmultiplizieren von $(a+b)^2$:
+  \begin{align*}
+    (a+b)^2 &= (a+b)(a+b) \\
+    &= a \cdot a + a \cdot b + b \cdot a + b \cdot b \\
+    &= a^2 + ab + ab + b^2 \\
+    &= a^2 + 2ab + b^2
+  \end{align*}
+  \newpage
+}
+\formulaWithDerivationShow{binomial}
+\formulaWithDerivationShow{binomial}
+\formulaWithDerivationShow{binomial}
+
+\subsection{Eulersche Formel}
+Eine der schönsten Formeln der Mathematik:
+
+\formulaWithDerivationDeclaration{euler}{
+  e^{i\pi} + 1 = 0
+}{
+  Die Eulersche Formel lautet allgemein:
+  \begin{equation*}
+    e^{ix} = \cos(x) + i\sin(x)
+  \end{equation*}
+  
+  Dies folgt aus den Taylor-Reihen:
+  \begin{align*}
+    e^{ix} &= \sum_{n=0}^{\infty} \frac{(ix)^n}{n!} \\
+    &= 1 + ix - \frac{x^2}{2!} - i\frac{x^3}{3!} + \frac{x^4}{4!} + \ldots
+  \end{align*}
+  
+  Für $x = \pi$:
+  \begin{equation*}
+    e^{i\pi} = \cos(\pi) + i\sin(\pi) = -1 + 0i = -1
+  \end{equation*}
+  
+  Daher:
+  \begin{equation*}
+    e^{i\pi} + 1 = 0
+  \end{equation*}
+  \newpage
+}
+\formulaWithDerivationShow{euler}
+
+% Anhang mit allen Herleitungen
+\showFormulaDerivations
+
+\end{document}

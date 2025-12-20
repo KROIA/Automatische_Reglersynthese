@@ -1,0 +1,287 @@
+\section{Recherche}
+%\newcommand{\rechercheMiniPage}[2]{\minipagedOrBelowEachOther{#1}{#2}}
+%\newcommand{\rechercheMiniPage}[3]{\minipagedOrBelowEachOther{#1#2}{#3}}
+%\newcommand{\rechercheMiniPage}[3]{#1 #2 #3}
+
+In der Recherche wird nach möglichen automatisierbaren Methoden oder Algorithmen für die Reglersynthese gesucht.
+
+\subsection{Recherchierte Methoden}
+Nachfolgend sind die recherchierten Methoden zusammenfassend aufgeführt und mit Vor- und Nachteilen gekennzeichnet.
+
+\horizontalLine
+\subsubsection{Lambda-Tuning}
+\minipagedOrBelowEachOther
+{
+  Lambda-Tuning \cite{lambdaMethode} basiert auf dem Prinzip der \gls{Pol-Nullstelle-Kürzung}.
+  Die Methode ermöglicht es, mit Hilfe eines einzigen Parameters, das Verhalten des \gls{System}s 
+  einfach zu beeinflussen. 
+  Um die Methode anwenden zu können, muss die Regelstrecke eine spezifische Form aufweisen.
+  Zudem muss das offene System bereits stabil sein, da die Pol-Nullstelle-Kürzung ein instabiles System nicht
+  stabilisieren kann.
+  Dies schränkt den praktischen Gebrauch dieser Methode auf wenige Anwendungsgebiete ein.
+}
+{
+  \begin{itemize}
+    \item[+] Verwendet nur einen Optimierungsparameter: $\lambda$
+    \item[+] Einfach automatisierbar
+    \item[+] Benutzer muss nur einen Parameter einstellen. Dies kann mit einem GUI-Element wie z.B. einem Slider umgesetzt werden 
+    \item[--] Die Regelstrecke muss stabil sein
+    \item[--] Die Regelstrecke muss eine spezifische Form aufweisen
+    \item[--] Die Regelstrecke muss linear und zeitinvariant sein
+    \item[--] Nicht geeignet für \gls{MIMO}-Systeme
+    \item[--] Reglerstruktur ist auf PID-Regler beschränkt
+  \end{itemize}
+}
+
+
+\horizontalLine
+\subsubsection{Polplatzierung}
+\minipagedOrBelowEachOther
+{
+Mit Hilfe der \gls{PolePlacement} lassen sich die Pole des geschlossenen 
+Regelkreises frei platzieren. Mit der Möglichkeit Pole frei zu platzieren kann ein guter Regler ausgelegt werden.
+Die Schwierigkeit besteht jedoch darin, zu wissen wo die Pole platziert werden sollen.
+Mit wenig Erfahrung lassen sich die richtigen Polstellen nicht finden.
+Den besten Regler mit dieser Methode zu finden ist also sehr schwierig. 
+Ausserdem wird voller Zugriff auf den gesamten Zustandsvektor benötigt, was nicht für jedes System immer möglich ist, 
+weshalb in solchen Fällen eine zusätzliche Ergänzung eines \gls{Beobachter}s benötigt wird.
+}
+{
+\begin{itemize}
+  \item[+] Volle Kontrolle über die Pole des geschlossenen Regelkreises
+  \item[+] Einfach automatisierbar 
+  \item[+] Kann auf instabile Systeme angewendet werden 
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Die Platzierung der Pole kann mit Hilfe eines GUI-Editors graphisch erfolgen
+  \item[--] Benötigt ein intuitives Verständnis für den Einfluss der Polpositionen auf das System
+  \item[--] Die Regelstrecke muss linear und zeitinvariant sein
+\end{itemize}
+}
+
+\horizontalLine
+\subsubsection{Linear Quadratic Regulator (LQR)}
+\minipagedOrBelowEachOther
+{
+  Findet den optimalen Zustandsregler für die zu definierende, quadratische Kostenfunktion.
+  Für die Kostenfunktion können die Zustandswerte, die Eingangssignale und das Kreuzprodukt 
+  der Zustände mit den Eingängen, gewichtet verwendet werden.
+  Es wird voller Zugriff auf den gesamten Zustandsvektor benötigt, was nicht für jedes System immer möglich ist, 
+  weshalb in solchen Fällen eine zusätzliche Ergänzung eines Beobachters benötigt wird.
+  Eine Schwierigkeit dieser Methode ist es, die passenden Gewichtungen der Kostenfunktion zu finden.
+}
+{
+\begin{itemize}
+  \item[+] Volle Kontrolle über die Pole des geschlossenen Regelkreises
+  \item[+] Einfach automatisierbar 
+  \item[+] Kann auf instabile Systeme angewendet werden 
+  \item[+] Geeignet für MIMO-Systeme 
+  \item[--] System sollte in Regelungsnormalform vorliegen damit das bestimmen der Kostenmatrizen einfacher ist
+  \item[--] Bestimmung der Gewichtungsmatrizen ist nicht intuitiv 
+  \item[--] Die Regelstrecke muss linear und zeitinvariant sein
+\end{itemize}
+}
+
+
+\horizontalLine
+\subsubsection{Ziegler-Nichols}
+\minipagedOrBelowEachOther
+{
+  Mit Hilfe von Ziegler-Nichols und ähnlichen Varianten wie:
+  \begin{itemize}
+    \item Ziegler-Nichols mit Sprungantwort \cite{einfuehrungInDieRegelungstechnik}
+    \item Ziegler-Nichols mit Hilfe der Stabilitätsgrenze \cite{zieglerNicholsFreq1} \cite{zieglerNicholsFreq2}
+    \item Chien-Hrones-Reswick \cite{einfuehrungInDieRegelungstechnik}
+    \item Latzel \cite{einfuehrungInDieRegelungstechnik}
+  \end{itemize}
+  kann ein einfacher PID-Regler mit empirischen Daten entworfen werden.
+  Die Methoden sind sehr einfach in der Anwendung, jedoch nicht optimal und in der Praxis auch nicht immer umsetzbar.
+  Ein System kann eventuell nicht immer, mit einem Sprung angeregt werden, um die benötigten Messwerte zu erhalten.
+  Für MIMO-Systeme sind diese Methoden ungeeignet, weil der Aufwand sehr gross wäre, 
+  für jede Übertragungsfunktion, von jedem Eingang zu jedem Ausgang, ein Regler mit diesen Methoden einzeln zu bestimmen. 
+  Auch wenn dieser Aufwand betrieben wird, wären die gegenseitigen Einflüsse der Eingänge nicht berücksichtigt.
+  Das würde nur bei Systemen klappen die sich komplett in mehrere \gls{SISO}-Systeme zerlegen lassen.
+  Dann wäre das Problem auf mehrere SISO-Systeme aufgeteilt und könnten individuell betrachtet werden.
+  Bei den meisten MIMO-Systemen sind die Zustände jedoch abhängig von mehreren Eingängen und Zuständen.
+  Für instabile Systeme sind diese Methoden nicht anwendbar da die benötigten Daten nicht ermittelt werden können.
+}
+{
+\begin{itemize}
+  \item[+] Benötigt kein Modell der Regelstrecke
+  \item[+] Einfach automatisierbar und mit einem Modell besonders einfach automatisierbar
+  \item[+] Benötigt keine komplexe Mathematik
+  \item[+] GUI-Gestaltung ist sehr einfach da es nur wenige tabellarische Auswahlmöglichkeiten gibt
+  \item[--] Kann nicht auf instabile Systeme angewendet werden
+  \item[--] Kann nur für \glspl{minimalphasiges System} angewendet werden
+  \item[--] Ziegler-Nichols mit Hilfe der Stabilitätsgrenze kann ohne Modell am realen Regelstrecke kaum umgesetzt werden
+  \item[--] Die Methoden dienen nur für einen ersten Reglerentwurf und sind keineswegs optimal
+  \item[--] Nur Systeme der Form PT2 oder PT3 geeignet 
+  \item[--] Bei schnellen Regelstrecken kaum umsetzbar
+  \item[--] Nicht geeignet für MIMO-Systeme
+  \item[--] Reglerstruktur ist auf PID-Regler beschränkt
+\end{itemize}
+}
+
+\newpage
+%\horizontalLine
+\subsubsection{MATLAB \textit{systune}}
+\label{sec:rechercheSystune}
+\minipagedOrBelowEachOther
+{
+  Mit \textit{systune} \cite{matlabSystune} kann ein komplettes System, flexibel auf das gewünschte Verhalten
+  optimiert werden. \textit{Systune} verwendet dafür ein $genss$-Modell \cite{matlabGenss}.
+  Es handelt sich dabei um ein verallgemeinertes Zustandsraum Modell, das zusätzlich
+  noch Optimierungsparameter beinhaltet, welche durch MATLAB optimiert werden.
+  Für die Optimierung werden Optimierungsziele \cite{matlabTuningGoals} definiert,
+  welche auf zwei Arten verwendet werden können.
+  \begin{itemize}
+    \item \textbf{Harte Ziele} \cite{matlabSystuneHardReq} werden priorisiert bei der Optimierung
+    \item \textbf{Weiche Ziele} \cite{matlabSystuneSoftReq} können vernachlässigt werden um die \textbf{harten Ziele} zu erreichen
+  \end{itemize}
+  
+  MATLAB \textit{systune} bietet als Ergebnis der Optimierung nicht nur die optimierten Parameter, 
+  sondern auch eine Auswertung der Optimierung für jedes Optimierungsziel.
+}
+{
+\begin{itemize}
+  \item[+] Sehr flexibel
+  \item[+] Einfach automatisierbar
+  \item[+] Optimierung kann detailliert vorgenommen werden
+  \item[+] Kann auf instabile Systeme angewendet werden 
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Kann beliebig viele Parameter optimieren
+  %\item[+] Grafischer Editor wird durch MATLAB bereitgestellt
+  \item[--] Benötigt MATLAB
+  \item[--] Das Modell muss als $genss$-Modell \cite{matlabGenss} vorliegen
+  \item[--] GUI-Gestaltung zur Eingabe der Optimierungsziele ist komplex
+  \item[--] Reglerstruktur muss vorgegeben werden
+\end{itemize}
+}
+
+\horizontalLine
+\subsubsection{MATLAB \textit{looptune}}
+\minipagedOrBelowEachOther
+{
+  Mit \textit{looptune} \cite{matlabLooptune} wird eine Feedbackschleife optimiert.
+  Looptune verwendet für die Optimierung zum einen die Ziel-crossover Frequenz/Frequenzbereich und zum anderen 
+  können auch Optimierungsziele \cite{matlabTuningGoals} definiert werden.
+  MATLAB \textit{looptune} bietet als Ergebnis der Optimierung nicht nur die optimierten Parameter, 
+  sondern auch eine Auswertung der Optimierung für jedes Optimierungsziel.
+}
+{
+\begin{itemize}
+  \item[+] Kann auf instabile Systeme angewendet werden 
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Kann beliebig viele Parameter optimieren
+  \item[--] Benötigt MATLAB
+  \item[--] Das Modell muss als $genss$-Modell \cite{matlabGenss} vorliegen 
+  \item[--] GUI-Gestaltung zur Eingabe der Optimierungsziele ist komplex
+  \item[--] Reglerstruktur muss vorgegeben werden
+\end{itemize}
+}
+
+\horizontalLine
+\subsubsection{Genetischer Algorithmus}
+\minipagedOrBelowEachOther
+{
+  Ein genetischer Algorithmus \gls{GA} \cite{mirjalili2018genetic} ist eine Optimierungsmethode, basierend auf der natürlichen Evolution.
+  Ein GA kann eine beliebige Anzahl an Parametern optimieren und benötigt dafür nur eine Bewertungsfunktion.
+  Die Idee besteht darin, eine \gls{Population} an Individuen mit zufälligen Parametern zu erstellen und diese einzeln mit Hilfe der Bewertungsfunktion zu bewerten.
+  Die besten Individuen werden ausgewählt und miteinander gekreuzt und mutiert um neue Individuen zu erzeugen.
+  Dieser Vorgang wird über mehrere Generationen wiederholt bis ein Abbruchkriterium erfüllt ist.
+  Diese Methode kann verwendet werden um die Parameter eines PID-Reglers oder auch eines Reglers mit beliebiger Struktur zu optimieren \cite{geneticPIDSynthesis}.
+  GA ist grundsätzlich nur für \gls{Maximierungsproblem}e ausgelegt, mit ein paar Tricks können aber auch 
+  \gls{Minimierungsproblem}e gelöst werden.
+}
+{
+\begin{itemize}
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Kann beliebig viele Parameter optimieren
+  \item[+] Sehr flexibel bezüglich der Reglerstruktur
+  \item[+] Kann auf nichtlineare Regelstrecken und Regler angewendet werden
+  \item[+] Der Algorithmus allein kann ohne Modellwissen arbeiten
+  \item[+] Gut automatisierbar 
+  \item[+] Ableitung der Bewertungsfunktion wird nicht benötigt
+  \item[--] Da die Optimierung auf reiner Simulation basiert, muss jedoch ein Modell der Regelstrecke vorliegen.
+            Eine Optimierung am realen System wäre technisch zwar möglich, praktisch jedoch nicht umsetzbar.
+  \item[--] Kann nicht auf zeitvariante Regelstrecken angewendet werden 
+  \item[--] Instabile Systeme können stabilisiert werden, jedoch ist dies nicht garantiert
+  \item[--] Benötigt eine gut definierte Bewertungsfunktion. Es kann sehr schwierig sein eine gute Bewertungsfunktion zu definieren:\\
+  Gewünschtes Transientenverhalten, Überschwingen, Robustheitsanforderungen, etc. müssen während des Bewertens in eine Zahl zusammengefasst werden.
+  \item[--] Optimierung kann lange dauern je nach Anzahl Parameter, Komplexität der Regelstrecke und Population/Generationen Grösse
+  \item[--] Es kann nicht garantiert werden, einen optimalen Regler zu finden  
+  \item[--] Reglerstruktur muss vorgegeben werden
+\end{itemize}
+}
+
+\newpage
+\subsubsection{Neuroevolution}
+\minipagedOrBelowEachOther
+{
+  \gls{NEAT} ist ein Ansatz, der evolutionäre Algorithmen mit \gls{NN} kombiniert. 
+  Dabei werden neuronale Netzwerke als Individuen in einer Population betrachtet und durch genetische Algorithmen optimiert. 
+  Die Methode ist eine Erweiterung des klassischen GA und ermöglicht es, sowohl die Struktur als auch die Gewichtungen der Netzwerke zu optimieren.
+  Der Anwender muss sich keine Reglerstruktur überlegen und vorgeben, der Algorithmus verändert die Struktur laufend um bessere Lösungen zu finden.
+  Im Gegensatz zu einem vordefinierten NN, welches den Regler darstellen soll, 
+  wird durch diesen Algorithmus ein unnötiges aufblasen des Netzwerks vermieden. \cite{trujillo2016neat}
+  Dies ist ein häufiges Problem bei der Verwendung von NN, 
+  einerseits ist zu Beginn nicht bekannt wie gross ein NN sein muss um die Aufgabe zu lösen, 
+  andererseits kann ein zu grosses NN dazu führen, zu komplex für die Implementierung auf dem Zielsystem zu sein.
+  NEAT startet bei einer minimalen Struktur und wächst nur so weit wie nötig um die Aufgabe zu lösen.
+  Eine Beispielanwendung kann in der Literatur gefunden werden \cite{lauckner4644203neat}. (Nicht peer-reviewed)
+}
+{
+\begin{itemize}
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Kann beliebig viele Parameter optimieren
+  \item[+] Sehr flexibel bezüglich der Reglerstruktur
+  \item[+] Kann auf nichtlineare Regelstrecken angewendet werden
+  \item[+] Der Algorithmus allein kann ohne Modellwissen arbeiten
+  \item[+] Die Reglerstruktur muss nicht vorgegeben werden 
+  \item[+] Sehr gut automatisierbar 
+  \item[+] Ableitung der Bewertungsfunktion wird nicht benötigt
+  \item[--] Da die Optimierung auf reiner Simulation basiert, muss jedoch ein Modell der Regelstrecke vorliegen.
+            Eine Optimierung am realen System wäre technisch zwar möglich, praktisch jedoch nicht umsetzbar.
+  \item[--] Kann nicht auf zeitvariante Regelstrecken angewendet werden 
+  \item[--] Instabile Systeme können stabilisiert werden, jedoch ist dies nicht garantiert
+  \item[--] Benötigt eine gut definierte Bewertungsfunktion. Es kann sehr schwierig sein eine gute Bewertungsfunktion zu definieren: \\
+  Gewünschtes Transientenverhalten, Überschwingen, Robustheitsanforderungen, etc. müssen während des Bewertens in eine Zahl zusammengefasst werden.
+  \item[--] Optimierung kann lange dauern je nach Anzahl Parameter, Komplexität der Regelstrecke und Population/Generationen Grösse
+  \item[--] Es kann nicht garantiert werden, einen optimalen Regler zu finden
+\end{itemize}
+}
+
+
+\horizontalLine
+\subsubsection{Differential Evolution}
+\minipagedOrBelowEachOther
+{
+  Der Differential Evolution Algorithmus \gls{DE} \cite{storn1997differentialEvolution} ist ein ähnlich wie der GA ein evolutionärer Algorithmus zur Optimierung von Parametern.
+  Diese Methode hat wie der GA auch, den Vorteil, dass keine Ableitungen der Bewertungsfunktion benötigt wird.
+  DE kann eine beliebige Anzahl an Parametern optimieren und benötigt dafür nur eine Bewertungsfunktion.
+  Sowohl Maximierungs- als auch Minimierungsprobleme können mit dieser Methode gelöst werden.
+  Ein Nachteil des DE ist jedoch, dass die Anfangswerte der Parameter 
+  aus Sicht der ganzen Population, den gesamten Suchraum aufspannen müssen.
+  Ist dies nicht der Fall, kann das optimale Ergebnis unter Umständen nicht gefunden werden da
+  der Suchraum nicht in alle Richtungen erkundet werden kann.
+}
+{
+\begin{itemize}
+  \item[+] Geeignet für MIMO-Systeme
+  \item[+] Kann beliebig viele Parameter optimieren
+  \item[+] Sehr flexibel bezüglich der Reglerstruktur
+  \item[+] Kann auf nichtlineare Regelstrecken und Regler angewendet werden
+  \item[+] Der Algorithmus allein kann ohne Modellwissen arbeiten
+  \item[+] Gut automatisierbar 
+  \item[+] Ableitung der Bewertungsfunktion wird nicht benötigt
+  \item[--] Da die Optimierung auf reiner Simulation basiert, muss jedoch ein Modell der Regelstrecke vorliegen.
+            Eine Optimierung am realen System wäre technisch zwar möglich, praktisch jedoch nicht umsetzbar.
+  \item[--] Kann nicht auf zeitvariante Regelstrecken angewendet werden 
+  \item[--] Instabile Systeme können stabilisiert werden, jedoch ist dies nicht garantiert
+  \item[--] Benötigt eine gut definierte Bewertungsfunktion. Es kann sehr schwierig sein eine gute Bewertungsfunktion zu definieren: \\
+  Gewünschtes Transientenverhalten, Überschwingen, Robustheitsanforderungen, etc. müssen während des Bewertens in eine Zahl zusammengefasst werden.
+  \item[--] Es kann nicht garantiert werden, einen optimalen Regler zu finden  
+  \item[--] Reglerstruktur muss vorgegeben werden
+\end{itemize}
+}
+
+\input{sections/21_ErgebnisRecherche.tex}

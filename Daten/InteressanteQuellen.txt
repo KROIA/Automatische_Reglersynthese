@@ -1,0 +1,24 @@
+paper1.pdf: https://ceur-ws.org/Vol-3842/paper1.pdf
+Applications of multi-objective.pdf: https://www.sciencedirect.com/science/article/pii/S2405896320327920
+Differential Evolution - A simple.pdf: https://cse.engineering.nyu.edu/~mleung/CS909/s04/Storn95-012.pdf
+
+Tuning of PID controllers based on simplified single parameter optimisation: https://www.tandfonline.com/doi/full/10.1080/00207179.2010.495162?needAccess=true
+
+Manuelle und automatische PID-Optimierungsmethoden | PID-Regelung verstehen, Teil 6: https://www.youtube.com/watch?v=qj8vTO1eIHo&ab_channel=MATLAB
+
+
+RelayFeedbackMethode.pdf: https://slunik.slu.se/kursfiler/TE0010/10095.1213/Reg1TuneReview.pdf
+Lambda_Tuning.pdf: https://www.idc-online.com/technical_references/pdfs/electrical_engineering/Lambda_Tuning.pdf
+PI_and_PID_controller_tuning_tool_based_on_the_lambda_method.pdf: https://ieeexplore.ieee.org/abstract/document/8229616
+On the Selection of Lambda in Lambda Tuning for PI(D) Controllers.pdf: https://www.sciencedirect.com/science/article/pii/S2405896320307801
+978-3-319-93025-1.pdf, Evolutionary Algorithms and Neural Networks: https://ieeexplore.ieee.org/abstract/document/260663?casa_token=dGZ5h7TScxkAAAAA:QuRlrMihRxpbwr6sJPgVXpLC0WzYyXzgRjO47WHMs_ZTMpoWRduqc3ZFUPNtuCe-ZorqV4Arb9o
+ssrn-4644203.pdf: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4644203
+s10462-024-10829-9.pdf: https://link.springer.com/article/10.1007/s10462-024-10829-9
+
+
+
+2014_ECC_Strasburgo_Nyquist_Logaritmico.pdf: http://www.dii.unimo.it/~zanasi/Personale/PDF_Papers_Zanasi/2014_ECC_Strasburgo_Nyquist_Logaritmico.pdf
+
+
+
+

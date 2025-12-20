@@ -1,0 +1,95 @@
+% Pakete nur laden, wenn sie nicht bereits geladen sind
+\makeatletter
+\@ifpackageloaded{inputenc}{}{%
+  \usepackage[utf8]{inputenc}%
+}
+\@ifpackageloaded{babel}{}{%
+  \usepackage[ngerman]{babel}%
+}
+\@ifpackageloaded{amsmath}{}{%
+  \usepackage{amsmath}%
+}
+\@ifpackageloaded{hyperref}{}{%
+  \usepackage{hyperref}%
+}
+
+% Zähler für Formeln mit Herleitungen
+\newcounter{formulaDerivationcounter}
+
+% Liste zum Speichern der Herleitungen
+\newcommand{\formulaDerivationlist}{}
+
+% Makro zum DEKLARIEREN einer Formel mit Herleitung
+% \formulaWithDerivationDeclaration{label}{formel}{herleitung}
+\newcommand{\formulaWithDerivationDeclaration}[3]{%
+  % Prüfen, ob diese Formel bereits deklariert wurde
+  \@ifundefined{formula@#1}{%
+    % Formel speichern
+    \expandafter\gdef\csname formula@#1\endcsname{#2}%
+    % Herleitung zur Liste hinzufügen und als definiert markieren
+    \expandafter\gdef\csname derivation@#1\endcsname{1}%
+    \g@addto@macro\formulaDerivationlist{%
+      \subsubsection{Herleitung von \ref{form:#1}}%
+      \label{deriv:#1}%
+      #3%
+      \vspace{1em}%
+    }%
+  }{%
+    \PackageWarning{formulaDerivation}{Formel '#1' wurde bereits deklariert und wird ignoriert}%
+  }%
+}
+
+% Makro zum ANZEIGEN einer deklarierten Formel
+% \formulaWithDerivationShow{label}
+\newcommand{\formulaWithDerivationShow}[1]{%
+  \@ifundefined{formula@#1}{%
+    \PackageError{formulaDerivation}{Formel '#1' wurde nicht deklariert! Verwenden Sie zuerst \string\formulaWithDerivationDeclaration\space um die Formel zu definieren.}{%
+      %
+    }%
+  }{%
+    % Prüfen, ob die Formel bereits angezeigt wurde (und somit eine Nummer hat)
+    \@ifundefined{formulanumber@#1}{%
+      % Erste Anzeige: normale Nummerierung
+      \begin{equation}
+        \label{form:#1}%
+        \csname formula@#1\endcsname
+      \end{equation}%
+      % Nummer speichern für spätere Verwendungen
+      \expandafter\xdef\csname formulanumber@#1\endcsname{\theequation}%
+    }{%
+      % Weitere Anzeigen: gleiche Nummer mit \tag
+      \begin{equation}
+        \tag{\csname formulanumber@#1\endcsname}%
+        \csname formula@#1\endcsname
+      \end{equation}%
+    }%
+    % Referenz zur Herleitung hinzufügen
+    \begin{center}
+      {\footnotesize Herleitung siehe \hyperref[deriv:#1]{Anhang \ref{deriv:#1}}}
+    \end{center}
+  }%
+}
+
+% Alternatives Makro: Formel inline anzeigen (ohne equation-Umgebung)
+\newcommand{\formulaWithDerivationShowInline}[1]{%
+  \@ifundefined{formula@#1}{%
+    \PackageError{formulaDerivation}{Formel '#1' wurde nicht deklariert}{}%
+  }{%
+    $\csname formula@#1\endcsname$%
+  }%
+}
+
+% Das ursprüngliche Makro bleibt für Abwärtskompatibilität erhalten
+\newcommand{\formulaWithDerivation}[3]{%
+  \formulaWithDerivationDeclaration{#1}{#2}{#3}%
+  \formulaWithDerivationShow{#1}%
+}
+
+\makeatother
+
+% Makro zum Anzeigen aller Herleitungen im Anhang
+\newcommand{\showFormulaDerivations}{%
+  \appendix
+  \section{Herleitungen der Formeln}\label{sec:herleitungen}
+  \formulaDerivationlist
+}

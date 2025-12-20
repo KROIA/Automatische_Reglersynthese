@@ -1,0 +1,272 @@
+\section{\textit{Systune} am Motor mit Schwungmasse}
+\label{sec:SystuneAmMotorMitSchwungmasse}
+Wie bereits im Beispiel \fullref{sec:SystuneAmDCMotor} beschrieben, 
+wird hier der gleiche Ablauf, aber diesmal für das Motor-mit-Schwungmasse-System, durchgeführt.
+Deshalb wird darauf verzichtet jeden Schritt in Detail erneut zu beschreiben.
+Das komplette MATLAB-Skript kann im GitHub Repository \cite{baRepository} eingesehen werden.
+
+
+\subsection{Regelkreis Definieren}
+\minipagedOrBelowEachOther
+{
+    %\vspace{0.8cm}
+    Der verwendete Regelkreis ist im Kapitel\\
+    ~\fullref{sec:MotorMitSchwungmasseModellidentifikation} genauer beschrieben.
+	Da der Regelkreis für \textit{systune} linear sein muss, werden die nichtlinearen Sättigungsblöcke vernachlässigt und 
+    erst beim Testen des optimierten Systems wieder berücksichtigt.
+}{
+	%\centering
+    \begin{figure}[H]
+    \centering
+    \input{images/MotorMitSchwungmasse/MotorMitSchwungmasseTikzDiagram_systune}
+    \caption{Regelkreis des Motors mit Schwungmasse}
+    \label{fig:MotorMitSchwungmasseTikzDiagram_systune}
+    \end{figure}
+}
+
+
+
+\horizontalLine
+\subsection{Optimierungsziele definieren}
+Bei den optimierungszielen können verschiedene Kriterien verwendet werden. 
+In diesem Beispiel werden drei Ziele definiert:
+\begin{itemize}
+    \item \textbf{Step-Tracking}: Das System soll der Sprungantwort eines PT2-Systems folgen.
+    \item \textbf{Overshoot}: Das Überschwingen soll begrenzt werden.
+    \item \textbf{Phasen- und Verstärkungsreserve}: Die Stabilitätsreserven sollen eingehalten werden.
+\end{itemize}
+
+\subsubsection{TuningGoal.StepTracking \cite{matlabTuningGoals_StepTracking}}
+\minipagedOrBelowEachOther
+{
+    Das Step-Tracking Ziel sorgt dafür, dass das System einer vordefinierten Sprungantwort folgt.
+    Dafür wird ein PT2-System als Referenz verwendet.
+    In diesem Beispiel wird eine Zeitkonstante von $\tau = 0.2$ und eine Dämpfung von $D = 1$ verwendet.
+    Die Wahl dieser Parameter entspricht approximativ den Parametern aus der Impulsantwort welche bei der 
+    Systemidentifikation in Kapitel~\fullref{sec:MotorMitSchwungmasseModellidentifikation} ermittelt wurde.
+}{
+	\begin{equation}
+        H_{\mathbf{ref}}(s) = \frac{1}{\tau^2 \cdot s + 2 \cdot D \cdot \tau \cdot s + 1} \quad \text{mit} \quad \tau = 0.2, D = 1
+    \end{equation}
+}
+\begin{matlabcode}{Definition des Step-Tracking Ziels}{lst:motorMitSchwungmasseStepTrackingZielDefinition_systune}
+pt2T = 0.2;
+pt2D  = 1;
+pt2Step = tf([1],[pt2T*pt2T 2*pt2D*pt2T 1]);
+TR1 = TuningGoal.StepTracking('r', 'y2', pt2Step);  
+\end{matlabcode}
+
+
+
+
+\subsubsection{TuningGoal.Overshoot \cite{matlabTuningGoals_Overshoot}}
+Das Overshoot Ziel begrenzt das Überschwingen des Systems.
+Ziel ist es, vom Referenzsignal $r$ zur Ausgangsgrösse $y2$ nicht mehr als 10\% Überschwingen zuzulassen.
+
+\begin{matlabcode}{Definition des Overshoot Ziels}{lst:motorMitSchwungmasseOvershootZielDefinition_systune}
+TR2 = TuningGoal.Overshoot('r', 'y2', 10);  
+\end{matlabcode}
+
+
+
+
+\subsubsection{TuningGoal.Margins \cite{matlabTuningGoals_Margins}}
+\minipagedOrBelowEachOther{
+    Das Margins-Ziel sorgt dafür, 
+    dass die Stabilitätsreserven eingehalten werden.
+    In diesem Beispiel sollen eine Phasenreserve von mindestens 45° und 
+    eine Verstärkungsreserve von mindestens 6dB eingehalten werden.
+}{
+    Der angegebene Analysis-Point 'uAP' steht für den Teil des Feedbacks, 
+    welcher für die Stabilitätsanalyse aufgetrennt wird 
+    um die Messung der Phasen- und Verstärkungsreserven zu ermöglichen.
+}
+
+
+\begin{matlabcode}{Definition des Margins Ziels}{lst:motorMitSchwungmasseMarginsZielDefinition_systune}
+TR4 = TuningGoal.Margins('uAP', 6, 45);
+\end{matlabcode}
+
+
+\subsubsection{Optimierungsziele kombinieren}
+\begin{matlabcode}{Kombinieren der Optimierungsziele}{lst:motorMitSchwungmasseOptimierungszieleKombinieren_systune}
+targetSoftGoals = [TR1  TR2]; % Step-Tracking und Overshoot
+targetHardGoals = [TR4];      % Phasen- und Verstärkungsreserven
+\end{matlabcode}
+
+
+
+
+
+\newpage
+\subsection{Regler extrahieren}
+Nach der Optimierung kann der optimierte Regler aus dem Gesamtsystem extrahiert werden.
+\begin{matlabcode}{Regler extrahieren}{lst:DCMotorReglerExtrahieren_systune}
+    controllerSysTuned = getBlockValue(sysTuned, 'controllerSys');
+    disp(controllerSysTuned);
+\end{matlabcode}
+\begin{matlabcode}{Optimierter Regler}{lst:motorMitSchwungmasseControllerSysTunedOutput_systune}
+  pid with properties:
+
+              Kp: -0.4108
+              Ki: -4.6926e-08
+              Kd: -0.7332
+              Tf: 0.0802
+              ...
+\end{matlabcode}
+
+
+
+\horizontalLine
+\subsection{Optimierung auswerten}
+Die Ziele wurden gut erreicht, da alle unter 1 liegen.
+\begin{matlabcode}{TuningGoals Auswertung}{lst:motorMitSchwungmasseTuningGoalsAuswertungOutput_systune}
+Final soft objective: 0.3065 (< 1 is good)
+Final soft objective: 0.6893 (< 1 is good)
+Final hard objective: 0.6066 (< 1 is good)
+
+%=== Performance Comparison ===
+%                  Initial    Tuned
+%Rise Time:        NaN s    0.660 s
+%Settling Time:    NaN s    1.180 s
+%Overshoot:        NaN %    0.31 %
+%
+%Gain Margin:      Na  dB   19.83 dB
+%Phase Margin:      <0 °    75.71 °
+\end{matlabcode}
+
+
+
+
+
+
+\newpage
+\subsubsection{Step-Tracking Ergebnis visualisiert}
+\begin{matlabcode}{Step-Tracking Diagramm}{lst:motorMitSchwungmasseOptimierungsanalyseOutput_systuneStepTracking}
+viewGoal(targetSoftGoals(1), sysTuned);
+\end{matlabcode}
+\minipagedOrBelowEachOther
+{
+    \vspace{1cm}
+    Das Diagramm in~\ref{fig:motorMitSchwungmasseSystuneTuningGoalStepTrackingResult} zeigt die Sprungantwort des 
+    optimierten Systems. Die Kurve mit dem Namen \textit{Desired} entspricht der gewünschten Sprungantwort,
+    die durch das Step-Tracking Ziel definiert wurde: 
+    $H_{\mathbf{ref}}(s) = \frac{1}{\tau^2 \cdot s + 2 \cdot D \cdot \tau \cdot s + 1} \quad \text{mit} \quad \tau = 0.2, D = 1$.
+    In blau ist die Sprungantwort des optimierten Systems dargestellt.
+    Diese deckt sich hauptsächlich kurz nach dem Start sehr gut mit der gewünschten Sprungantwort.
+}{
+	%\centering
+   % \vspace{-1cm}
+    \begin{figure}[H]
+        %\centering
+        \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/SystuneTuningGoalSoft_1.pdf}
+        \caption{Step-Tracking Optimierungsergebnis mit \textit{systune} am Motor mit Schwungmasse}
+        \label{fig:motorMitSchwungmasseSystuneTuningGoalStepTrackingResult}
+    \end{figure}
+}
+
+\horizontalLine
+\subsubsection{Overshoot Ergebnis visualisiert}
+\begin{matlabcode}{Overshoot Diagramm}{lst:motorMitSchwungmasseOptimierungsanalyseOutput_systuneOvershoot}
+viewGoal(targetSoftGoals(2), sysTuned);
+\end{matlabcode}
+\minipagedOrBelowEachOther
+{
+    \vspace{0.6cm}
+	Das Diagramm in~\ref{fig:motorMitSchwungmasseSystuneTuningGoalOvershootResult} zeigt den Frequenzgang des optimierten geschlossenen Systems.
+    Der orange Bereich stellt den Tiel der Verstärkung dar, welcher grösser als die erlaubten 10\% Überschwingen ist.
+    Die blaue Kurve zeigt die Verstärkung des optimierten Systems, diese ist im gesamten Frequenzbereich unterhalb der
+    10\% Grenze, was zeigt, dass das Overshoot Ziel erfolgreich erfüllt wurde.
+}{
+	%\centering
+    \begin{figure}[H]
+        %\vspace{-1cm}
+        \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/SystuneTuningGoalSoft_2.pdf}
+        \caption{Overshoot Optimierungsergebnis mit \textit{systune} am Motor mit Schwungmasse}
+        \label{fig:motorMitSchwungmasseSystuneTuningGoalOvershootResult}
+    \end{figure}
+}
+
+\newpage
+\subsubsection{Phasen- und Verstärkungsreserven Ergebnis visualisiert}
+\begin{matlabcode}{Phasen- und Verstärkungsreserven Diagramm}{lst:motorMitSchwungmasseOptimierungsanalyseOutput_systunePhaseAndGainMargin}
+viewGoal(targetHardGoals(1), sysTuned);
+\end{matlabcode}
+\minipagedOrBelowEachOther
+{
+    %\centering
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/SystuneTuningGoalHard_1.pdf}
+        \caption{Phasen- und Verstärkungsreserven Optimierungsergebnis mit \textit{systune} am Motor mit Schwungmasse}
+        \label{fig:motorMitSchwungmasseSystuneTuningGoalPhaseAndGainMarginResult}
+    \end{figure}
+    %\vspace{-1cm}
+	Das Diagramm in \ref{fig:motorMitSchwungmasseSystuneTuningGoalPhaseAndGainMarginResult} zeigt die Verstärkungs- und 
+    Phasenreserven des optimierten geschlossenen Systems.
+    Die blaue Kurve zeigt jeweils den Verstärkungsreserven (oben) und die Phasenreserve (unten) des optimierten Systems.
+    Beide Kurven liegen über den geforderten Mindestreserven (oranger Bereich), 
+    was zeigt, dass das Margins-Ziel erfolgreich erfüllt wurde.  
+
+    \vspace{0.3cm}
+    Mehr Informationen darüber, wie die Optimierungsergebnisse visualisiert werden,
+    ist in der MATLAB Dokumentation zu den Tuning-Goals beschrieben. \cite{matlabTuningGoals_VisualizeTuningGoals}
+}{
+	%\centering
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.838\linewidth]{images/MotorMitSchwungmasse/SystuneStabilityDelayMarginsPlot.pdf}
+        \caption{Totzeit \& Verstärkungsreserve Diagramm des optimierten Systems}
+        \label{fig:motorMitSchwungmasseSystuneStabilityMarginsPlot}
+    \end{figure}
+
+    Das von MATLAB generierte Diagramm kann verwirren und ist nicht einfach zu interpretieren.
+    Eine bessere Darstellung über die resultierten Phasen- und Verstärkungsreserven ist in
+    \ref{fig:motorMitSchwungmasseSystuneStabilityMarginsPlot} zu sehen.
+    Wie diese Abbildung interpretiert wird, ist in folgendem Kapitel erklärt:\\
+\fullref{sec:StabilitaetsDelayMarginPlot}
+
+
+    Das Diagramm zeigt, dass das System über eine grosse Phasenreserve
+    verfügt. Das zeigt sich durch die Toleranz der möglichen Totzeiten mit bis zu 0.6s
+    bei einer Verstärkung von 1.
+    Ausserdem besitzt das System eine gute Verstärkungsreserve mit bis zu 20dB\\
+    (Verstärkungsfaktor = 10).
+}
+\newpage
+
+%\minipagedOrBelowEachOther
+%{
+%    
+%}{
+%	
+%}
+
+
+
+%\horizontalLine
+\subsection{Optimierten Regler am realen System testen}
+
+%\subsubsection{Reales System Resultat}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Systune_realResult.pdf}
+    \caption{Antwort auf Stimulation des optimierten Reglers am Motor mit Schwungmasse, mit dem durch \textit{systune} optimierten PID-Regler}
+    \label{fig:MotorMitSchwungmasseSystune_realResult}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+    Für den Test am realen Prozess sind im Simulink Modell unterschiedliche Sollwerte vorbereitet. 
+    Auch die Sättigungen sind wieder eingebaut.
+    Da der PID-Regler am Ausgang einen Sättigungsblock besitzt, entsteht das Problem des Integrator Windups.
+    Die \textit{Clamping} Anti-Windup Methode wird verwendet, da diese keinen weiteren Tuning-Parameter erzeugt.
+    \textit{Systune} kann leider keinen Anti-Windup Tuning-Parameter optimieren.
+}
+{
+    Der Regler verstärkt an seinem Ausgang $u1$ das Messrauschen des Encoders, welches zu starken 
+    Stromschwankungen am Motoreingang führen. 
+    Es ist zu erkennen, dass der Ist-Winkel $y2$, sobald die Störgrösse dazu geschaltet wird, davon driftet.
+    Der Regler besitzt deshalb keine guten Eigenschaften um Störgrössen zu kompensieren.
+}
+\newpage

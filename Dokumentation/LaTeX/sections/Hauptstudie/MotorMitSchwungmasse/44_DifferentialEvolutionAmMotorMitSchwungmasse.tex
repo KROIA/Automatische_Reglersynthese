@@ -1,0 +1,108 @@
+\section{DE Algorithmus am Motor mit Schwungmasse}
+\minipagedOrBelowEachOther
+{
+    Im Gegensatz zum \gls{GA} wird beim \gls{DE} kein abklingender \gls{Hyperparameter} für 
+    die Mutationsstärke $\mathFunction{M}{k}$ verwendet, da der Algorithmus von sich aus kleinere Mutationen durchführt,
+    während die Population konvergiert.
+}
+{
+    Die Funktionsweise des DE Algorithmus ist im Kapitel\\
+	\fullref{sec:Description_DifferentialEvolutionAlgorithmus} beschrieben.
+}
+
+
+
+
+\subsection{Optimierung durchführen}
+
+
+\minipagedOrBelowEachOther
+{
+	Die Software führt die Optimierung 10-mal durch, weil der \gls{DE}
+	aufgrund der zufälligen Startwerte nicht immer zum gleichen Ergebnis führt.
+	Bei der Optimierung wurden die Einstellungen aus der ~\ref{tab:MotorMitSchwungmasseDifferential_OptimizationParameters} verwendet.
+}{
+	
+}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}clrc@{}}
+		\toprule
+		\textbf{Parameter} & \textbf{Beschreibung} & \textbf{Wert} \\
+		\midrule
+		$D$                 & Anzahl der einzelnen Optimierungsdurchläufe &10\\[0.5ex]
+		$N$                 & Anzahl Individuen in der Population &30\\[0.5ex]
+		$G$                 & Anzahl Generationen &1000\\[0.5ex]
+		$C$                 & Crossover-Wahrscheinlichkeit &0.7\\[0.5ex]
+		$M$                 & Mutationsstärke &0.5\\[0.5ex]
+		Anti-Windup         & Verwendete Anti-Windup Methode & Clamping \\[0.5ex]
+		\hline
+		\textbf{Optimierungsziele} &  &  & \\[0.5ex]
+		$a_\mathbf{1}$     & Absoluter Regelungsfehler &2.8\\[0.5ex]
+		$a_\mathbf{2}$     & Stellwertänderungsrate &0.1\\[0.5ex]
+		$a_\mathbf{3}$     & Positives Überschwingen &111\\[0.5ex]
+        $a_\mathbf{4}$     & Verstärkungsreserve (6dB) &0\\[0.5ex]
+        $a_\mathbf{5}$     & Phasenreserve (90°) &99 Ab Epoche 100\\[0.5ex]
+		\hline
+		\textbf{Konstante Systemparameter} &  &  & \\[0.5ex]
+		$u_\mathbf{satHigh}$ & PID Ausgangs Sättigung oberer Wert &10\\
+		$u_\mathbf{satLow}$  & PID Ausgangs Sättigung unterer Wert &-10\\
+		$I_{\mathbf{SatHigh}}$	     & PID Integrator Sättigung oberer Wert &100000000\\
+		$I_{\mathbf{SatLow}}$	     & PID Integrator Sättigung unterer Wert &-100000000\\
+		\hline
+		\textbf{PID-Startparameter} &  &  & \\[0.5ex]
+		$Kp$     & Proportionalitätsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Ki$     & Integrationsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Kd$     & Ableitungsfaktor &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		$Kn$     & Filterkonstante &$0 + \mathFunction{randG}{-1,1}*$\\[0.5ex]
+		\bottomrule
+\end{tabular}
+\caption{Hyper- \& Tuningparameter für Optimierung mit dem Differential Evolution Algorithmus}
+\label{tab:MotorMitSchwungmasseDifferential_OptimizationParameters}
+\end{table}
+
+\[
+    *\mathFunction{randG}{a,b} \text{ ist eine gleichverteilte Zufallsvariable im Intervall [a, b] } 
+\]
+
+%\horizontalLine
+\newpage
+\subsection{Optimierung auswerten}
+
+
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Differential_Simulation_LearningHistory_1.pdf}
+    \caption{Lernverlauf der Optimierung mit dem Differential Evolution Algorithmus bei 10 Durchläufen}
+    \label{fig:MotorMitSchwungmasseDifferential_SimulationLearningHistory_1}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+    Sehr auffällig ist, dass der \gls{DE} Algorithmus im Vergleich zum \gls{GA}
+    schöner konvergiert und kein stochastisches Verhalten zeigt.
+    Abgesehen von einem Durchlauf, finden alle anderen Durchläufe nahezu die gleiche Lösung.
+}
+{
+
+}
+
+\horizontalLine
+\subsection{Optimierten Regler am realen System testen}
+\begin{figure}[H]
+	\center
+    %\vspace{-1.6cm}
+    \includegraphics[width=\linewidth]{images/MotorMitSchwungmasse/Differential_realResult.pdf}
+    \caption{Antwort auf Stimulation des optimierten Reglers am Motor mit Schwungmasse, mit dem durch \gls{DE} optimierten PID-Regler}
+    \label{fig:MotorMitSchwungmasseDifferential_realResult}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+
+}
+{
+	
+}

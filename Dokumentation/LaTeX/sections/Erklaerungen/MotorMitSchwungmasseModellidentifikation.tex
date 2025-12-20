@@ -1,0 +1,287 @@
+\subsubsection{Regelkreis für Prozess: Motor-mit-Schwungmasse}
+\label{sec:MotorMitSchwungmasseModellidentifikation}
+\begin{figure}[H]
+    \centering
+    \input{images/MotorMitSchwungmasse/MotorMitSchwungmasseRegelkreisTikzDiagram}
+    
+  %  \begin{table}[h!]
+    \caption{Regelkreis des Prozesses Motor mit Schwungmasse}
+    %\label{tab:Spannungsfall_Legende}
+    %\end{table}
+    \label{fig:MotorMitSchwungmasseRegelkreisTikzDiagram}
+\end{figure}
+
+\minipagedOrBelowEachOther
+{
+    Der Prozess besteht aus zwei Motoren, welche auf einer federgekoppelten Welle sitzen.
+    Auf den Achsen der Motoren befindet sich jeweils eine Schwungmasse, welche die Trägheit des Prozesses erhöht.
+    Beide Motoren besitzen Encoder, welche die Winkelposition der Motorachsen messen.
+    Der Prozess ist darauf ausgelegt, mit dem Motor1 $(u_1)$ einen bestimmten Winkel anzufahren.
+    Der Motor am Eingang 2 $(u_2)$ dient zur Störung des Prozesses.
+    Die Motoren sind unterschiedlich und verhalten sich deshalb nicht ganz gleich.
+    Der Prozess beinhaltet somit zwei Eingänge und zwei Ausgänge.
+    Für die Modellbildung werden folgende Schritte durchgeführt.
+}
+{
+    \begin{itemize}
+        \item Impulsmessungen an beiden Eingängen und Ausgängen
+        \item Definition eines Modellgerüsts mit fehlenden Parametern
+        \item Finden der Modellparameter mit Hilfe des genetischen Algorithmus
+        \item Validierung des Modells
+        \item Umwandlung des Modells in den Zustandsraum
+        \item Verbesserung des Modells im Arbeitsbereich
+        \item Normierung der Eingänge auf einen Eingangsbereich von $[-10, 10]$ im C++ Code
+    \end{itemize}
+}
+
+
+% ========================================
+%     Impulsmessungen
+% ========================================
+\horizontalLine
+\paragraph{Impulsmessungen}
+\minipagedOrBelowEachOther
+{
+    Eine Sprungantwort ist für dieses Prozess nicht geeignet für die Systemidentifikation, 
+    da der Encoder-Wert bereits das zweite Integral der Stellgrösse darstellt und deshalb ein Sprung 
+    am Eingang zu einem linearen Anstieg am Ausgang führen würde.
+    Deshalb werden kurze Impulse am Eingang des Prozesses angelegt und die Antwort des Prozesses aufgezeichnet.
+    \ref{fig:ImpulsEingangMotorMitSchwungmasse} zeigt die angelegten Impulse am den beiden Eingängen des Prozesses.
+    Für die Identifizierung des Modells wurden diese Impulse mit unterschiedlichen Amplituden verwendet:
+    \[
+    [500, 1000, 1500, 2000, 2500, 3000]
+    \]
+}
+{
+    \vspace{-1cm}
+    \begin{figure}[H]
+        \center
+        \includegraphics[width=\textwidth]{images/MotorMitSchwungmasse/MotorMitSchwungmasseSystemIdentifikationsmessungInputs.pdf}
+        \caption{Eingansimpulse $2000$ des Motor-mit-Schwungmasse-Prozesses}
+        \label{fig:ImpulsEingangMotorMitSchwungmasse}
+    \end{figure}
+}
+\minipagedOrBelowEachOther
+{
+    \vspace{1cm}
+    \ref{fig:ImpulsantwortenMotorMitSchwungmasse} zeigt die Antwort des Prozesses auf die angelegten Impulse.
+    Die Encoder-Werte sind in Radianten dargestellt und verlaufen jeweils mit gegensätzlichem Vorzeichen.
+
+}
+{
+    \begin{figure}[H]
+        \center
+        \includegraphics[width=\textwidth]{images/MotorMitSchwungmasse/MotorMitSchwungmasseSystemIdentifikationsmessungOutputs.pdf}
+        \caption{Antworten des Motor-mit-Schwungmasse-Prozesses auf die Eingangsimpulse $2000$}
+        \label{fig:ImpulsantwortenMotorMitSchwungmasse}
+    \end{figure}
+}
+
+
+% ========================================
+%     Modellgerüst
+% ========================================
+\newpage
+\paragraph{Modellgerüst}
+\minipagedOrBelowEachOther
+{
+    Der Modellentwurf basiert darauf, nur die Struktur des Prozesses festlegen zu müssen und die fehlenden Parameter
+    mit Hilfe des genetischen Algorithmus zu finden. 
+    Prinzipiell ist das der gleiche Vorgang wie beim Optimieren eines Reglers mit dem genetischen Algorithmus.
+
+    Die im \ref{fig:MotorMitSchwungmasseBlockdiagramm} dargestellte Struktur entsteht aus folgenden Überlegungen:
+    \begin{itemize}
+        \item Die Eingangsgrössen werden mit den Vorfaktoren $k_1$ und $k_4$ skaliert, um die unterschiedlichen Motorstärken zu berücksichtigen.
+        \item Beide Motoren verhalten sich wie PT1-Glieder. $\rightarrow$ Je ein Integrator mit den Vorfaktoren $k_2, k_5$ und Feedback Verbindungen.
+        \item Die Umrechnung der Winkelgeschwindigkeit in die Winkelposition erfolgt über einen weiteren Integrator mit den Vorfaktoren $k_3, k_6$.
+        \item Die Ausgänge sind die Winkelpositionen der beiden Motoren.
+        \item Die Kopplung der beiden Motoren erfolgt über eine Schwungmasse, welche ein Drehmoment proportional zur Winkelabweichung erzeugt.
+        Weil die Encoder-Werte ein entgegengesetztes Vorzeichen haben, 
+        werden diese Beiden Encoder-Werte addiert. (Summation zwischen den Ausgängen)
+        Die über $k_7$ skalierte Winkelabweichung wird auf beide Motoren als Kraft mit einander entgegengesetzten Vorzeichen zurückgeführt.
+    \end{itemize}
+
+    Die Grössen $Drehmoment$ und $Winkelgeschwindigkeit$ sind in diesem Modell nicht explizit dargestellt, 
+    sondern werden nur implizit über die Integratoren modelliert. 
+    Die Tatsächlichen physikalischen Grössen können beliebig skaliert sein im schlussendlichen Modell.
+    Da diese Zustände jedoch am echten Prozess nicht gemessen werden, 
+    ist auch in diesem Modell der Zugang zu diesen Zuständen nicht vorhanden. 
+    Deshalb ist es egal wie diese Zustände skaliert sind.
+}
+{
+    \begin{figure}[H]
+        \center
+        \input{images/MotorMitSchwungmasse/MotorMitSchwungmasseTikzDiagram.tex}
+        \caption{Blockdiagramm der Regelstrecke Motor-mit-Schwungmasse}
+        \label{fig:MotorMitSchwungmasseBlockdiagramm}
+    \end{figure}
+}
+
+
+% ========================================
+%     Modellparameter finden
+% ========================================
+\horizontalLine
+\paragraph{Modellparameter finden}
+\minipagedOrBelowEachOther
+{
+    Um die fehlenden Modellparameter $k_1$ bis $k_7$ zu finden, wird der genetische Algorithmus verwendet.
+    Als \gls{Fitnessfunktion} wird der mittlere quadratische Fehler (MSE) zwischen den gemessenen Ausgangsgrössen
+    und den modellierten Ausgangsgrössen verwendet.
+    Als Referenz wird das gemessene Prozessverhalten mit der Impulsamplitude von $2000$ verwendet,
+    weil sich dieser Wert circa in der Mitte befindet und somit das nichtlineare Verhalten des Prozesses gut mittelt.
+}
+{
+    Der genetische Algorithmus sucht die Parameterkombination, welche den MSE minimiert.
+    Die Initialwerte der Parameter wurden von Hand abgeschätzt und als Startpunkt für den Algorithmus verwendet um 
+    die Chance zu erhöhen, dass der Algorithmus konvergiert.
+}
+
+% ========================================
+%     Modellvalidierung
+% ========================================
+\newpage
+\paragraph{Modellvalidierung}
+\minipagedOrBelowEachOther
+{
+    In \ref{fig:MotorMitSchwungmasseModelEvalOutputs} sind die Impulsantworten des realen Prozesses
+    mit den Impulsantworten des modellierten und nach den Modellparametern optimierten Prozesses, verglichen.
+    Die gestrichelten Linien stellen die Referenzantworten aus den echten Messungen dar.
+    Die durchgezogenen Linien stellen das Antwortverhalten des modellierten Prozesses dar.
+    
+    
+}
+{
+    \vspace{-1cm}
+    \begin{figure}[H]
+        \center
+        \includegraphics[width=\textwidth]{images/MotorMitSchwungmasse/MotorMitSchwungmasseModelEvalOutputs.pdf}
+        \caption{Vergleich der Impulsantworten des realen Prozesses mit dem modellierten Prozess}
+        \label{fig:MotorMitSchwungmasseModelEvalOutputs}
+    \end{figure}
+}
+
+\minipagedOrBelowEachOther
+{
+    \vspace{1cm}
+    Die~\ref{fig:MotorMitSchwungmasseModelEvalOutputsAll} zeigt den Vergleich des Modelles mit allen gemessenen Impulsantworten.
+    Es ist ersichtlich, dass sich die DC-Verstärkung des realen Prozesses stark nichtlinear verhält.
+    Es ist ausserdem ersichtlich, dass sich der reale Prozess, bei kleinen Eingangsgrössen, nicht gleich verhält,
+    je nach dem in welche Richtung der Eingang angesteuert wird.
+    Die Impulse zum Zeitpunkt $t=1s$ sind positiv und die Impulse zum Zeitpunkt $t=5s$ sind negativ und haben die gleiche Fläche.
+    Das bedeutet, dass der Prozess eigentlich wieder an die Ursprungsposition zurückkehren müsste.
+    Dies ist jedoch bei kleinen Eingangssignalen nicht der Fall.
+    \\
+    Das Modell ist nicht so gut wie erhofft und um ein besseres Modell zu erhalten müsste die Modellstruktur angepasst werden
+    und weitere Modellparameter hinzugefügt werden. 
+    Für die Verwendung in der Reglersynthese ist dieses Modell jedoch ausreichend.
+}
+{
+    \begin{figure}[H]
+        \center
+        \includegraphics[width=\textwidth]{images/MotorMitSchwungmasse/MotorMitSchwungmasseModelEvalOutputsAllY1.pdf}
+        \includegraphics[width=\textwidth]{images/MotorMitSchwungmasse/MotorMitSchwungmasseModelEvalOutputsAllY2.pdf}
+        \caption{Stark nichtlineare DC-Verstärkung des realen Prozesses im Vergleich zum modellierten Prozess}
+        \label{fig:MotorMitSchwungmasseModelEvalOutputsAll}
+    \end{figure}
+}
+
+
+% ========================================
+%     Zustandsraummodell
+% ========================================
+\horizontalLine
+\paragraph{Zustandsraummodell}
+\minipagedOrBelowEachOther
+{
+    Das fertige Simulink Modell kann mit dem Befehl \textit{linmod} \cite{matlabLinmod} in ein Zustandsraummodell umgewandelt werden.
+    Das Zustandsraummodell kann anschliessend im Simulink und im MATLAB für die Reglersynthese verwendet werden.  
+}
+{
+
+}
+
+
+% ========================================
+%     Verfeinerung des Modells im Arbeitspunkt
+% ========================================
+\horizontalLine
+\paragraph{Verbesserung des Modells im Arbeitsbereich}
+\minipagedOrBelowEachOther
+{
+    Das Modell verhält sich sehr unterschiedlich im Vergleich zum realen Prozess. 
+    Das hat sich im Verlauf der Tests ergeben, deshalb wurde das Modell verfeinert um im verwendeten Arbeitsbereich 
+    besser zu funktionieren.
+    
+    Dafür wurde der reale Prozess im closed loop Betrieb mit einem PID-Regler betrieben.
+    Der PID-Regler wurde mit dem alten Modell entworfen und anschliessend auf den realen Prozess angewendet.
+    Das Verhalten am realen Prozess mit dem PID-Regler wurde aufgezeichnet. 
+}
+{
+    Anschliessend wurde das Modell wieder mit Hilfe des genetischen Algorithmus verfeinert.
+    Dabei wurde natürlich auch das geschlossene System mit dem gleichen PID-Regler verwendet.
+    Das Ergebnis war ein Modell, welches sich im verwendeten Arbeitsbereich deutlich besser verhält.
+}
+
+
+
+% ========================================
+%     Normierung der Eingänge
+% ========================================
+\horizontalLine
+\paragraph{Normierung der Eingänge}
+\minipagedOrBelowEachOther
+{
+    Die Eingänge des Modells werden auf einen Bereich von $[-10, 10]$ normiert.
+    Der Hauptgrund dafür ist, die dadurch verbesserte Darstellung in den Diagrammen.
+}
+{
+    Die Normierung wird durch die vorgeschalteten Verstärkungen von $300$ erreicht.
+    Dadurch wird der Eingangsbereich von $[-10, 10]$ auf $[-3000, 3000]$ skaliert,
+    was dem Arbeitsbereich des realen Prozesses entspricht.
+}
+
+
+% ========================================
+%     Implementierung im C++ Code
+% ========================================
+\newpage
+\paragraph{Implementierung im C++ Code}
+\begin{cppcode}{Update Funktion des Motors Mit Schwungmasse im Code}{lst:MotorMitSchwungmasseDefinitionCPP}
+// Update Funktion des Modells im C++ Code. class DCMotorWithMassSystem
+void update(double deltaTime) override
+{
+    /*
+        m_parameters = { 
+            0.0637851, 
+            -0.0232653, 
+            189.219, 
+            -0.207233, 
+            18.8808, 
+            -0.809018, 
+            -0.228862 };
+    */
+	double input1Scaled = m_inputs[0] * 300 * m_parameters[0];
+	double input2Scaled = m_inputs[1] * 300 * m_parameters[1];
+
+	double angleDifferenceTorque = (m_disk1.angle + m_disk2.angle) * m_parameters[2];
+
+	double torque1 = (input1Scaled - m_disk1.angularVelocity - angleDifferenceTorque) * m_parameters[3];
+	double torque2 = (input2Scaled - m_disk2.angularVelocity + angleDifferenceTorque) * m_parameters[4];
+
+	double lastAngularVelocity1 = m_disk1.angularVelocity * m_parameters[5];
+	double lastAngularVelocity2 = m_disk2.angularVelocity * m_parameters[6];
+	m_disk1.angularVelocity = TimeBasedSystem::getIntegrated_Bilinear(m_disk1.lastPreIntegrationTorque, torque1, m_disk1.angularVelocity, deltaTime);
+	m_disk2.angularVelocity = TimeBasedSystem::getIntegrated_Bilinear(m_disk2.lastPreIntegrationTorque, torque2, m_disk2.angularVelocity, deltaTime);
+
+
+	m_disk1.angle = TimeBasedSystem::getIntegrated_Bilinear(lastAngularVelocity1, m_disk1.angularVelocity * m_parameters[5], m_disk1.angle, deltaTime);
+	m_disk2.angle = TimeBasedSystem::getIntegrated_Bilinear(lastAngularVelocity2, m_disk2.angularVelocity * m_parameters[6], m_disk2.angle, deltaTime);
+	m_outputs[0] = m_disk1.angle;
+	m_outputs[1] = m_disk2.angle;
+
+
+	m_disk1.lastPreIntegrationTorque = torque1;
+	m_disk2.lastPreIntegrationTorque = torque2;
+}
+\end{cppcode}

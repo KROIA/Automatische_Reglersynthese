@@ -1,0 +1,298 @@
+\subsubsection{Reglerstruktur: Erweiterter PID-Regler}
+\label{sec:ErweiterterPIDRegler}
+\minipagedOrBelowEachOther
+{
+    Für die Tests der unterschiedlichen Methoden wird auf ein Simulink Modell mit der in~\fullref{fig:SimpleMotorTikzDiagram} 
+    dargestellten Regelstrecke zurückgegriffen. Der darin verwendete PID-Regler Block beinhaltet nicht nur die üblich bekannten
+    $Ki$, $Kp$ und $Kd$ Anteile, sondern auch noch diverse weitere Einstellmöglichkeiten und Parameter.
+    Einige dieser zusätzlichen PID-Regler Erweiterungen sind in~\fullref{fig:ErweiterterPID} dargestellt.
+    Für die Tests werden die unterschiedlichen Einstellungen so gut es geht berücksichtigt. 
+    Der Grund warum gleich mehrere Einstellungsmöglichkeiten getestet werden ist, dass einige Einstellungen zu einer
+    grösseren Anzahl an Parametern führen, welche optimiert werden müssen.
+}
+{
+    Dies ermöglicht es, ein besseres Ergebnis zu erzielen und 
+    gleichzeitig zeigt es auch die Probleme der getesteten Methoden besser auf.
+    Der PID-Regler wird im diskreten Zeitbereich angewendet um Faire Bedingungen der unterschiedlichen Methoden zu gewährleisten.
+    Deshalb sind die dargestellten Übertragungsfunktionen auch im Z-Transformationsbereich angegeben.
+
+    \vspace{0.2cm}
+    Der PID-Block von Simulink hat jedoch für den Anti-Windup $Clamping$ Mechanismus 
+    ein falsches Verhalten, dies ist in den Testresultaten ersichtlich.
+    Mehr dazu kann im~\fullref{sec:Description_SimulinkPID_ClampingLogic_Problem} nachgelesen werden.
+}
+
+
+\begin{figure}[H]
+    \centering
+    \input{images/ErweiterterPID}
+    \caption{Aufbau des Erweiterten PID-Reglers}
+    \label{fig:ErweiterterPID}
+\end{figure}
+
+Aus allgemeiner Sicht auf den PID-Regler wird bei der Erweiterung für den Ausgang $u$ eine Sättigung eingeführt.
+Eine Sättigung an dieser Stelle ist sinnvoll, da in realen Systemen die Stellgrösse meist physikalischen Grenzen unterliegt und 
+die Sättigung somit das reale Verhalten besser abbildet.
+
+\newpage
+%\horizontalLine
+\paragraph{P-Anteil}
+Der Proportionalanteil verhält sich wie in einem klassischen PID-Regler.
+
+\horizontalLine
+\paragraph{I-Anteil}
+Aufgrund der Sättigung am Ausgang des PID-Reglers kann es zu einem sogenannten \textit{\gls{Integral Windup}} kommen.
+Der Integralanteil verfügt über 3 Anti-Windup Einstellungen:
+\begin{itemize}
+    \item Kein Anti-Windup
+    \item Back-Calculation
+    \item Clamping
+\end{itemize}
+
+
+\label{par:Clamping}
+\label{par:Back-Calculation}
+\begin{figure}[H]
+{
+    \vspace{-0.2cm}
+    %\centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \subparagraph{Back-Calculation}%\mbox{}\\[0.5em]
+        Bei der Back-Calculation Methode wird die Differenz zwischen dem gesättigten Ausgang und dem ungesättigten Ausgang
+        berechnet. Diese Differenz wird mit einem einstellbaren Faktor $Kb$ multipliziert und vom zu integrierenden Signal subtrahiert.
+        Dies bewirkt, dass der Integrator Eingang sinkt, wenn der Ausgang gesättigt ist
+        und somit der Integralanteil nicht beliebig weiter ansteigen soll.
+        $Kb$ ist dabei ein zusätzlicher zu optimierender Parameter.
+    \end{minipage}
+    \hfill
+    \vrule width 0.5pt % vertical line
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \subparagraph{Clamping}%\mbox{}\\[0.5em]
+        Bei der Clamping Methode wird der Integrator Eingang komplett auf null gesetzt, 
+        wenn $\boxed{(\mathrm{sgn}(e \cdot K_\mathrm{i})=\mathrm{sgn}(u_\mathrm{i})) \wedge (u-u_{\mathrm{preSat}} \neq 0)}$,
+        wobei \gls{sgn} der Signum-Operator ist.
+        Diese Logik ist in~\fullref{fig:ErweiterterPID} als \textit{Clamping Controller} dargestellt.
+
+
+
+        Neben dem Anti-Windup Mechanismus kann der Integrator auch noch mit einer Sättigung versehen werden, 
+        welche über die Parameter $I_\mathrm{SatLow}$ und $I_\mathrm{SatHigh}$ eingestellt wird.
+        Die dargestellte \textit{I-Begrenzung's} Rückführung symbolisiert, dass der interne Zustandswert durch die Sättigung überschrieben wird.
+        Der Sättigungsblock bezeichnet also die Sättigung des internen Integrator Zustandswertes und nicht die Sättigung am Ausgang des Integrators.
+        Wenn die Sättigung des Integrators aktiv ist, können die Parameter $I_\mathrm{SatLow}$ und $I_\mathrm{SatHigh}$ ebenfalls optimiert werden.
+        Für die Optimierung werden jedoch nicht beide Parameter individuell optimiert. Es wird stattdessen nur ein Wert positiv 
+        trainiert für die obere Sättigung $I_\mathrm{SatHigh}$. Der untere Sättigungswert $I_\mathrm{SatLow}$ wird dann automatisch als negativer Wert von $I_\mathrm{SatHigh}$ gesetzt.
+        Dadurch wird die Sättigung symmetrisch um Null gehalten und die Anzahl der zu optimierenden Parameter reduziert.
+    \end{minipage}
+}
+\end{figure}
+
+
+\horizontalLine
+\paragraph{D-Anteil}
+
+\minipagedOrBelowEachOther
+{
+    Der in Simulink zur Verfügung stehende PID-Regler Block bietet für den diskreten D-Anteil zwei unterschiedliche Implementationen an.
+}
+{
+
+}
+
+\minipagedOrBelowEachOther
+{
+    Ohne Filterung wird der D-Anteil implementiert wie in~\ref{form:formulaPIDWithoutDFilter} dargestellt.
+}
+{
+    \formulaWithDerivationShow{formulaPIDWithoutDFilter}
+}
+
+
+\minipagedOrBelowEachOther
+{
+    Mit Filterung wird der D-Anteil implementiert wie in~\ref{form:formulaPIDWithDFilter} dargestellt.
+    Bei der Verwendung des D-Anteils mit Filterung kommt der zusätzliche Parameter $Kn$ hinzu, 
+    welcher ebenfalls optimiert werden muss.
+}
+{
+    \formulaWithDerivationShow{formulaPIDWithDFilter}
+}
+
+
+
+%\begin{itemize}
+%    \item Ohne Filterung wird der D-Anteil implementiert als: \\
+%      \formulaWithDerivationShow{formulaPIDWithoutDFilter}
+%    \item Mit Filterung wird der D-Anteil implementiert als: \\
+%      \formulaWithDerivationShow{formulaPIDWithDFilter}
+%\end{itemize}
+
+\paragraph{Implementierung im C++ Code}
+Bei der Anti-Windup Methode \textit{Clamping} wird im Code nicht die gleiche Implementierung wie in Simulink verwendet.
+Mehr Informationen dazu sind im Kapitel~\fullref{sec:Description_SimulinkPID_ClampingLogic_Problem} zu finden.
+Nachfolgend wird lediglich die Update Funktion des PID-Reglers im C++ Code dargestellt.
+
+\begin{cppcode}{Update Funktion des PID-Reglers im Code}{lst:PID_ReglerDefinition}
+// Update Funktion des PID-Reglers im C++ Code. class PID
+void PID::update(double deltaTime)
+{
+	double proportional = m_kp * m_inputValue;
+	double derivative = 0;
+
+    // D Anteil berechnen
+	switch (getDerivativeType())
+	{
+		case DerivativeType::Unfiltered:
+		{
+			switch (getDifferentiationSolver())
+			{
+				case DifferentiationSolver::BackwardEuler:
+				{
+					derivative = TimeBasedSystem::getDifferentiated_backwardEuler(m_lastInputValue, m_inputValue, deltaTime) * m_kd;
+					break;
+				}
+			}
+			break;
+		}
+		case DerivativeType::Filtered:
+		{
+			derivative = m_kd * m_kn * (m_inputValue - m_lastInputValue) - m_lastDerivativeValue * (m_kn * deltaTime - 1);
+			break;
+		}
+	}
+
+	double toIntegrateSignal     = m_inputValue     * m_ki;
+	double toIntegrateLastSignal = m_lastInputValue * m_ki;
+
+    // Anti-Windup Methode anwenden
+	switch (getAntiWindupMethod())
+	{
+		case AntiWindupMethod::None:
+			break;
+		case AntiWindupMethod::Clamping:
+		{
+			bool integralSignEqual = (m_integral > 0 && toIntegrateSignal > 0) || (m_integral < 0 && toIntegrateSignal < 0);
+			if ((m_outputPositiveSaturated || m_outputNegativeSaturated) && integralSignEqual)
+			{
+				// Integration überspringen, wenn der Regler-Ausgang gesättigt ist und 
+                // das Integrator-Eingang das gleiche Vorzeichen wie der Integrator-Ausgang hat
+				goto afterIntegration;
+			}
+			break;
+		}
+		case AntiWindupMethod::BackCalculation:
+		{
+			double antiWindupSignal = (m_outputValue - m_outputValueBeforeSaturation) * m_backCalculationConstant;
+			toIntegrateSignal += antiWindupSignal;
+			toIntegrateLastSignal += antiWindupSignal;
+			break;
+		}
+	}
+
+    // Integration durchführen
+	switch (getIntegrationSolver())
+	{
+		case IntegrationSolver::ForwardEuler:
+		{
+			m_integral = TimeBasedSystem::getIntegrated_forwardEuler(toIntegrateSignal, m_integral, deltaTime);
+			break;
+		}
+		case IntegrationSolver::BackwardEuler:
+		{
+			m_integral = TimeBasedSystem::getIntegrated_backwardEuler(toIntegrateLastSignal, m_integral, deltaTime);
+			break;
+		}
+		case IntegrationSolver::Bilinear:
+		{
+			m_integral = TimeBasedSystem::getIntegrated_Bilinear(toIntegrateLastSignal, toIntegrateSignal, m_integral, deltaTime);
+			break;
+		}
+	}
+	afterIntegration: // Goto Sprungziel für Clamping Anti-Windup Methode
+	
+
+	// Integrator Sättigung anwenden
+	if (m_integral < -m_iSaturationLimit)
+	{
+		m_integral = -m_iSaturationLimit;
+	}
+	else if (m_integral > m_iSaturationLimit)
+	{
+		m_integral = m_iSaturationLimit;
+	}
+
+    // Regler-Ausgang vor Sättigung berechnen
+	m_outputValueBeforeSaturation = proportional + m_integral + derivative;
+
+	// Regler-Ausgangssättigung anwenden
+	m_outputPositiveSaturated = false;
+	m_outputNegativeSaturated = false;
+	if (m_outputValueBeforeSaturation < m_outputSaturationLimitLower)
+	{
+		m_outputValue = m_outputSaturationLimitLower;
+		m_outputNegativeSaturated = true;
+	}
+	else if (m_outputValueBeforeSaturation > m_outputSaturationLimitUpper)
+	{
+		m_outputValue = m_outputSaturationLimitUpper;
+		m_outputPositiveSaturated = true;
+	}
+	else
+	{
+		m_outputValue = m_outputValueBeforeSaturation;
+	}
+
+	m_lastInputValue = m_inputValue;
+	m_lastDerivativeValue = derivative;
+}
+\end{cppcode}
+
+
+
+
+\newpage
+\paragraph{Zusammenfassung}
+\begin{figure}[H]
+{
+    \vspace{-0.2cm}
+    %\centering
+    \begin{minipage}[t]{0.3\textwidth}
+        %\vspace{0.8cm}
+        Der verwendete PID-Regler bietet die Möglichkeit unterschiedliche Einstellungen zu testen und zu vergleichen.
+        In der Tabelle sind die möglichen Optimierungsparameter des PID-Reglers zusammengefasst.
+
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.67\textwidth}
+    \vspace{-0.5cm}
+    \centering
+    % Tabelle der PID-Regler Parameter
+    \begin{table}[H]
+        %\centering
+        \begin{tabular}{|c|c|c|}
+            \hline
+            \textbf{Parameter} & \textbf{Beschreibung} & \textbf{Parameter vorhanden, wenn:} \\
+            \hline
+            $Kp$ & Proportionalverstärkung & immer \\
+            \hline
+            $Ki$ & Integralverstärkung & immer \\
+            \hline
+            $Kd$ & Differentialverstärkung & immer \\
+            \hline
+            $Kn$ & D-Anteil Filterkonstante & Ableitungstyp = Mit Filter \\
+            \hline
+            $U_{\mathrm{SatHigh}}$ & Obere Ausgangssättigung & Ausgangssättigung aktiviert \\
+            \hline
+            $U_{\mathrm{SatLow}}$ & Untere Ausgangssättigung & Ausgangssättigung aktiviert \\
+            \hline
+            $Kb$ & Anti-Windup Verstärkung & Anti-Windup Typ = Back-Calculation \\
+            \hline
+            $I_{\mathrm{SatHigh}}/I_{\mathrm{SatLow}}$ & $\pm$ Integrator Sättigung  & aktiviert \\
+            \hline
+        \end{tabular}
+        \caption{Übersicht der PID-Regler Parameter}
+        \label{tab:PIDParameter}
+    \end{table}
+    \end{minipage}
+}
+\end{figure}

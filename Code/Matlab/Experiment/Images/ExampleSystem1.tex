@@ -1,0 +1,190 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xkeyval}
+\usetikzlibrary{shapes,arrows,positioning,calc}
+\usetikzlibrary{shapes,arrows,positioning}
+
+
+\tikzstyle{block} = [draw, rectangle, minimum height=1cm, minimum width=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{sum} = [draw, circle, node distance=1cm, minimum size=0.5cm]
+
+
+\newcommand{\drawLabel}[2]{%
+    \node[font=\small] at (#1) {#2};
+}
+
+% Custom command to add two vectors
+% Usage: \vectorAdd{vector1}{vector2}
+\newcommand{\vectorAdd}[2]{
+    ($(#1) + (#2)$)
+}
+
+% Custom command to draw a block with label and formula
+% Usage: \blocknode{node_name}{position}{label}
+\newcommand{\blocknode}[3]{
+    \node [block] at (#2) (#1) {#3};
+}
+
+% Custom command to draw a summation node
+% Usage: \sumnode{node_name}{position}
+\newcommand{\sumnode}[2]{
+    \node [sum, scale=0.5] at (#2) (#1) {$+$};
+}
+
+% Custom command to draw feedback connection with optional minus sign
+% Usage: \feedback[optional_offset]{from_coordinate}{yOffsetOfLoop}{to_coordinate}
+% example: \feedback[0.5,-0.5]{output}{yOffsetOfLoop}{sum}{->};
+%          \feedback{output}{yOffsetOfLoop}{sum}{->};
+%          \feedback[0.5,-0.5]{7,5}{-2}{3,5}{->};
+\newcommand{\feedback}[5][]{%
+    \draw[#5] (#2) -| ($ (#2) + (0,#3) $) -| (#4)%
+        \if\relax\detokenize{#1}\relax
+        % no optional argument → do nothing
+        \else
+            node at ($ (#4) + (#1) $) {$-$}%
+        \fi
+    ;
+}
+
+
+% Custom command to connect multiple coordinates with optional minus sign
+% Usage: \connect[optional_offset]{(A) (B) (C) ...}{->}
+% A is a position or node, B is another position or node, etc.
+% example \connect[0.5,-0.5]{(0,0) (feedback_point) (yCrossing)}{->};
+%         \connect{(0,0) (feedback_point) (yCrossing)}{->};
+%\newcommand{\connect}[3][]{%
+%  % #1 = optional offset like {(0.3,-0.3)} (must include parentheses)
+%  % #2 = the list of coordinates: (A) (B) (C) ...
+%  \begingroup
+%    % draw the path and create a coordinate at the path's end
+%    \draw[#3] plot coordinates {#2} coordinate (connect@last);
+%    % if optional offset supplied, place the minus relative to the last coordinate
+%    \if\relax\detokenize{#1}\relax
+%      % no offset -> nothing
+%    \else
+%      \node at ($(connect@last)+(#1)$) {$-$};
+%    \fi
+%  \endgroup
+%}
+% Define a new command with optional key-value parameters
+\makeatletter
+
+% Define keys with default values (initially undefined)
+% For label: captures {coords}{text} as two separate arguments
+% For label: use a helper that parses {coords}{text}
+\define@key{myparams}{label}{\myparam@parselabel#1\@nil}
+\def\myparam@parselabel#1#2\@nil{%
+  \def\myparam@labelcoords{#1}%
+  \def\myparam@labeltext{#2}%
+}
+
+
+\define@key{myparams}{sign}{\def\myparam@sign{#1}}
+
+
+% Command to check if parameter was set
+\newcommand{\ifparamset}[3]{%
+  \@ifundefined{myparam@#1}{#3}{#2}%
+}
+
+% Helper to check if label was set (checks the coords part)
+\newcommand{\iflabelset}[2]{%
+  \@ifundefined{myparam@labelcoords}{#2}{#1}%
+}
+
+% Reset all parameters to undefined
+\newcommand{\resetparams}{%
+  \let\myparam@labelcoords\undefined
+  \let\myparam@labeltext\undefined
+  \let\myparam@sign\undefined
+}
+
+
+% Your main macro with optional parameters
+\newcommand{\connect}[3][]{%
+  \resetparams% Clear previous values
+  \setkeys{myparams}{#1}% Parse the optional parameters
+  %
+  % Now use the parameters
+  \begingroup
+    % draw the path and create a coordinate at the path's end
+    \draw[#3] plot coordinates {#2} coordinate (connect@last);
+  
+  
+    % Check if parameters were set and act accordingly
+    \iflabelset{%
+        \node[font=\small] at ($(connect@last)+(\myparam@labelcoords)$) {\myparam@labeltext};
+    }{%
+        % label not set, do nothing
+    }
+    \ifparamset{sign}{\node at ($(connect@last)+(\myparam@sign)$) {$-$};}{}
+  \endgroup
+}
+
+\makeatother
+
+
+% Custom command to draw a filled connection node at a coordinate
+% Usage: \connectionNode{node_name}{position}
+\newcommand{\connectionNode}[2]{
+    \node[circle, fill, inner sep=1.5pt] (#1) at (#2) {};
+}
+
+
+% Debugging command to mark coordinates and show their values
+% Usage: \debugCoordinate{coordinate_name}
+\newcommand{\debugCoordinate}[1]{%
+    %\fill[red] (#1) circle (2pt);
+    % Draw cross
+    \draw[red] ($(#1) + (-0.1, -0.1)$) -- ($(#1) + (0.1, 0.1)$);
+    \draw[red] ($(#1) + (-0.1, 0.1)$) -- ($(#1) + (0.1, -0.1)$);
+
+    % Label coordinate (use detokenize so underscores aren't treated as math)
+    \node[red, above right, scale=0.5] at ($(#1)+(0.1,+0.0)$) {\detokenize{#1}};
+
+    % get numeric coordinates (in pt) and print them
+    \path (#1); \pgfgetlastxy{\myx}{\myy}%
+    \pgfmathsetmacro{\mx}{\myx/1pt}%
+    \pgfmathsetmacro{\my}{\myy/1pt}%
+    \node[red, below right, scale=0.4] at ($(#1)+(0.1,+0.1)$) {(\pgfmathprintnumber{\mx},\pgfmathprintnumber{\my})};%
+}
+
+\begin{document}
+
+
+
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+
+    
+    \newcommand{\labeloffset}{0.2}
+    % Draw grid
+    %\draw[step=1cm,gray,very thin] (0,0) grid (10,10);
+    
+    % Draw blocks
+    \sumnode{sum}{1,0};
+
+    \blocknode{controller}{3,0}{$G_c(s)$};
+    \blocknode{plant}{5,0}{$G(s)$};
+
+    % Draw connections
+    \connect[sign={0,0.1}, label={0,1}{\textbf{r}}]{(0,0) (sum.west)}{->};
+    \connect{(sum.east) (controller.west)}{->};
+    \connect{(controller.east) (plant.west)}{->};
+    \connectionNode{output}{6,0};
+    \connect{(plant.east) \vectorAdd{output}{0.5,0}}{->};
+    
+    \feedback[0.3,-0.5]{output}{-1}{sum}{->};
+
+
+    % Draw labels
+    \drawLabel{0.3,\labeloffset}{\textbf{r}};
+    \drawLabel{1.8,\labeloffset}{\textbf{e}};
+    \drawLabel{4,\labeloffset}{\textbf{u}};
+    \drawLabel{6.5,\labeloffset}{\textbf{y}};
+
+    
+\end{tikzpicture}
+
+\end{document}

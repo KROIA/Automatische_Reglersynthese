@@ -1,0 +1,19 @@
+\begin{tikzpicture}[auto, node distance=2cm,>=latex', scale=1]
+    \newcommand{\labeloffset}{0.2}
+    % Draw grid
+    %\draw[step=1cm,gray,very thin] (0,0) grid (10,10);
+    
+    % Draw blocks
+    \sumNode{sum}{1,0};
+    \blockNode{kGain}{2.5,0}{$K$};
+    \blockNode{plant}{$(kGain.east) + (1,0)$}{$G(s)$};
+
+    % Draw connections
+    \connect{(0,0)             (sum.west)          }{->};
+    \connect{(sum.east)        (kGain.west)   }{->};
+    \connect{(kGain.east) (plant.west)   }{->};
+    \connectionNode{output}{$(plant.east) + (0.5,0)$};
+    \connect{(plant.east) (output.center)   ($(output.center) + (0.5,0)$)}{->};
+    
+    \feedback[sign={-0.3,-0.1}              ]{output.center}{-1}{sum.south}{->};
+\end{tikzpicture}
