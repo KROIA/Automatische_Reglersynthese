@@ -121,6 +121,64 @@ public:
 		}
 	};
 	
+	enum SolverType
+	{
+		GeneticAlgorithm,
+		DifferentialEvolution
+	};
+	struct SetupSettings
+	{
+		bool useGeneticMutationRateDecay = true;
+		bool useMinimizingScore = true;
+		bool useKn = true;
+
+		SolverType solverType = SolverType::GeneticAlgorithm;
+		bool disableErrorIntegrationWhenSaturated = true;
+
+		// Optimization parameters
+		bool optimizeKp = true;
+		bool optimizeKi = true;
+		bool optimizeKd = true;
+		bool optimizeKn = true;
+		bool optimizeIntegralSaturation = false;
+		bool optimizeAntiWindupBackCalculationConstant = false;
+
+
+
+		double defaultKp = 1.0;
+		double defaultKi = 1.0;
+		double defaultKd = 1.0;
+		double defaultKn = 1.0;
+		double defaultPIDISaturation = 10;
+		AutoTuner::PID::AntiWindupMethod defaultPIDAntiWindupMethod = AutoTuner::PID::AntiWindupMethod::Clamping;
+		AutoTuner::PID::IntegrationSolver defaultPIDIntegrationSolver = AutoTuner::PID::IntegrationSolver::ForwardEuler;
+
+		AutoTuner::PID::DerivativeType defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Filtered;
+		//AutoTuner::PID::DerivativeType defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Unfiltered;
+
+		double defaultPIDAntiWindupBackCalculationConstant = 0.1;
+
+		double startAreaRange = 10;
+		size_t agentCount = 30;
+		
+		double endTime = 20;
+		double deltaTime = 0.01;
+		size_t targetEpochs = 5000;
+
+		double nyquistBeginFreq = 0.1;
+		double nyquistEndFreq = 1000;
+		double targetPhaseMargin = M_PI / 2; // degrees
+		double targetGainMargin = 2;
+
+
+		double startLearningRate = 1;
+		double learningRateDecay = 0.999; // per generation
+		
+		SetupSettings() {}
+		SetupSettings(const SetupSettings& other) = default;
+	};
+
+
 	PIDTuningProblem(const std::string& name = "PIDTuningProblem", QSFML::Objects::GameObject* parent = nullptr)
 		: QSFML::Objects::GameObject(name, parent)
 	{

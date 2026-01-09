@@ -22,9 +22,12 @@ static double map(double value, double inMin, double inMax, double outMin, doubl
 	return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
-DCMotorProblem::DCMotorProblem(const std::string& name,
+DCMotorProblem::DCMotorProblem(const SetupSettings& setupSettings, 
+	const std::string& name,
 	GameObject* parent)
 	: PIDTuningProblem(name, parent)
+	, m_setupSettings(setupSettings)
+	, m_testSystem(setupSettings)
 {
 
 	m_zieglerNicholsComponent = new AutoTuner::ZieglerNichols("ZieglerNichols");
@@ -33,22 +36,49 @@ DCMotorProblem::DCMotorProblem(const std::string& name,
 	m_chartViewComponent = new AutoTuner::ChartViewComponent("ChartViewComponent");
 	addComponent(m_chartViewComponent);
 
-#ifdef USE_GENTIC_SOLVER
-	AutoTuner::GeneticSolver *gs = new AutoTuner::GeneticSolver();
-	gs->setMutationAmount(m_learningRate);
-	m_solverObject = gs;
-#endif
-#ifdef USE_DIFFERENTIAL_EVOLUTION_SOLVER
-	AutoTuner::DifferentialEvolutionSolver *ds = new AutoTuner::DifferentialEvolutionSolver();
-	ds->setMutationAmount(s_startLearningRate);
-	m_solverObject = ds;
-#endif
+	m_learningRate = m_setupSettings.startLearningRate;
+	switch (m_setupSettings.solverType)
+	{
+		case SolverType::GeneticAlgorithm:
+		{
+			AutoTuner::GeneticSolver* gs = new AutoTuner::GeneticSolver();
+			gs->setMutationAmount(m_setupSettings.startLearningRate);
+			m_solverObject = gs;
+			break;
+		}
+		case SolverType::DifferentialEvolution:
+		{
+			AutoTuner::DifferentialEvolutionSolver* ds = new AutoTuner::DifferentialEvolutionSolver();
+			ds->setMutationAmount(m_setupSettings.startLearningRate);
+			m_solverObject = ds;
+			break;
+		}
+		default:
+		{
+			break;
+		}
 
-#ifdef GENETIC_USE_MINIMIZING_SCORE
-	m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Minimize);
-#else
-	m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Maximize);
-#endif
+	}
+//#ifdef USE_GENTIC_SOLVER
+//	AutoTuner::GeneticSolver *gs = new AutoTuner::GeneticSolver();
+//	gs->setMutationAmount(m_learningRate);
+//	m_solverObject = gs;
+//#endif
+//#ifdef USE_DIFFERENTIAL_EVOLUTION_SOLVER
+//	AutoTuner::DifferentialEvolutionSolver *ds = new AutoTuner::DifferentialEvolutionSolver();
+//	ds->setMutationAmount(s_startLearningRate);
+//	m_solverObject = ds;
+//#endif
+	if(m_setupSettings.useMinimizingScore)
+		m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Minimize);
+	else
+		m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Maximize);
+
+//#ifdef GENETIC_USE_MINIMIZING_SCORE
+//	m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Minimize);
+//#else
+//	m_solverObject->setOptimizingDirection(AutoTuner::Solver::OptimizingDirection::Maximize);
+//#endif
 	addChild(m_solverObject);
 
 	
@@ -135,7 +165,7 @@ void DCMotorProblem::precalculatePIDWithZieglerNichols()
 	DCMotorSystem dcMotorSystem;
 	dcMotorSystem.setIntegrationSolver(AutoTuner::TimeBasedSystem::IntegrationSolver::Bilinear);
 
-	float dt = s_deltaTime;
+	float dt = m_setupSettings.deltaTime;
 	for (float x = 0; x < 1; x += dt)
 	{
 		timeData.push_back(x);
@@ -146,10 +176,11 @@ void DCMotorProblem::precalculatePIDWithZieglerNichols()
 	}
 	m_zieglerNicholsComponent->setStepResponse(timeData, responseData);
 	auto pidParams = m_zieglerNicholsComponent->getPID_Parameters(AutoTuner::ZieglerNichols::Method::ZN_PID_controller);
-	pidParams.Kd = s_defaultKp; // 2.38885601249613;
-	pidParams.Ki = s_defaultKi; // 22.1216868792194;
-	pidParams.Kp = s_defaultKd; // 0.0231853375201583;
-	setupPopulation(m_populationSize, pidParams.Kp, pidParams.Ki, pidParams.Kd, s_defaultPIDISaturation, s_startAreaRange);
+	pidParams.Kd = m_setupSettings.defaultKp; // 2.38885601249613;
+	pidParams.Ki = m_setupSettings.defaultKi; // 22.1216868792194;
+	pidParams.Kp = m_setupSettings.defaultKd; // 0.0231853375201583;
+	setupPopulation(m_setupSettings.agentCount, pidParams.Kp, pidParams.Ki, pidParams.Kd, 
+		m_setupSettings.defaultPIDISaturation, m_setupSettings.startAreaRange);
 	
 	auto tmp = agentTestFunction({ 11.3, 0, 0, 0 },0);
 	// tmp = agentTestFunction({ 7.21,111.21,0,0 });
@@ -164,29 +195,47 @@ void DCMotorProblem::setupPopulation(size_t populationSize, double kp, double ki
 	//AutoTuner::GeneticSolver* geneticSolver = dynamic_cast<AutoTuner::GeneticSolver*>(m_solverObject);
 	if (m_solverObject)
 	{
-		m_populationSize = populationSize;
+		m_setupSettings.agentCount = populationSize;
 		std::vector<std::vector<double>> initialPopulation;
 		for (size_t i = 0; i < populationSize; ++i)
 		{
 			std::vector<double> individual;
-#ifdef PARAMETERLIST_ENABLE_KP
-			individual.push_back(kp + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kp
-#endif
-#ifdef PARAMETERLIST_ENABLE_KI
-			individual.push_back(ki + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Ki
-#endif
-#ifdef PARAMETERLIST_ENABLE_KD
-			individual.push_back(kd + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));  // Kd
-#endif
-#ifdef PARAMETERLIST_ENABLE_KN
-			individual.push_back(s_defaultKn + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kn
-#endif
-#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
-			individual.push_back(s_defaultPIDISaturation * AutoTuner::Solver::getRandomDouble(0,2 * areaRange));
-#endif
-#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
-			individual.push_back(s_defaultPIDAntiWindupBackCalculationConstant + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));
-#endif
+			if(m_setupSettings.optimizeKp)
+				individual.push_back(kp + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kp
+
+			if (m_setupSettings.optimizeKi)
+				individual.push_back(ki + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Ki
+
+			if (m_setupSettings.optimizeKd)
+				individual.push_back(kd + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));  // Kd
+			if (m_setupSettings.optimizeKn)
+				individual.push_back(m_setupSettings.defaultKn + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kn
+			if (m_setupSettings.optimizeIntegralSaturation)
+				individual.push_back(m_setupSettings.defaultPIDISaturation * AutoTuner::Solver::getRandomDouble(0, 2 * areaRange));
+			if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+				individual.push_back(m_setupSettings.defaultPIDAntiWindupBackCalculationConstant + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));
+
+
+
+
+//#ifdef PARAMETERLIST_ENABLE_KP
+//			individual.push_back(kp + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kp
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KI
+//			individual.push_back(ki + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Ki
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KD
+//			individual.push_back(kd + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));  // Kd
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KN
+//			individual.push_back(s_defaultKn + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kn
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
+//			individual.push_back(s_defaultPIDISaturation * AutoTuner::Solver::getRandomDouble(0,2 * areaRange));
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
+//			individual.push_back(s_defaultPIDAntiWindupBackCalculationConstant + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));
+//#endif
 			initialPopulation.push_back(individual);
 		}
 		AutoTuner::GeneticSolver* geneticSolver = dynamic_cast<AutoTuner::GeneticSolver*>(m_solverObject);
@@ -225,22 +274,26 @@ void DCMotorProblem::update()
 		
 		logCSVData();
 		++m_epochCounter;
-		if(m_targetEpochs <= m_epochCounter)
+		if(m_setupSettings.targetEpochs <= m_epochCounter)
 		{
 			emit targetEpochReached(m_epochCounter);
 		}
 
-#if defined(USE_GENTIC_SOLVER)
-		if (m_useLearningRateDecay)
+		AutoTuner::GeneticSolver* geneticSolver = dynamic_cast<AutoTuner::GeneticSolver*>(m_solverObject);
+		if (geneticSolver)
 		{
-			AutoTuner::GeneticSolver* geneticSolver = dynamic_cast<AutoTuner::GeneticSolver*>(m_solverObject);
-			if (geneticSolver)
+//#if defined(USE_GENTIC_SOLVER)
+			if (m_setupSettings.useGeneticMutationRateDecay)
 			{
-				m_learningRate *= s_learningRateDecay;
-				return geneticSolver->setMutationAmount(m_learningRate);
+				//AutoTuner::GeneticSolver* geneticSolver = dynamic_cast<AutoTuner::GeneticSolver*>(m_solverObject);
+				//if (geneticSolver)
+				//{
+					m_learningRate *= m_setupSettings.learningRateDecay;
+					geneticSolver->setMutationAmount(m_learningRate);
+				//}
 			}
 		}
-#endif
+//#endif
 	}
 }
 
@@ -265,7 +318,7 @@ void DCMotorProblem::resetPopulation()
 		//setupPopulation(kp, ki, kd,m_defaultPIDISatturation,  1);
 		//testPID(kp, ki, kd, m_defaultPIDISatturation);
 
-		setupPopulation(m_populationSize, 0, 0, 0, s_defaultPIDISaturation, s_startAreaRange);
+		setupPopulation(m_setupSettings.agentCount, 0, 0, 0, m_setupSettings.defaultPIDISaturation, m_setupSettings.startAreaRange);
 		//testPID({ 0, 0, 0, s_defaultPIDISaturation });
 		m_resultData.clearData();
 		//m_csvExport.clearData();
@@ -467,7 +520,7 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 	//std::vector<double> responseData;
 	//AutoTuner::PID pidController(6.48, 26.8, -1.09, 0.547);
 	//AutoTuner::PID pidController(6.48, 26.8, -1.09);
-	double dt = s_deltaTime;
+	double dt = m_setupSettings.deltaTime;
 
 	m_testSystem.reset();
 	m_testSystem.setParameters(params);
@@ -478,9 +531,11 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 	AutoTuner::ChartViewComponent::PlotData uPlotData("u");
 	AutoTuner::ChartViewComponent::PlotData yPlotData("y");
 	AutoTuner::ChartViewComponent::PlotData dPlotData("d");
-#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
+
+
+//#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
 	AutoTuner::ChartViewComponent::PlotData sumErrPlotData("sumErrorEnabled");
-#endif
+//#endif
 
 	double r = 0;
 	double disturbance = 0;
@@ -500,7 +555,7 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 	//pidController.setAntiWindupBackCalculationConstant(0.1);
 	double lastR = 0;
 	int rWasRising = 0;
-	for (double t = 0; t < s_endTime; t += dt)
+	for (double t = 0; t < m_setupSettings.endTime; t += dt)
 	{
 		// Apply step changes
 		if (nextStepIndex < stepData.size())
@@ -543,21 +598,26 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 			//rPlotData.addDataPoint(t, r);
 			//yPlotData.addDataPoint(t, pidController.getOutputs()[0]);
 
-#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
-			double pidOutput = m_testSystem.getPIDOutput();
-			double angularSpeed = m_testSystem.getOutput();
-			// Check if the controller is not saturating
-			double error = m_testSystem.getError() / systemInputLimit;
-			bool isPositiveSaturated = pidOutput > actuatorLimit - 0.01;
-			bool isLowerSaturated = pidOutput < 0.01;
+//#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
 			
-			if (!((isPositiveSaturated && r > angularSpeed) || (isLowerSaturated && r < angularSpeed)))
+			// Check if the controller is not saturating
+			//double error = m_testSystem.getError() / systemInputLimit;
+			
+			
+			if (m_setupSettings.disableErrorIntegrationWhenSaturated)
 			{
-				// Penalize the integral of the error
-				sumErrPlotData.addDataPoint(t, 10);
+				double pidOutput = m_testSystem.getPIDOutput();
+				double angularSpeed = m_testSystem.getOutput();
+				bool isPositiveSaturated = pidOutput > actuatorLimit - 0.01;
+				bool isLowerSaturated = pidOutput < 0.01;
+				if (!((isPositiveSaturated && r > angularSpeed) || (isLowerSaturated && r < angularSpeed)))
+				{
+					// Penalize the integral of the error
+					sumErrPlotData.addDataPoint(t, 10);
+				}
+				else
+					sumErrPlotData.addDataPoint(t, 0);
 			}
-			else
-				sumErrPlotData.addDataPoint(t, 0);
 
 
 			//if ((lastR < angularSpeed) && (r < angularSpeed) && rWasRising)
@@ -572,7 +632,7 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 			//	sumErrPlotData.addDataPoint(t, 0);
 			//}
 
-#endif
+//#endif
 		}
 		lastR = r;
 	}
@@ -582,9 +642,10 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 	m_chartViewComponent->addPlotData(dPlotData);
 	m_chartViewComponent->addPlotData(yPlotData);
 	
-#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
-	m_chartViewComponent->addPlotData(sumErrPlotData);
-#endif
+//#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
+	if (m_setupSettings.disableErrorIntegrationWhenSaturated)
+		m_chartViewComponent->addPlotData(sumErrPlotData);
+//#endif
 
 	if (m_nyquistPlotComponent)
 	{
@@ -594,7 +655,8 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 		if (counter % 10 == 0)
 		{
 			counter = 0;
-			responseData = m_frequencyResponse.getResponse(m_testSystem.getFeedForwardPart(), 0.1, 1000.0);
+			responseData = m_frequencyResponse.getResponse(m_testSystem.getFeedForwardPart(), 
+				m_setupSettings.nyquistBeginFreq, m_setupSettings.nyquistEndFreq);
 			m_nyquistPlotComponent->setFrequencyResponse(responseData);
 		}
 	}
@@ -634,6 +696,38 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 		resultContainer->stepResponse.responseSignals[4].data = yPlotValues;
 		std::vector<ResultData::ParameterData> parameterData;
 		size_t paramIndexCounter = 0;
+
+		if(m_setupSettings.optimizeKp)
+			resultContainer->parameters[paramIndexCounter++].value = params[0];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKp;
+
+		if (m_setupSettings.optimizeKi)
+			resultContainer->parameters[paramIndexCounter++].value = params[1];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKi;
+
+		if (m_setupSettings.optimizeKd)
+			resultContainer->parameters[paramIndexCounter++].value = params[2];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKd;
+
+		if (m_setupSettings.optimizeKn)
+			resultContainer->parameters[paramIndexCounter++].value = params[3];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKn;
+
+		if (m_setupSettings.optimizeIntegralSaturation)
+			resultContainer->parameters[paramIndexCounter++].value = params[4];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultPIDISaturation;
+
+		if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+			resultContainer->parameters[paramIndexCounter++].value = params[5];
+		else
+			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultPIDAntiWindupBackCalculationConstant;
+
+		/*
 #ifdef PARAMETERLIST_ENABLE_KP
 		resultContainer->parameters[paramIndexCounter++].value = params[0];
 #else
@@ -671,17 +765,17 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 		resultContainer->parameters[paramIndexCounter++].value = params[counter++];
 #else
 		resultContainer->parameters[paramIndexCounter++].value = s_defaultPIDAntiWindupBackCalculationConstant;
-#endif
+#endif*/
 	}
 }
 
 std::vector<double> DCMotorProblem::agentTestFunction(const std::vector<double>& parameters, size_t agent)
 {
 	AT_GENERAL_PROFILING_FUNCTION(AT_COLOR_STAGE_2);
-	double dt = s_deltaTime;
-	double endTime = s_endTime;
+	double dt = m_setupSettings.deltaTime;
+	double endTime = m_setupSettings.endTime;
 
-	TestSystem agentSystem;
+	TestSystem agentSystem(m_setupSettings);
 	agentSystem.reset();
 	agentSystem.setParameters(parameters);
 
@@ -703,15 +797,16 @@ std::vector<double> DCMotorProblem::agentTestFunction(const std::vector<double>&
 
 	if (m_tuningGoalFactor_gainMargin != 0 || m_tuningGoalFactor_phaseMargin != 0)
 	{
-		AutoTuner::FrequencyResponse::FrequencyResponseData responseData = m_frequencyResponse.getResponse(agentSystem.getFeedForwardPart(), m_nyquistBeginFreq, m_nyquistEndFreq);
+		AutoTuner::FrequencyResponse::FrequencyResponseData responseData = m_frequencyResponse.getResponse(agentSystem.getFeedForwardPart(), 
+			m_setupSettings.nyquistBeginFreq, m_setupSettings.nyquistEndFreq);
 		double gainMargin = responseData.gainMargin;
 		double phaseMargin = responseData.phaseMargin;
 
 		//losses[3] = std::abs(std::max(0.0, targetGainMargin - gainMargin)) * 10;
 		//losses[4] = std::abs(std::max(0.0, targetPhaseMargin - phaseMargin)) * 100;
 
-		losses[3] = std::abs(m_targetGainMargin - gainMargin) * m_tuningGoalFactor_gainMargin;
-		losses[4] = std::abs(m_targetPhaseMargin - phaseMargin) * m_tuningGoalFactor_phaseMargin;
+		losses[3] = std::abs(m_setupSettings.targetGainMargin - gainMargin) * m_tuningGoalFactor_gainMargin;
+		losses[4] = std::abs(m_setupSettings.targetPhaseMargin - phaseMargin) * m_tuningGoalFactor_phaseMargin;
 	}
 
 	const std::vector<sf::Vector2<double>> &disturbanceData = m_learningDisturbanceData;
@@ -764,16 +859,16 @@ std::vector<double> DCMotorProblem::agentTestFunction(const std::vector<double>&
 
 		// Check if the controller is not saturating
 		double error = agentSystem.getError() / systemInputLimit;
-#ifdef DISABLE_ERROR_INTEGRAL_WHEN_SATURATED
-		bool isPositiveSaturated = pidOutput > actuatorLimit - 0.01;
-		bool isLowerSaturated = pidOutput < 0.01;
-		if (!((isPositiveSaturated && r > angularSpeed) || (isLowerSaturated && r < angularSpeed)))
-#endif
-#ifdef GENETIC_USE_MINIMIZING_SCORE
-			errorSum += std::abs(error);  
-#else
+		if (m_setupSettings.disableErrorIntegrationWhenSaturated)
+		{
+			bool isPositiveSaturated = pidOutput > actuatorLimit - 0.01;
+			bool isLowerSaturated = pidOutput < 0.01;
+			if (!((isPositiveSaturated && r > angularSpeed) || (isLowerSaturated && r < angularSpeed)))
+				errorSum += std::abs(error);
+		}
+		else
 			errorSum += std::abs(error);
-#endif
+
 
 		// Check overshoot
 		if ((lastR < angularSpeed) && (r < angularSpeed) && rWasRising)
@@ -796,17 +891,20 @@ std::vector<double> DCMotorProblem::agentTestFunction(const std::vector<double>&
 	pidOutChangeSum *= invUpdateCount * m_tuningGoalFactor_actuatorEffort / actuatorLimit;
 	
 
-#ifdef GENETIC_USE_MINIMIZING_SCORE
-	losses[0] = (errorSum);
-	losses[1] = (pidOutChangeSum);
-	losses[2] = (overshootSum);
-	return losses;
-#else
-	losses[0] += 500 * (errorSum + pidOutChangeSum + overshootSum);
-	std::vector<double> scores = losses;
-	scores[0] = (500.0 / (losses[0] + 0.1));
-	return scores;
-#endif
+	if (m_setupSettings.useMinimizingScore)
+	{
+		losses[0] = (errorSum);
+		losses[1] = (pidOutChangeSum);
+		losses[2] = (overshootSum);
+		return losses;
+	}
+	else
+	{
+		losses[0] += 500 * (errorSum + pidOutChangeSum + overshootSum);
+		std::vector<double> scores = losses;
+		scores[0] = (500.0 / (losses[0] + 0.1));
+		return scores;
+	}
 }
 
 void DCMotorProblem::printSignalSequenceToConsole(const std::string& name, const std::vector<sf::Vector2<double>>& steps) const
@@ -872,14 +970,17 @@ void DCMotorProblem::setCSVHeader()
 	ResultData::ColumnData rPlot("r", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0xf2c94e));
 	ResultData::ColumnData lPlot("l", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0xeb3a23));
 	ResultData::ColumnData ePlot("e", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0xf2c94e));
-#ifdef USE_DIFFERENTIAL_EVOLUTION_SOLVER
-	ResultData::ColumnData uPlot("u", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0x506ce6));
-	ResultData::ColumnData yPlot("y", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0x15297d));
-#endif
-#ifdef USE_GENTIC_SOLVER
-	ResultData::ColumnData uPlot("u", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0x63e0d8));
-	ResultData::ColumnData yPlot("y", AutoTuner::CSVExport::LineStyle::Solid, 1, sf::Color(0x228a83));
-#endif
+
+	sf::Color color1 = sf::Color(0x506ce6);
+	sf::Color color2 = sf::Color(0x15297d);
+	if(m_setupSettings.solverType == SolverType::GeneticAlgorithm) // specify the correct solver type
+	{
+		color1 = sf::Color(0x63e0d8);
+		color2 = sf::Color(0x228a83);
+	}
+
+	ResultData::ColumnData uPlot("u", AutoTuner::CSVExport::LineStyle::Solid, 1, color1);
+	ResultData::ColumnData yPlot("y", AutoTuner::CSVExport::LineStyle::Solid, 1, color2);
 
 	ResultData::ColumnData time;
 	time.name = "Zeit [s]";
@@ -963,7 +1064,40 @@ void DCMotorProblem::logCSVData()
 			parameterChanges[i].data.push_back(bestParameters[i]);
 		}*/
 
+
 		size_t paramIndexCounter = 0;
+
+		if (m_setupSettings.optimizeKp)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[0]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKp);
+
+		if (m_setupSettings.optimizeKi)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[1]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKi);
+
+		if (m_setupSettings.optimizeKd)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[2]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKd);
+
+		if (m_setupSettings.optimizeKn)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[3]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKn);
+
+		if (m_setupSettings.optimizeIntegralSaturation)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[4]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultPIDISaturation);
+
+		if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[5]);
+		else
+			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultPIDAntiWindupBackCalculationConstant);
+
+		/*
 #ifdef PARAMETERLIST_ENABLE_KP
 		parameterChanges[paramIndexCounter++].data.push_back(bestParameters[0]);
 #else
@@ -1001,7 +1135,7 @@ void DCMotorProblem::logCSVData()
 		parameterChanges[paramIndexCounter++].data.push_back(params[counter++]);
 #else
 		parameterChanges[paramIndexCounter++].data.push_back(s_defaultPIDAntiWindupBackCalculationConstant);
-#endif
+#endif*/
 	}
 }
 
@@ -1014,8 +1148,8 @@ void DCMotorProblem::testCustomPID()
 	double Kd = -1.8759e-4;
 	double Kn = 1/1.9757;
 
-	double integralSaturation = s_defaultPIDISaturation;
-	double backCalculationConstant = s_defaultPIDAntiWindupBackCalculationConstant;
+	double integralSaturation = m_setupSettings.defaultPIDISaturation;
+	double backCalculationConstant = m_setupSettings.defaultPIDAntiWindupBackCalculationConstant;
 
 
 	std::vector<double> params = { Kp, Ki, Kd, Kn, integralSaturation, backCalculationConstant };
@@ -1058,11 +1192,15 @@ void DCMotorProblem::saveResultDataToFile(const ResultData& resultData, std::str
 
 	{
 		AutoTuner::CSVExport learningHistoryCSV;
-#ifdef GENETIC_USE_MINIMIZING_SCORE
-		std::string yAxisLabel = "Fehler";
-#else
 		std::string yAxisLabel = "Fitness";
-#endif
+		if(m_setupSettings.useMinimizingScore)
+			yAxisLabel = "Fehler";
+
+//#ifdef GENETIC_USE_MINIMIZING_SCORE
+//		std::string yAxisLabel = "Fehler";
+//#else
+//		std::string yAxisLabel = "Fitness";
+//#endif
 		std::vector<std::string> labels = {"Epoche" };
 		std::vector<AutoTuner::CSVExport::LineStyle> lineStyles;
 		std::vector<sf::Color> lineColors;

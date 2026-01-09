@@ -42,40 +42,41 @@ class DCMotorProblem: public QObject, public PIDTuningProblem
 	Q_OBJECT
 public:
 	// Default parameters
-	static constexpr double s_defaultKp = 1.0;
-	static constexpr double s_defaultKi = 1.0;
-	static constexpr double s_defaultKd = 1.0;
-	static constexpr double s_defaultKn = 1.0;
-	static constexpr double s_defaultPIDISaturation = 10;
-	static constexpr AutoTuner::PID::AntiWindupMethod s_defaultPIDAntiWindupMethod = AutoTuner::PID::AntiWindupMethod::Clamping;
-	static constexpr AutoTuner::PID::IntegrationSolver s_defaultPIDIntegrationSolver = AutoTuner::PID::IntegrationSolver::ForwardEuler;
-#ifdef PARAMETERLIST_ENABLE_KN
-	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Filtered;
-#else
-	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Unfiltered;
-#endif
-	static constexpr double s_defaultPIDAntiWindupBackCalculationConstant = 0.1;
+//	static constexpr double s_defaultKp = 1.0;
+//	static constexpr double s_defaultKi = 1.0;
+//	static constexpr double s_defaultKd = 1.0;
+//	static constexpr double s_defaultKn = 1.0;
+//	static constexpr double s_defaultPIDISaturation = 10;
+//	static constexpr AutoTuner::PID::AntiWindupMethod s_defaultPIDAntiWindupMethod = AutoTuner::PID::AntiWindupMethod::Clamping;
+//	static constexpr AutoTuner::PID::IntegrationSolver s_defaultPIDIntegrationSolver = AutoTuner::PID::IntegrationSolver::ForwardEuler;
+//#ifdef PARAMETERLIST_ENABLE_KN
+//	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Filtered;
+//#else
+//	static constexpr AutoTuner::PID::DerivativeType s_defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Unfiltered;
+//#endif
+//	static constexpr double s_defaultPIDAntiWindupBackCalculationConstant = 0.1;
+//
+//	static constexpr double s_startAreaRange = 10;
+//	static constexpr size_t s_agentCount = 30;
+//	//static constexpr size_t s_testRuns = 1;
+//	static constexpr double s_endTime = 20;
+//	static constexpr double s_deltaTime = 0.01;
+//	static constexpr size_t s_targetEpochs = 5000;
+//
+//	static constexpr double m_nyquistBeginFreq = 1;
+//	static constexpr double m_nyquistEndFreq = 100;
+//	static constexpr double m_targetPhaseMargin = M_PI / 2; // degrees
+//	static constexpr double m_targetGainMargin = 2;
+//
+//#ifdef USE_GENTIC_SOLVER
+//	static constexpr double s_startLearningRate = 1;
+//	static constexpr double s_learningRateDecay = 0.999; // per generation
+//#else
+//	static constexpr double s_startLearningRate = 0.5;
+//#endif
 
-	static constexpr double s_startAreaRange = 10;
-	static constexpr size_t s_agentCount = 30;
-	//static constexpr size_t s_testRuns = 1;
-	static constexpr double s_endTime = 20;
-	static constexpr double s_deltaTime = 0.01;
-	static constexpr size_t s_targetEpochs = 5000;
-
-	static constexpr double m_nyquistBeginFreq = 1;
-	static constexpr double m_nyquistEndFreq = 100;
-	static constexpr double m_targetPhaseMargin = M_PI / 2; // degrees
-	static constexpr double m_targetGainMargin = 2;
-
-#ifdef USE_GENTIC_SOLVER
-	static constexpr double s_startLearningRate = 1;
-	static constexpr double s_learningRateDecay = 0.999; // per generation
-#else
-	static constexpr double s_startLearningRate = 0.5;
-#endif
-
-	DCMotorProblem(const std::string& name = "DCMotorProblem",
+	DCMotorProblem(const SetupSettings &setupSettings = SetupSettings(),
+				  const std::string& name = "DCMotorProblem",
 				  GameObject* parent = nullptr);
 
 	void onAwake() override;
@@ -115,7 +116,7 @@ public:
 	std::vector<double> getBestParameters() const override;
 	size_t getPopulationSize() const override
 	{
-		return m_populationSize;
+		return m_setupSettings.agentCount;
 	}
 
 	void setTuningGoalParameters(double errorIntegralWeight,
@@ -168,11 +169,13 @@ public:
 	}
 	void enableLearningRateDecay(bool enable) override
 	{
-		m_useLearningRateDecay = enable;
+		m_setupSettings.useGeneticMutationRateDecay = enable;
+		//m_useLearningRateDecay = enable;
 	}
 	bool isLearningRateDecayEnabled() const override
 	{
-		return m_useLearningRateDecay;
+		return m_setupSettings.useGeneticMutationRateDecay;
+		//return m_useLearningRateDecay;
 	}
 
 
@@ -184,7 +187,7 @@ public:
 
 	void setTargetEpoch(size_t epoch) override
 	{
-		m_targetEpochs = epoch;
+		m_setupSettings.targetEpochs = epoch;
 	}
 	signals:
 		//void targetEpochReached(size_t epoch);
@@ -271,22 +274,33 @@ private:
 		private:
 
 		};
-		TestSystem()
+		TestSystem(
+			SetupSettings setupSettings)
 			: AutoTuner::TunableTimeBasedSystem()
+			, m_setupSettings(setupSettings)
 		{
 			m_feedForwardPart.m_dcMotorSystem.setIntegrationSolver(AutoTuner::TimeBasedSystem::IntegrationSolver::Bilinear);
-			m_feedForwardPart.m_pidController.setIntegrationSolver(s_defaultPIDIntegrationSolver); // Matlab uses forward euler: 1/s = Ts/(z-1)
+			m_feedForwardPart.m_pidController.setIntegrationSolver(m_setupSettings.defaultPIDIntegrationSolver); // Matlab uses forward euler: 1/s = Ts/(z-1)
 			m_feedForwardPart.m_pidController.setOutputSaturationLimits(0, m_actuatorInputLimit);
-			m_feedForwardPart.m_pidController.setAntiWindupMethod(s_defaultPIDAntiWindupMethod);
-			m_feedForwardPart.m_pidController.setDerivativeType(s_defaultPIDDerivativeType);
+			m_feedForwardPart.m_pidController.setAntiWindupMethod(m_setupSettings.defaultPIDAntiWindupMethod);
+			m_feedForwardPart.m_pidController.setDerivativeType(m_setupSettings.defaultPIDDerivativeType);
 		
+			reset();
 		}
 		TestSystem(const TestSystem& other)
-			: AutoTuner::TunableTimeBasedSystem(other),
-			  m_feedForwardPart(other.m_feedForwardPart),
-			  m_referenceValue(other.m_referenceValue),
-			  m_errorValue(other.m_errorValue)
+			: AutoTuner::TunableTimeBasedSystem(other)
+			, m_feedForwardPart(other.m_feedForwardPart)
+			, m_referenceValue(other.m_referenceValue)
+			, m_errorValue(other.m_errorValue)
+			, m_setupSettings(other.m_setupSettings)
 		{
+			m_feedForwardPart.m_dcMotorSystem.setIntegrationSolver(AutoTuner::TimeBasedSystem::IntegrationSolver::Bilinear);
+			m_feedForwardPart.m_pidController.setIntegrationSolver(m_setupSettings.defaultPIDIntegrationSolver); // Matlab uses forward euler: 1/s = Ts/(z-1)
+			m_feedForwardPart.m_pidController.setOutputSaturationLimits(0, m_actuatorInputLimit);
+			m_feedForwardPart.m_pidController.setAntiWindupMethod(m_setupSettings.defaultPIDAntiWindupMethod);
+			m_feedForwardPart.m_pidController.setDerivativeType(m_setupSettings.defaultPIDDerivativeType);
+
+			reset();
 		}
 		TimeBasedSystem* clone() override
 		{
@@ -338,69 +352,117 @@ private:
 			//	m_pidController.setIntegralSatturationLimit(10);
 			//}
 			size_t counter = 0;
-#ifdef PARAMETERLIST_ENABLE_KP
-			double p = params[counter++];
-#else
-			double p = s_defaultKp;
-#endif	
-#ifdef PARAMETERLIST_ENABLE_KI
-			double i = params[counter++];
-#else
-			double i = s_defaultKi;
-#endif
-#ifdef PARAMETERLIST_ENABLE_KD
-			double d = params[counter++];
-#else
-			double d = s_defaultKd;
-#endif
-#ifdef PID_USE_KN
-#ifdef PARAMETERLIST_ENABLE_KN
-			double n = params[counter++];
-#else
-			double n = s_defaultKn;
-#endif
-			m_feedForwardPart.m_pidController.setParameters(p, i, d, n);
-#else
-			m_feedForwardPart.m_pidController.setParameters(p, i, d);
-#endif
+//#ifdef PARAMETERLIST_ENABLE_KP
+//			double p = params[counter++];
+//#else
+//			double p = s_defaultKp;
+//#endif	
+			double p = m_setupSettings.defaultKp;
+			if (m_setupSettings.optimizeKp)
+				p = params[counter++];
+//#ifdef PARAMETERLIST_ENABLE_KI
+//			double i = params[counter++];
+//#else
+//			double i = s_defaultKi;
+//#endif
+			double i = m_setupSettings.defaultKi;
+			if (m_setupSettings.optimizeKi)
+				i = params[counter++];
+//#ifdef PARAMETERLIST_ENABLE_KD
+//			double d = params[counter++];
+//#else
+//			double d = s_defaultKd;
+//#endif
+			double d = m_setupSettings.defaultKd;
+			if (m_setupSettings.optimizeKd)
+				d = params[counter++];
+
+
+			double n = m_setupSettings.defaultKn;
+			if (m_setupSettings.optimizeKn)
+				n = params[counter++];
+			if (m_setupSettings.useKn)
+				m_feedForwardPart.m_pidController.setParameters(p, i, d, n);
+			else
+				m_feedForwardPart.m_pidController.setParameters(p, i, d);
+
+//#ifdef PID_USE_KN
+//#ifdef PARAMETERLIST_ENABLE_KN
+//			double n = params[counter++];
+//#else
+//			double n = s_defaultKn;
+//#endif
+//			m_feedForwardPart.m_pidController.setParameters(p, i, d, n);
+//#else
+//			m_feedForwardPart.m_pidController.setParameters(p, i, d);
+//#endif
 			
+			if (m_setupSettings.optimizeIntegralSaturation)
+			{
+				m_feedForwardPart.m_pidController.setIntegralSatturationLimit(params[counter++]);
+			}
+			else
+			{
+				m_feedForwardPart.m_pidController.setIntegralSatturationLimit(m_setupSettings.defaultPIDISaturation);
+			}
 			
 
-#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
-			m_feedForwardPart.m_pidController.setIntegralSatturationLimit(params[counter++]);
-#else
-			m_feedForwardPart.m_pidController.setIntegralSatturationLimit(s_defaultPIDISaturation);
-#endif
+//#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
+//			m_feedForwardPart.m_pidController.setIntegralSatturationLimit(params[counter++]);
+//#else
+//			m_feedForwardPart.m_pidController.setIntegralSatturationLimit(s_defaultPIDISaturation);
+//#endif
 
-#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
-			m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(params[counter++]);
-#else
-			m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(s_defaultPIDAntiWindupBackCalculationConstant);
-#endif
+			if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+			{
+				m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(params[counter++]);
+			}
+			else
+			{
+				m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(m_setupSettings.defaultPIDAntiWindupBackCalculationConstant);
+			}
+
+//#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
+//			m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(params[counter++]);
+//#else
+//			m_feedForwardPart.m_pidController.setAntiWindupBackCalculationConstant(s_defaultPIDAntiWindupBackCalculationConstant);
+//#endif
 			
 		}
 
 		std::vector<double> getParameters() const override
 		{
 			std::vector<double> params;
-#ifdef PARAMETERLIST_ENABLE_KP
-			params.push_back(m_feedForwardPart.m_pidController.getKp());
-#endif
-			#ifdef PARAMETERLIST_ENABLE_KI
-			params.push_back(m_feedForwardPart.m_pidController.getKi());
-#endif
-			#ifdef PARAMETERLIST_ENABLE_KD
-			params.push_back(m_feedForwardPart.m_pidController.getKd());
-#endif
-			#ifdef PARAMETERLIST_ENABLE_KN
-			params.push_back(m_feedForwardPart.m_pidController.getKn());
-#endif
-			#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
-			params.push_back(m_feedForwardPart.m_pidController.getIntegralSatturationLimit());
-#endif
-			#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
-			params.push_back(m_feedForwardPart.m_pidController.getAntiWindupBackCalculationConstant());
-#endif
+			if(m_setupSettings.optimizeKp)
+				params.push_back(m_feedForwardPart.m_pidController.getKp());
+			if (m_setupSettings.optimizeKi)
+				params.push_back(m_feedForwardPart.m_pidController.getKi());
+			if (m_setupSettings.optimizeKd)
+				params.push_back(m_feedForwardPart.m_pidController.getKd());
+			if (m_setupSettings.optimizeKd)
+				params.push_back(m_feedForwardPart.m_pidController.getKn());
+			if (m_setupSettings.optimizeIntegralSaturation)
+				params.push_back(m_feedForwardPart.m_pidController.getIntegralSatturationLimit());
+			if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+				params.push_back(m_feedForwardPart.m_pidController.getAntiWindupBackCalculationConstant());
+//#ifdef PARAMETERLIST_ENABLE_KP
+//			params.push_back(m_feedForwardPart.m_pidController.getKp());
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KI
+//			params.push_back(m_feedForwardPart.m_pidController.getKi());
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KD
+//			params.push_back(m_feedForwardPart.m_pidController.getKd());
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_KN
+//			params.push_back(m_feedForwardPart.m_pidController.getKn());
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_INTEGRAL_SATURATION
+//			params.push_back(m_feedForwardPart.m_pidController.getIntegralSatturationLimit());
+//#endif
+//#ifdef PARAMETERLIST_ENABLE_ANTI_WINDUP_BACK_CALCULATION_CONSTANT
+//			params.push_back(m_feedForwardPart.m_pidController.getAntiWindupBackCalculationConstant());
+//#endif
 			return params;
 		}
 
@@ -526,11 +588,14 @@ private:
 		{
 			return m_feedForwardPart.m_dcMotorSystem;
 		}
-		FeedForwardPart & getFeedForwardPart()
+		FeedForwardPart& getFeedForwardPart()
 		{
 			return m_feedForwardPart;
 		}
 	private:
+
+		SetupSettings m_setupSettings;
+
 
 		double m_referenceValue = 0.0;
 		
@@ -552,16 +617,19 @@ private:
 	void testCustomPID() override;
 
 
+	SetupSettings m_setupSettings;
+
+
 	AutoTuner::ZieglerNichols* m_zieglerNicholsComponent = nullptr;
 	AutoTuner::ChartViewComponent* m_chartViewComponent = nullptr;
 	AutoTuner::Solver* m_solverObject = nullptr;
 	AutoTuner::NyquistPlotComponent* m_nyquistPlotComponent = nullptr;
 
-	size_t m_populationSize = s_agentCount;
+	//size_t m_populationSize = s_agentCount;
 	
 	//AutoTuner::CSVExport m_csvExport;
 	size_t m_epochCounter = 0;
-	size_t m_targetEpochs = s_targetEpochs;
+	//size_t m_targetEpochs = s_targetEpochs;
 	TestSystem m_testSystem;
 	AutoTuner::FrequencyResponse m_frequencyResponse;
 
@@ -576,8 +644,8 @@ private:
 	double m_tuningGoalFactor_overshoot = 111;
 	double m_tuningGoalFactor_gainMargin = 0;
 	double m_tuningGoalFactor_phaseMargin = 0;
-	bool m_useLearningRateDecay = true;
-	double m_learningRate = s_startLearningRate;
+	//bool m_useLearningRateDecay = true;
+	double m_learningRate;
 
 
 	
