@@ -25,8 +25,8 @@ void Scene::setupScene(QWidget* parent)
 
 //    m_dcMotorProblem = new DCMotorProblem();
 //	m_scene->addObject(m_dcMotorProblem);
-	//createDCMotorProblem();
-	createDCMotorWithMassProblem();
+	createDCMotorProblem();
+	//createDCMotorWithMassProblem();
 	
 	//IntegrationTest* test = new IntegrationTest();
 	//m_scene->addObject(test);
@@ -43,12 +43,8 @@ void Scene::setupScene(QWidget* parent)
 
 void Scene::createDCMotorWithMassProblem()
 {
-	if (m_dcMotorWithMassProblem)
-	{
-		m_scene->removeObject(m_dcMotorWithMassProblem);
-		delete m_dcMotorWithMassProblem;
-		m_dcMotorWithMassProblem = nullptr;
-	}
+	
+
 	PIDTuningProblem::SetupSettings settings;
 	settings.useGeneticMutationRateDecay = true;
 	settings.useMinimizingScore = true;
@@ -104,18 +100,16 @@ void Scene::createDCMotorWithMassProblem()
 		settings.learningRateDecay = 0.999; // per generation
 	}
 
+	createDCMotorWithMassProblem(settings);
+}
+void Scene::createDCMotorWithMassProblem(PIDTuningProblem::SetupSettings settings)
+{
+	destroyDCMotorWithMassProblem();
 	m_dcMotorWithMassProblem = new DCMotorWithMassProblem(settings);
 	m_scene->addObject(m_dcMotorWithMassProblem);
 }
 void Scene::createDCMotorProblem()
 {
-	if (m_dcMotorProblem)
-	{
-		m_scene->removeObject(m_dcMotorProblem);
-		delete m_dcMotorProblem;
-		m_dcMotorProblem = nullptr;
-	}
-
 	PIDTuningProblem::SetupSettings settings;
 	settings.useGeneticMutationRateDecay = true;
 	settings.useMinimizingScore = true;
@@ -171,7 +165,29 @@ void Scene::createDCMotorProblem()
 	}
 
 
-
+	createDCMotorProblem(settings);	
+}
+void Scene::createDCMotorProblem(PIDTuningProblem::SetupSettings settings)
+{
+	destroyCDMotorProblem();
 	m_dcMotorProblem = new DCMotorProblem(settings);
 	m_scene->addObject(m_dcMotorProblem);
+}
+void Scene::destroyCDMotorProblem()
+{
+	if (m_dcMotorProblem)
+	{
+		m_scene->removeObject(m_dcMotorProblem);
+		delete m_dcMotorProblem;
+		m_dcMotorProblem = nullptr;
+	}
+}
+void Scene::destroyDCMotorWithMassProblem()
+{
+	if (m_dcMotorWithMassProblem)
+	{
+		m_scene->removeObject(m_dcMotorWithMassProblem);
+		delete m_dcMotorWithMassProblem;
+		m_dcMotorWithMassProblem = nullptr;
+	}
 }

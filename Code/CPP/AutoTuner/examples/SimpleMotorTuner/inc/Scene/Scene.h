@@ -15,7 +15,11 @@ public:
 
 	void setupScene(QWidget* parent);
 	void createDCMotorWithMassProblem();
+	void createDCMotorWithMassProblem(PIDTuningProblem::SetupSettings settings);
 	void createDCMotorProblem();
+	void createDCMotorProblem(PIDTuningProblem::SetupSettings settings);
+	void destroyCDMotorProblem();
+	void destroyDCMotorWithMassProblem();
 
 	PIDTuningProblem *getPIDTuningProblem() const
 	{
