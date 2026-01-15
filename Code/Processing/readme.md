@@ -1,5 +1,5 @@
 # Processing Projekte
-[Go to Main Page](../../readme.md)
+[Go to Main Page](../../../README.md)
 
 Die Projekte können in der Software [Processing](https://processing.org/download) ausgeführt werden.
 
