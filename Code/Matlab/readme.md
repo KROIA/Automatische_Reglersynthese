@@ -1,5 +1,5 @@
 # MATLAB
-[Go to Main Page](../../../README.md)
+[Go to Main Page](../../README.md)
 
 
 ## Inhalt
