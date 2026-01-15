@@ -114,6 +114,7 @@ public:
 	bool isResultsStepResponseSignalEnabled(size_t index) const override;
 
 	std::vector<double> getBestParameters() const override;
+	std::vector<QString> getParameterLabels() const override;
 	size_t getPopulationSize() const override
 	{
 		return m_setupSettings.agentCount;
@@ -385,7 +386,7 @@ private:
 				d = params[counter++];
 
 			double n = m_setupSettings.defaultKn;
-			if (m_setupSettings.optimizeKn)
+			if (m_setupSettings.optimizeKn && m_setupSettings.useKn)
 				n = params[counter++];
 			if (m_setupSettings.useKn)
 				m_feedForwardPart.m_pidController.setParameters(p, i, d, n);

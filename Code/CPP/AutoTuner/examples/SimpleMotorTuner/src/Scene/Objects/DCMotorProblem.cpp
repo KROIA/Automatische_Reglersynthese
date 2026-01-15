@@ -33,7 +33,7 @@ DCMotorProblem::DCMotorProblem(const SetupSettings& setupSettings,
 	m_zieglerNicholsComponent = new AutoTuner::ZieglerNichols("ZieglerNichols");
 	addComponent(m_zieglerNicholsComponent);
 
-	m_chartViewComponent = new AutoTuner::ChartViewComponent("ChartViewComponent");
+	m_chartViewComponent = new AutoTuner::ChartViewComponent("DC Motor simulation");
 	addComponent(m_chartViewComponent);
 
 	m_learningRate = m_setupSettings.startLearningRate;
@@ -208,7 +208,7 @@ void DCMotorProblem::setupPopulation(size_t populationSize, double kp, double ki
 
 			if (m_setupSettings.optimizeKd)
 				individual.push_back(kd + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange));  // Kd
-			if (m_setupSettings.optimizeKn)
+			if (m_setupSettings.optimizeKn && m_setupSettings.useKn)
 				individual.push_back(m_setupSettings.defaultKn + AutoTuner::Solver::getRandomDouble(-areaRange, areaRange)); // Kn
 			if (m_setupSettings.optimizeIntegralSaturation)
 				individual.push_back(m_setupSettings.defaultPIDISaturation * AutoTuner::Solver::getRandomDouble(0, 2 * areaRange));
@@ -511,6 +511,23 @@ std::vector<double> DCMotorProblem::getBestParameters() const
 	}
 	return {};
 }
+std::vector<QString> DCMotorProblem::getParameterLabels() const
+{
+	std::vector<QString> labels;
+	if (m_setupSettings.optimizeKp)
+		labels.push_back("Kp");
+	if (m_setupSettings.optimizeKi)
+		labels.push_back("Ki");
+	if (m_setupSettings.optimizeKd)
+		labels.push_back("Kd");
+	if (m_setupSettings.useKn && m_setupSettings.optimizeKn)
+		labels.push_back("Kn");
+	if (m_setupSettings.optimizeIntegralSaturation)
+		labels.push_back("IntegralSaturation");
+	if (m_setupSettings.optimizeAntiWindupBackCalculationConstant)
+		labels.push_back("AntiWindupBackCalculationConstant");
+	return labels;
+}
 
 void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resultContainer)
 {
@@ -712,10 +729,13 @@ void DCMotorProblem::testPID(const std::vector<double>& params, ResultData* resu
 		else
 			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKd;
 
-		if (m_setupSettings.optimizeKn)
-			resultContainer->parameters[paramIndexCounter++].value = params[3];
-		else
-			resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKn;
+		if (m_setupSettings.useKn)
+		{
+			if (m_setupSettings.optimizeKn)
+				resultContainer->parameters[paramIndexCounter++].value = params[3];
+			else
+				resultContainer->parameters[paramIndexCounter++].value = m_setupSettings.defaultKn;
+		}
 
 		if (m_setupSettings.optimizeIntegralSaturation)
 			resultContainer->parameters[paramIndexCounter++].value = params[4];
@@ -1082,10 +1102,13 @@ void DCMotorProblem::logCSVData()
 		else
 			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKd);
 
-		if (m_setupSettings.optimizeKn)
-			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[3]);
-		else
-			parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKn);
+		if (m_setupSettings.useKn)
+		{
+			if (m_setupSettings.optimizeKn)
+				parameterChanges[paramIndexCounter++].data.push_back(bestParameters[3]);
+			else
+				parameterChanges[paramIndexCounter++].data.push_back(m_setupSettings.defaultKn);
+		}
 
 		if (m_setupSettings.optimizeIntegralSaturation)
 			parameterChanges[paramIndexCounter++].data.push_back(bestParameters[4]);

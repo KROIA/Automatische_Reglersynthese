@@ -9,7 +9,8 @@
 #include <memory>
 
 #include "Scene/Scene.h"
-
+#include "RibbonImpl.h"
+#include "SetupSettingsWidget.h"
 
 
 
@@ -26,7 +27,10 @@ public:
     ~MainWindow();
 
 private slots:
-	void on_reset_pushButton_clicked();
+	void onResetClicked();
+	void loadDCMotorScene();
+	void loadDCMotorWithMassScene();
+
 	void on_generateStepSequence_pushButton_clicked();
 	void on_learningAmount_lineEdit_editingFinished();
 	void on_learningRateDecay_checkBox_stateChanged(int arg1);
@@ -56,6 +60,9 @@ private:
 
 
     Ui::MainWindow* ui;
+	RibbonImpl* m_ribbon;
+	SetupSettingsWidget* m_setupWidget = nullptr;
+
 	Scene* m_scene;
 	QTimer* m_autoTestTimer = nullptr;
 	QTimer* m_updateTimer = nullptr;

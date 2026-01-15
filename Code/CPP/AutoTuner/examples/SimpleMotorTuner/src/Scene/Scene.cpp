@@ -43,8 +43,17 @@ void Scene::setupScene(QWidget* parent)
 
 void Scene::createDCMotorWithMassProblem()
 {
-	
-
+	createDCMotorWithMassProblem(getDefaultDCMotorWithMassSettings());
+}
+void Scene::createDCMotorWithMassProblem(PIDTuningProblem::SetupSettings settings)
+{
+	destroyDCMotorWithMassProblem();
+	destroyDCMotorProblem();
+	m_dcMotorWithMassProblem = new DCMotorWithMassProblem(settings);
+	m_scene->addObject(m_dcMotorWithMassProblem);
+}
+PIDTuningProblem::SetupSettings Scene::getDefaultDCMotorWithMassSettings() const
+{
 	PIDTuningProblem::SetupSettings settings;
 	settings.useGeneticMutationRateDecay = true;
 	settings.useMinimizingScore = true;
@@ -99,16 +108,20 @@ void Scene::createDCMotorWithMassProblem()
 		settings.startLearningRate = 0.5;
 		settings.learningRateDecay = 0.999; // per generation
 	}
-
-	createDCMotorWithMassProblem(settings);
-}
-void Scene::createDCMotorWithMassProblem(PIDTuningProblem::SetupSettings settings)
-{
-	destroyDCMotorWithMassProblem();
-	m_dcMotorWithMassProblem = new DCMotorWithMassProblem(settings);
-	m_scene->addObject(m_dcMotorWithMassProblem);
+	return settings;
 }
 void Scene::createDCMotorProblem()
+{
+	createDCMotorProblem(getDefaultDCMotorSettings());
+}
+void Scene::createDCMotorProblem(PIDTuningProblem::SetupSettings settings)
+{
+	destroyDCMotorProblem();
+	destroyDCMotorWithMassProblem();
+	m_dcMotorProblem = new DCMotorProblem(settings);
+	m_scene->addObject(m_dcMotorProblem);
+}
+PIDTuningProblem::SetupSettings Scene::getDefaultDCMotorSettings() const
 {
 	PIDTuningProblem::SetupSettings settings;
 	settings.useGeneticMutationRateDecay = true;
@@ -163,22 +176,14 @@ void Scene::createDCMotorProblem()
 		settings.startLearningRate = 0.5;
 		settings.learningRateDecay = 0.999; // per generation
 	}
-
-
-	createDCMotorProblem(settings);	
+	return settings;
 }
-void Scene::createDCMotorProblem(PIDTuningProblem::SetupSettings settings)
-{
-	destroyCDMotorProblem();
-	m_dcMotorProblem = new DCMotorProblem(settings);
-	m_scene->addObject(m_dcMotorProblem);
-}
-void Scene::destroyCDMotorProblem()
+void Scene::destroyDCMotorProblem()
 {
 	if (m_dcMotorProblem)
 	{
-		m_scene->removeObject(m_dcMotorProblem);
-		delete m_dcMotorProblem;
+		m_scene->deleteObject(m_dcMotorProblem);
+		//delete m_dcMotorProblem;
 		m_dcMotorProblem = nullptr;
 	}
 }
@@ -186,8 +191,8 @@ void Scene::destroyDCMotorWithMassProblem()
 {
 	if (m_dcMotorWithMassProblem)
 	{
-		m_scene->removeObject(m_dcMotorWithMassProblem);
-		delete m_dcMotorWithMassProblem;
+		m_scene->deleteObject(m_dcMotorWithMassProblem);
+		//delete m_dcMotorWithMassProblem;
 		m_dcMotorWithMassProblem = nullptr;
 	}
 }

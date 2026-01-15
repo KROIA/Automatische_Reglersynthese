@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QColorDialog>
 #include <windows.h>
+
 //#include "MatlabEngine.hpp"
 //#define ENABLE_SCREEN_CAPTURE
 
@@ -19,6 +20,15 @@ MainWindow::MainWindow(QWidget *parent)
 	Q_INIT_RESOURCE(AutoTunerIcons);
     //MatlabApiLoader::instance(); // ensures DLLs are loaded
     ui->setupUi(this);
+	ui->mainToolBar->setMovable(false);
+	ui->mainToolBar->setFixedHeight(120);
+	m_ribbon = new RibbonImpl(ui->mainToolBar);
+
+
+	RibbonImpl::GeneralButtons& generalButtons = m_ribbon->generalButtons();
+	connect(generalButtons.resetScene, &RibbonWidget::RibbonButton::clicked, this, &MainWindow::onResetClicked);
+	connect(generalButtons.setupDCMotorProblem, &RibbonWidget::RibbonButton::clicked, this, &MainWindow::loadDCMotorScene);
+	connect(generalButtons.setupDCMotorWithMassProblem, &RibbonWidget::RibbonButton::clicked, this, &MainWindow::loadDCMotorWithMassScene);
 	
 	//MatlabAPI::MatlabEngine::instantiate(u"MySession");
 
@@ -52,7 +62,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_reset_pushButton_clicked()
+void MainWindow::onResetClicked()
 {
 	PIDTuningProblem* problem = m_scene->getPIDTuningProblem();
 	if (problem)
@@ -71,6 +81,116 @@ void MainWindow::on_reset_pushButton_clicked()
 		motorWithMassProblem->stopOptimization();
 		motorWithMassProblem->startOptimization();
 	}
+}
+void MainWindow::loadDCMotorScene()
+{
+	PIDTuningProblem::SetupSettings settings = m_scene->getDefaultDCMotorSettings();
+	SetupSettingsWidget *setupWidget = new SetupSettingsWidget(settings);
+	setupWidget->show();
+	m_setupWidget = setupWidget;
+	m_scene->stop();
+	connect(setupWidget, &SetupSettingsWidget::okeyClicked, this, [this, setupWidget](const PIDTuningProblem::SetupSettings& settings)
+		{
+			m_scene->createDCMotorProblem(settings);
+			PIDTuningProblem* problem = m_scene->getPIDTuningProblem();
+			if (problem)
+			{
+				for (size_t i = 0; i < m_scrollAreaLabels.size(); ++i)
+				{
+					delete m_scrollAreaLabels[i];
+				}
+				m_scrollAreaLabels.clear();
+				connect(problem, &PIDTuningProblem::targetEpochReached, this, &MainWindow::onEpochReached);
+				ui->errorIntegral_label->setText(QString::number(problem->getTuningGoalParameter_ErrorIntegralWeight()));
+				ui->errorIntegral_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ErrorIntegralWeight() * 10.0));
+				ui->actuatorAction_label->setText(QString::number(problem->getTuningGoalParameter_ActuatorEffortWeight()));
+				ui->actuatorAction_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ActuatorEffortWeight() * 1000.0));
+				ui->overshoot_label->setText(QString::number(problem->getTuningGoalParameter_OvershootWeight()));
+				ui->overshoot_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_OvershootWeight()));
+				ui->gainMargin_label->setText(QString::number(problem->getTuningGoalParameter_GainMarginWeight()));
+				ui->gainMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_GainMarginWeight()));
+				ui->phaseMargin_label->setText(QString::number(problem->getTuningGoalParameter_PhaseMarginWeight()));
+				ui->phaseMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_PhaseMarginWeight()));
+				ui->learningRateDecay_checkBox->setChecked(problem->isLearningRateDecayEnabled());
+				ui->learningAmount_lineEdit->setText(QString::number(problem->getLearningAmount()));
+			}
+			m_scene->start();
+			setupWidget->close();
+			setupWidget->deleteLater();
+			m_setupWidget = nullptr;
+		});
+	connect(setupWidget, &SetupSettingsWidget::cancelClicked, this, [setupWidget, this]() {
+		setupWidget->close();
+		setupWidget->deleteLater();
+		m_setupWidget = nullptr;
+		m_scene->start();
+		});
+	/*m_scene->createDCMotorProblem();
+	PIDTuningProblem* problem = m_scene->getPIDTuningProblem();
+	if (problem)
+	{
+		connect(problem, &PIDTuningProblem::targetEpochReached, this, &MainWindow::onEpochReached);
+
+		ui->errorIntegral_label->setText(QString::number(problem->getTuningGoalParameter_ErrorIntegralWeight()));
+		ui->errorIntegral_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ErrorIntegralWeight() * 10.0));
+		ui->actuatorAction_label->setText(QString::number(problem->getTuningGoalParameter_ActuatorEffortWeight()));
+		ui->actuatorAction_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ActuatorEffortWeight() * 1000.0));
+		ui->overshoot_label->setText(QString::number(problem->getTuningGoalParameter_OvershootWeight()));
+		ui->overshoot_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_OvershootWeight()));
+		ui->gainMargin_label->setText(QString::number(problem->getTuningGoalParameter_GainMarginWeight()));
+		ui->gainMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_GainMarginWeight()));
+		ui->phaseMargin_label->setText(QString::number(problem->getTuningGoalParameter_PhaseMarginWeight()));
+		ui->phaseMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_PhaseMarginWeight()));
+
+		ui->learningRateDecay_checkBox->setChecked(problem->isLearningRateDecayEnabled());
+		ui->learningAmount_lineEdit->setText(QString::number(problem->getLearningAmount()));
+	}*/
+}
+void MainWindow::loadDCMotorWithMassScene()
+{
+	PIDTuningProblem::SetupSettings settings = m_scene->getDefaultDCMotorWithMassSettings();
+	SetupSettingsWidget* setupWidget = new SetupSettingsWidget(settings);
+	setupWidget->show();
+	m_setupWidget = setupWidget;
+	m_scene->stop();
+	connect(setupWidget, &SetupSettingsWidget::okeyClicked, this, [this, setupWidget](const PIDTuningProblem::SetupSettings& settings)
+		{
+			m_scene->createDCMotorWithMassProblem(settings);
+			PIDTuningProblem* problem = m_scene->getPIDTuningProblem();
+			if (problem)
+			{
+				for (size_t i = 0; i < m_scrollAreaLabels.size(); ++i)
+				{
+					delete m_scrollAreaLabels[i];
+				}
+				m_scrollAreaLabels.clear();
+				connect(problem, &PIDTuningProblem::targetEpochReached, this, &MainWindow::onEpochReached);
+				ui->errorIntegral_label->setText(QString::number(problem->getTuningGoalParameter_ErrorIntegralWeight()));
+				ui->errorIntegral_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ErrorIntegralWeight() * 10.0));
+				ui->actuatorAction_label->setText(QString::number(problem->getTuningGoalParameter_ActuatorEffortWeight()));
+				ui->actuatorAction_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_ActuatorEffortWeight() * 1000.0));
+				ui->overshoot_label->setText(QString::number(problem->getTuningGoalParameter_OvershootWeight()));
+				ui->overshoot_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_OvershootWeight()));
+				ui->gainMargin_label->setText(QString::number(problem->getTuningGoalParameter_GainMarginWeight()));
+				ui->gainMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_GainMarginWeight()));
+				ui->phaseMargin_label->setText(QString::number(problem->getTuningGoalParameter_PhaseMarginWeight()));
+				ui->phaseMargin_verticalSlider->setValue(static_cast<int>(problem->getTuningGoalParameter_PhaseMarginWeight()));
+				ui->learningRateDecay_checkBox->setChecked(problem->isLearningRateDecayEnabled());
+				ui->learningAmount_lineEdit->setText(QString::number(problem->getLearningAmount()));
+			}
+			m_scene->start();
+			setupWidget->close();
+			setupWidget->deleteLater();
+			m_setupWidget = nullptr;
+		});
+	connect(setupWidget, &SetupSettingsWidget::cancelClicked, this, [setupWidget, this]() {
+		setupWidget->close();
+		setupWidget->deleteLater();
+		m_setupWidget = nullptr;
+		m_scene->start();
+		});
+
+	
 }
 void MainWindow::on_generateStepSequence_pushButton_clicked()
 {
@@ -183,7 +303,7 @@ void MainWindow::on_multiRun_pushButton_clicked()
 
 
 
-		on_reset_pushButton_clicked();
+		onResetClicked();
 
 		//size_t stepResponseSignalCount = problem->getResultsStepResponseSingalsCount();
 		//for (size_t i = 0; i < stepResponseSignalCount; ++i)
@@ -283,7 +403,7 @@ void MainWindow::onEpochReached(size_t epoch)
 		//	problem->setResultsLearningHistoryColors(colorGradient);
 		//	problem->setResultsParameterColors(colorGradient);
 		//}
-		on_reset_pushButton_clicked();
+		onResetClicked();
 
 	}
 
@@ -307,7 +427,7 @@ void MainWindow::on_errorIntegral_verticalSlider_valueChanged(int value)
 		ui->errorIntegral_label->setText(QString::number(factor));
 		if(ui->restartOnChange_checkBox->isChecked())
 		{
-			on_reset_pushButton_clicked();
+			onResetClicked();
 		}
 	}
 }
@@ -321,7 +441,7 @@ void MainWindow::on_actuatorAction_verticalSlider_valueChanged(int value)
 		ui->actuatorAction_label->setText(QString::number(factor));
 		if (ui->restartOnChange_checkBox->isChecked())
 		{
-			on_reset_pushButton_clicked();
+			onResetClicked();
 		}
 	}
 }
@@ -335,7 +455,7 @@ void MainWindow::on_overshoot_verticalSlider_valueChanged(int value)
 		ui->overshoot_label->setText(QString::number(factor));
 		if (ui->restartOnChange_checkBox->isChecked())
 		{
-			on_reset_pushButton_clicked();
+			onResetClicked();
 		}
 	}
 }
@@ -349,7 +469,7 @@ void MainWindow::on_gainMargin_verticalSlider_valueChanged(int value)
 		ui->gainMargin_label->setText(QString::number(factor));
 		if (ui->restartOnChange_checkBox->isChecked())
 		{
-			on_reset_pushButton_clicked();
+			onResetClicked();
 		}
 	}
 }
@@ -363,7 +483,7 @@ void MainWindow::on_phaseMargin_verticalSlider_valueChanged(int value)
 		ui->phaseMargin_label->setText(QString::number(factor));
 		if (ui->restartOnChange_checkBox->isChecked())
 		{
-			on_reset_pushButton_clicked();
+			onResetClicked();
 		}
 	}
 }
@@ -381,12 +501,7 @@ void MainWindow::onUpdateTimerFinished()
 	if (problem)
 	{
 		auto parameters = problem->getBestParameters();
-		if (parameters.size() >= 3)
-		{
-			ui->kp_label->setText(QString::number(parameters[0]));
-			ui->ki_label->setText(QString::number(parameters[1]));
-			ui->kd_label->setText(QString::number(parameters[2]));
-		}
+		auto labels = problem->getParameterLabels();
 
 		if (m_scrollAreaLabels.size() < parameters.size())
 		{
@@ -408,7 +523,7 @@ void MainWindow::onUpdateTimerFinished()
 		// Update labels with current parameter values§
 		for (size_t i = 0; i < parameters.size(); ++i)
 		{
-			m_scrollAreaLabels[i]->setText(QString("Param %1: %2").arg(i).arg(parameters[i]));
+			m_scrollAreaLabels[i]->setText(QString("%1: %2").arg(labels[i]).arg(parameters[i]));
 		}
 		ui->learningAmount_label->setText(QString::number(problem->getLearningRate()));
 	}
@@ -441,5 +556,11 @@ void MainWindow::setupScene()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+	if (m_setupWidget)
+	{
+		m_setupWidget->close();
+		m_setupWidget->deleteLater();
+		m_setupWidget = nullptr;
+	}
 	QMainWindow::closeEvent(event);
 }

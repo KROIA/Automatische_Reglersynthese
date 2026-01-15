@@ -4,8 +4,8 @@ namespace AutoTuner
 {
 	DifferentialEvolutionSolver::DifferentialEvolutionSolver()
 		: Solver("DifferentialEvolutionSolver")
-		, m_alltimeBestIndividual(1)
-		, m_lastRoundBestIndividual(1)
+		, m_alltimeBestIndividual(0)
+		, m_lastRoundBestIndividual(0)
 	{
 		m_differentialEvolution.setFitnessFunction(std::bind(&DifferentialEvolutionSolver::fitnessFunction, this, std::placeholders::_1, std::placeholders::_2));
 		m_differentialEvolution.setMaxGenerations(1000000);

@@ -4,5 +4,7 @@
         <file>icons/hit.png</file>
         <file>icons/reset.png</file>
         <file>icons/wind.png</file>
+        <file>icons/motor.png</file>
+        <file>icons/motorWithMass.png</file>
     </qresource>
 </RCC>

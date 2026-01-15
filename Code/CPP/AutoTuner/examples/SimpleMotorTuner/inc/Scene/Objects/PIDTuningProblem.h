@@ -150,13 +150,15 @@ public:
 		double defaultKd = 1.0;
 		double defaultKn = 1.0;
 		double defaultPIDISaturation = 10;
+		double defaultPIDAntiWindupBackCalculationConstant = 0.1;
+
 		AutoTuner::PID::AntiWindupMethod defaultPIDAntiWindupMethod = AutoTuner::PID::AntiWindupMethod::Clamping;
 		AutoTuner::PID::IntegrationSolver defaultPIDIntegrationSolver = AutoTuner::PID::IntegrationSolver::ForwardEuler;
 
 		AutoTuner::PID::DerivativeType defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Filtered;
 		//AutoTuner::PID::DerivativeType defaultPIDDerivativeType = AutoTuner::PID::DerivativeType::Unfiltered;
 
-		double defaultPIDAntiWindupBackCalculationConstant = 0.1;
+		
 
 		double startAreaRange = 10;
 		size_t agentCount = 30;
@@ -219,6 +221,7 @@ public:
 	virtual bool isResultsStepResponseSignalEnabled(size_t index) const= 0;
 
 	virtual std::vector<double> getBestParameters() const = 0;
+	virtual std::vector<QString> getParameterLabels() const = 0;
 	virtual size_t getPopulationSize() const = 0;
 
 	virtual void setTuningGoalParameters(double errorIntegralWeight,

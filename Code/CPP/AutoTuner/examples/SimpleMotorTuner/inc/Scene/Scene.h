@@ -16,9 +16,13 @@ public:
 	void setupScene(QWidget* parent);
 	void createDCMotorWithMassProblem();
 	void createDCMotorWithMassProblem(PIDTuningProblem::SetupSettings settings);
+	PIDTuningProblem::SetupSettings getDefaultDCMotorWithMassSettings() const;
+
 	void createDCMotorProblem();
 	void createDCMotorProblem(PIDTuningProblem::SetupSettings settings);
-	void destroyCDMotorProblem();
+	PIDTuningProblem::SetupSettings getDefaultDCMotorSettings() const;
+
+	void destroyDCMotorProblem();
 	void destroyDCMotorWithMassProblem();
 
 	PIDTuningProblem *getPIDTuningProblem() const
@@ -33,6 +37,16 @@ public:
 	DCMotorWithMassProblem* getDCMotorWithMassProblem() const { return m_dcMotorWithMassProblem; }
 	MotorWithMassIdentification* getMotorWithMassIdentification() const { return m_motorWithMassIdentification; }
 
+	void stop()
+	{
+		if(m_scene)
+			m_scene->stop();
+	}
+	void start()
+	{
+		if (m_scene)
+			m_scene->start();
+	}
 private:
 	QSFML::Scene* m_scene;
 
