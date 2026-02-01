@@ -8,7 +8,7 @@
 
     %\saturationBlockNode{saturation1}{-1, 0}{-10}{10};
     \saturationBlockNode{saturation3}{4.5, 2}{-10}{10};
-    \blockNode{controller}{2.5,0}{$PID$};
+    \blockNode{controller}{2.5,0}{$\mathbf{PID}$};
     \saturationBlockNode{saturation2}{4.5,0}{-10}{10};
     \gainNode[east]{u1gain}{$(saturation2.east) + (1,0)$}{300};
     \gainNode[east]{u2gain}{$(saturation3.east) + (1,0)$}{300};

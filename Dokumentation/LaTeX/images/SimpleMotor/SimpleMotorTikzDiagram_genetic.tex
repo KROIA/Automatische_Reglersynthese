@@ -21,7 +21,7 @@
     \connect[label={-1,\labeloffset}{$\mathbf{u}$}]   {(controller.east) (plant.west)   }{->};
     \connectionNode{output}{$(plant.east) + (0.5,0)$};
     \connect[label={0.2,0}{$\mathbf{y}$}               ]{(plant.east) \vectorAdd{output}{0.5,0}}{->};
-    \connect[label={-5.27,0.5}{$\mathbf{l}$}              ]{(0,1) (5,1) (plant.north)}{->};
+    \connect[label={-5.18,0.5}{$\mathbf{l}$}              ]{(0,1) (5,1) (plant.north)}{->};
 
     \feedback[sign={-0.3,-0.1}              ]{delay.west}{0}{sum.south}{->};
     \connect{(output.center) ($(output.center) + (0,-1)$) (delay.east)}{->};
