@@ -10,7 +10,7 @@
 
 
 ### Präsentation
-[comming soon](Präsentation/Präsentation.pptx)
+[Präsentation.pptx](Präsentation/Präsentation.pptx)
 
 
 ### Code

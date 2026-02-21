@@ -3,7 +3,7 @@
 
 ---
 ## Applikation zum Download
-[]
+[SimpleMotorTuner Download](https://github.com/KROIA/Automatische_Reglersynthese/releases/download/v1.0.1/SimpleMotorTuner_v1.0.0.zip)
 
 ## Buildumgebung
 ### Benötigte Tools und Bibliotheken
