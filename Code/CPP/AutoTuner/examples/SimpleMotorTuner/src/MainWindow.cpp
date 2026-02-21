@@ -55,6 +55,36 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->multiRunColor1_pushButton->setStyleSheet(QString("background-color: %1").arg(QColor::fromRgba(m_multiRunColor1.toInteger()).name()));
 	ui->multiRunColor2_pushButton->setStyleSheet(QString("background-color: %1").arg(QColor::fromRgba(m_multiRunColor2.toInteger()).name()));
 
+	//ui->statusbar->showMessage("Autor: Alex Krieg, alexkrieg@gmx.ch, v"+
+	//	QString::number(AutoTuner::LibraryInfo::version.major)+"."+ 
+	//	QString::number(AutoTuner::LibraryInfo::version.minor)+"."+
+	//	QString::number(AutoTuner::LibraryInfo::version.patch));
+
+
+	QLabel* infoLabel = new QLabel(this);
+	infoLabel->setText("Autor: Alex Krieg, alexkrieg@gmx.ch, v" +
+			QString::number(AutoTuner::LibraryInfo::version.major)+"."+ 
+			QString::number(AutoTuner::LibraryInfo::version.minor)+"."+
+			QString::number(AutoTuner::LibraryInfo::version.patch));
+	//infoLabel->setTextFormat(Qt::RichText);
+	//infoLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+	//infoLabel->setOpenExternalLinks(true);
+	infoLabel->show();
+
+	// Add it to the status bar
+	statusBar()->addWidget(infoLabel);
+
+	QLabel* linkLabel = new QLabel(this);
+	linkLabel->setText("<a href='https://github.com/KROIA/Automatische_Reglersynthese'>GitHub</a>");
+	linkLabel->setTextFormat(Qt::RichText);
+	linkLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+	linkLabel->setOpenExternalLinks(true);
+	linkLabel->show();
+
+	// Add it to the status bar
+	statusBar()->addWidget(linkLabel);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -408,6 +438,7 @@ void MainWindow::onEpochReached(size_t epoch)
 	}
 
 }
+
 void MainWindow::on_testBestPID_pushButton_clicked()
 {
 	PIDTuningProblem* problem = m_scene->getPIDTuningProblem();

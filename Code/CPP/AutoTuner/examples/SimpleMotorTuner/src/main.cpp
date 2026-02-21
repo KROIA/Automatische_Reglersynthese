@@ -28,7 +28,11 @@ int main(int argc, char* argv[])
 #endif
 
 	Log::UI::createConsoleView(Log::UI::nativeConsoleView);
+#ifdef AT_DEBUG
 	Log::UI::getConsoleView<Log::UI::NativeConsoleView>()->show();
+#else
+	Log::UI::getConsoleView<Log::UI::NativeConsoleView>()->hide();
+#endif
 
 
 	AutoTuner::Profiler::start();
